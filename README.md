@@ -19,12 +19,22 @@ $ curl -k https://127.0.0.1 | jq
 }
 ```
 
-Check the generated `dek`, `cek` & `jwe token` in the `output/` dir:
+Finally, check the generated `dek`, `cek` & `jwe token` in the `output/` dir:
 ```bash
 $ ls output/
 cek-2020-08-08_14:52:20  dek-2020-08-08_14:52:20  json_jwe_token-2020-08-08_14:52:20.json
 ```
 A `dek`, `cek` and `jwe token` will be created for every HTTP request.
+
+## Key Consumer Setup
+
+### Salesforce
+
+- Get a developer account: https://developer.salesforce.com/signup
+- Configure `My Domain`: https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5
+- Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up
+- Create Tenant Secret: https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5
+- How to configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
 
 ## Further reading
 - Salesforce HYOK format specification: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5

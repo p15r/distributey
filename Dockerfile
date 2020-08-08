@@ -8,6 +8,7 @@ RUN apk add python3 py3-pip build-base nginx
 RUN mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf_
 
 COPY hyok-wrapper /opt/hyok-wrapper
+COPY tls /etc/nginx/tls
 
 RUN python3 -m pip install -r /opt/hyok-wrapper/requirements.txt
 
@@ -17,7 +18,7 @@ RUN ln -s /opt/hyok-wrapper/nginx.conf /etc/nginx/conf.d/hyok-wrapper.conf
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
   && ln -sf /dev/stderr /var/log/nginx/error.log
 
-EXPOSE 80
+EXPOSE 443
 
 WORKDIR /opt/hyok-wrapper
 

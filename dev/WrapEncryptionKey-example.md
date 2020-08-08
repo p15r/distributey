@@ -1,0 +1,34 @@
+Hex encoded encryption key (len == 64 byte): 74e0366d3893da6f011294d1e20515202533a7b504f7e5a5a31c5f3803f9b7d9
+
+Cache-Only Key representation written to file: da65e01d-dd7c-4185-90ee-a00eb85952f9
+
+```json
+{
+    "kid": "da65e01d-dd7c-4185-90ee-a00eb85952f9",
+    "jwe": "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00iLCJraWQiOiJkYTY1ZTAxZC1kZDdjLTQxODUtOTBlZS1hMDBlYjg1OTUyZjkifQ.SonnNYQd93zEvB9uzUVixoWlZ6l52Dom_VSKiy6gVQ-FhYZ7T-ZV_IwJk7tcx39XdMwDg_-SAOMzC2F3ngx7CeepKG0U70y3eI2Tr2EyIHJj9NLaWG8-qhXu5uDrJqM6F1pVaCvyGyO4QCtk4OWW7Y-VQIyuG1vv65oOVecXL1Hd93qnntJ72Fh_pJx7KEqZUMKyVnlHuH_XS2ndFxoKLGxolJdu2orPfOUx884HXxygRpbpSGwmU1Q9i8Gm-52lfON_ufsIb1c_94dby02-JDwtREre9KInN7WTj9JQteg_8vGdSX-GZvArpoBQYiQ5LsigXADOognwq-8k82Fqo_A_JqKoInmvFbSowD_fm67L8pjsCaFuTYoSU_1SgbwTvU1xGUAMgLqj63vfW7eQzaHxx-CjuEn2_k-UItiSzKIj3a7bQVrBD6cIdVhZf9p5L3uLQdrUhFdxOy_4oEJ_vv8OIXLESXceMwEkgKg3n-YkQE5Yj3HRidlZdoonJCNyP2DOFWYy3niFS1IkXPyVPjV3NaVwKFywba6DcD2qykJOnH9xTK63hvHucoYunH6mVF1nd12GBe15I1ERf3XtAF9hbVB3i3ztPzIz5J3q69-HjwCOS_xisecGkKW07yGNCK6dvf0oomQV_oLptOvYMXdOyVxkP22DiEQrYuQGORA.BtHEwdpO15ilxCt-.LK0BbT2D-iegaz0vgmUyDagOSOfwWcSRiZAN1uQY-T8.urFMs-3TIRUIgT--0KOuhQ"
+}
+```
+
+`kid`: Custom identifier
+
+`jwe` token examination:
+
+BASE64URL(UTF8(JWE Protected Header)):
+- `eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00iLCJraWQiOiJkYTY1ZTAxZC1kZDdjLTQxODUtOTBlZS1hMDBlYjg1OTUyZjkifQ`
+- `{"alg":"RSA-OAEP","enc":"A256GCM","kid":"da65e01d-dd7c-4185-90ee-a00eb85952f9"}`
+
+BASE64URL(JWE Encrypted Key), content key (CEK), respectively:
+- `SonnNYQd93zEvB9uzUVixoWlZ6l52Dom_VSKiy6gVQ-FhYZ7T-ZV_IwJk7tcx39XdMwDg_-SAOMzC2F3ngx7CeepKG0U70y3eI2Tr2EyIHJj9NLaWG8-qhXu5uDrJqM6F1pVaCvyGyO4QCtk4OWW7Y-VQIyuG1vv65oOVecXL1Hd93qnntJ72Fh_pJx7KEqZUMKyVnlHuH_XS2ndFxoKLGxolJdu2orPfOUx884HXxygRpbpSGwmU1Q9i8Gm-52lfON_ufsIb1c_94dby02-JDwtREre9KInN7WTj9JQteg_8vGdSX-GZvArpoBQYiQ5LsigXADOognwq-8k82Fqo_A_JqKoInmvFbSowD_fm67L8pjsCaFuTYoSU_1SgbwTvU1xGUAMgLqj63vfW7eQzaHxx-CjuEn2_k-UItiSzKIj3a7bQVrBD6cIdVhZf9p5L3uLQdrUhFdxOy_4oEJ_vv8OIXLESXceMwEkgKg3n-YkQE5Yj3HRidlZdoonJCNyP2DOFWYy3niFS1IkXPyVPjV3NaVwKFywba6DcD2qykJOnH9xTK63hvHucoYunH6mVF1nd12GBe15I1ERf3XtAF9hbVB3i3ztPzIz5J3q69-HjwCOS_xisecGkKW07yGNCK6dvf0oomQV_oLptOvYMXdOyVxkP22DiEQrYuQGORA`
+- encrypted
+
+BASE64URL(JWE Initialization Vector):
+- `BtHEwdpO15ilxCt-`
+- encrypted
+
+BASE64URL(JWE Ciphertext), data encryption key (DEK):
+- `LK0BbT2D-iegaz0vgmUyDagOSOfwWcSRiZAN1uQY-T8`
+- encrypted
+
+BASE64URL(JWE Authentication Tag):
+- `urFMs-3TIRUIgT--0KOuhQ`
+- encrypted

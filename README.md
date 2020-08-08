@@ -19,7 +19,7 @@ $ curl -k https://127.0.0.1 | jq
 }
 ```
 
-Check the generated `d`ek, `cek` & `jwe token` in the `output/` dir:
+Check the generated `dek`, `cek` & `jwe token` in the `output/` dir:
 ```bash
 $ ls output/
 cek-2020-08-08_14:52:20  dek-2020-08-08_14:52:20  json_jwe_token-2020-08-08_14:52:20.json

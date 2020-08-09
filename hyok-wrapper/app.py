@@ -5,6 +5,7 @@ app = Flask(__name__)
 
 # TODO: Salesforce connects to /KID, e.g. https://blah.com/hyok-wrapper-kid
 # Therefore, serving on root doesn't work
+# If there is a requestId, take it into account as well (it's a nonce)
 @app.route('/')
 def get_jwe_token():
     json_jwe_token = jwe.generate_jwe()

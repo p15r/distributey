@@ -16,7 +16,8 @@ if [ ! -d "$cert_dir" ]; then
     chmod o+rx $cert_dir
 fi
 
-openssl req -x509 -nodes -days 999 -newkey rsa:2048 -keyout docker/certs/nginx.key -out docker/certs/nginx.crt -subj "/C=SC/ST=SomeRegion/L=Some Valey/O=SomeOrg/OU=SomeOrgUnit/CN=somecommonname"
+# Create self-signed cert for testing:
+# openssl req -x509 -nodes -days 999 -newkey rsa:2048 -keyout docker/certs/nginx.key -out docker/certs/nginx.crt -subj "/C=SC/ST=SomeRegion/L=Some Valey/O=SomeOrg/OU=SomeOrgUnit/CN=somecommonname"
 chmod o+r docker/certs/nginx.key docker/certs/nginx.crt
 
 docker-compose build

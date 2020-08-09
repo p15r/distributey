@@ -3,7 +3,7 @@ The HYOK Wrapper provides key material, retrieved from a key service, wrapped an
 
 ## Setup
 ### Prerequisites
-- `docker-compose` (v3.3+): https://docs.docker.com/compose/install/
+- `docker-compose` (v3.7+): https://docs.docker.com/compose/install/
 
 ### Build Service
 - Build docker images: `./00-build.sh`
@@ -12,9 +12,9 @@ The HYOK Wrapper provides key material, retrieved from a key service, wrapped an
 - Remove service: `./03-remove.sh`
 
 ## Usage
-Next, issue an HTTP request against the `/` (root) directory and retrieve a jwe token:
+Issue an HTTP request against the root directory to retrieve a jwe token:
 ```bash
-$ curl -k https://127.0.0.1 | jq
+$ curl -k https://127.0.0.1/ | jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100   630  100   630    0     0  27391      0 --:--:-- --:--:-- --:--:-- 27391
@@ -24,12 +24,16 @@ $ curl -k https://127.0.0.1 | jq
 }
 ```
 
-Finally, check the generated `dek`, `cek` & `jwe token` in the `output/` dir:
+Check the generated `dek`, `cek` & `jwe token` in the `output/` dir:
 ```bash
 $ ls output/
 cek-2020-08-08_14:52:20  dek-2020-08-08_14:52:20  json_jwe_token-2020-08-08_14:52:20.json
 ```
 A `dek`, `cek` and `jwe token` will be created for every HTTP request.
+
+### Dev
+- Sync code to container: `./dev/cp_src_docker.sh`
+- `gunicorn` will automatically detect new files and reload itself.
 
 ## Key Consumer Setup
 ### Salesforce

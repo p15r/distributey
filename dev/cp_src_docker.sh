@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # set
 # -e            exit on error
@@ -9,9 +9,4 @@
 
 set -euf -o pipefail
 
-gunicorn --workers 5 \
-    --bind 0.0.0.0:5000 \
-    --access-logfile - \
-    --error-logfile - \
-    --reload --reload-extra-file /opt/hyok-wrapper \
-    wsgi:app
+docker cp hyok-wrapper hyok-wrapper:/opt/

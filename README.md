@@ -7,7 +7,7 @@ The HYOK Wrapper provides key material, retrieved from a key service, wrapped an
 
 ## Usage
 
-Next, iusse an HTTP request against the `/` (root) directory and retrieve a jwe token:
+Next, issue an HTTP request against the `/` (root) directory and retrieve a jwe token:
 ```bash
 $ curl -k https://127.0.0.1 | jq
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current

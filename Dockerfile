@@ -14,7 +14,7 @@ COPY requirements.txt /root/requirements.txt
 RUN python3 -m pip install -r /root/requirements.txt
 
 COPY --chown=nobody:nobody hyok-wrapper ${ROOT}
-COPY --chown=nobody:nobody entrypoint.sh ${ROOT}/entrypoint.sh
+COPY --chown=nobody:nobody docker/entrypoint.sh ${ROOT}/entrypoint.sh
 
 # "output" dir must be writable by gunicorn
 RUN chown ${UID}:${GID} ${ROOT}/output

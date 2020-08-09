@@ -11,8 +11,8 @@ services:
         published: 443
         protocol: tcp
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/hyok-wrapper.conf:ro
-      - ./certs:/etc/nginx/certs:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/hyok-wrapper.conf:ro
+      - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
       - hyok-wrapper
 
@@ -25,4 +25,4 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ./output/:/opt/hyok-wrapper/output
+      - ./output/:/opt/hyok-wrapper/output:rw

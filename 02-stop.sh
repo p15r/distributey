@@ -9,4 +9,6 @@
 
 set -euf -o pipefail
 
+cd docker
 docker-compose stop
+cd ..

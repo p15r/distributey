@@ -16,4 +16,6 @@ if [ ! -d "$output_dir" ]; then
     chmod o+rwx $output_dir
 fi
 
+cd docker
 docker-compose up -d
+cd ..

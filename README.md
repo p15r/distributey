@@ -4,7 +4,7 @@ The HYOK Wrapper provides key material, retrieved from a key service, wrapped an
 ## Setup
 ### Prerequisites
 - `docker-compose` (v3.7+): https://docs.docker.com/compose/install/
-- Copy TSL cert & key for reverse proxy to:
+- Copy TLS cert & key for reverse proxy to:
   - Key: `docker/certs/nginx.key`
   - Cert: `docker/certs/nginx.crt`
 

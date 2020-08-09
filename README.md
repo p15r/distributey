@@ -42,9 +42,11 @@ A `dek`, `cek` and `jwe token` will be created for every HTTP request.
 - Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up
 - Create Tenant Secret: https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5
 - How to configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
+- Troubleshoot: https://help.salesforce.com/articleView?id=security_pe_byok_cache_troubleshoot.htm&type=5
 
 ## Further reading
 - Salesforce HYOK format specification: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
 - Salesforce example key wrapper: https://github.com/forcedotcom/CacheOnlyKeyWrapper
 - JSON Web Encryption (JWE) RFC: https://tools.ietf.org/html/rfc7516
-- Authlib: https://docs.authlib.org/en/stable/jose/jwe.html
+- `pyjwkest`: https://github.com/rohe/pyjwkest
+- `Authlib`: https://docs.authlib.org/en/stable/jose/jwe.html

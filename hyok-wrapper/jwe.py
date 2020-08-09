@@ -61,11 +61,15 @@ def generate_jwe() -> str:
             requesting a 128-bit Authentication Tag output.
         Encode the resulting ciphertext as BASE64URL(Ciphertext).
         Encode the Authentication Tag as BASE64URL(Authentication Tag).
-
-    BASE64URL(JWE Ciphertext)
     """
     # TODO: Where is the IV? Is the nonce the IV? 😕
-    dek_cipher = AES.new(cek, AES.MODE_GCM, nonce=iv, mac_len=16)   # mac_len=16: 128 bit tag
+    # It would work via AES CTR:
+    #   - https://github.com/rohe/pyjwkest/blob/master/src/jwkest/jwe.py#L363
+    #   - https://github.com/rohe/pyjwkest/blob/master/src/jwkest/aes_gcm.py#L147
+    #   - https://github.com/Legrandin/pycryptodome/blob/master/lib/Crypto/Cipher/AES.py#L130
+
+    # mac_len=16: 128 bit authentication tag
+    dek_cipher = AES.new(cek, AES.MODE_GCM, nonce=iv, mac_len=16)
     encrypted_dek, tag = dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
 
     b64_encrypted_dek = base64.urlsafe_b64encode(encrypted_dek)

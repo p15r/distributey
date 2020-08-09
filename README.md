@@ -2,11 +2,16 @@
 The HYOK Wrapper provides key material, retrieved from a key service, wrapped and in the JWE format.
 
 ## Setup
-- Build docker image: `./build.sh`
-- Run docker image: `./run.sh`
+### Prerequisites
+- `docker-compose` (v3.3+): https://docs.docker.com/compose/install/
+
+### Build Service
+- Build docker images: `./00-build.sh`
+- Run service: `./01-run.sh`
+- Stop service: `./02-stop.sh`
+- Remove service: `./03-remove.sh`
 
 ## Usage
-
 Next, issue an HTTP request against the `/` (root) directory and retrieve a jwe token:
 ```bash
 $ curl -k https://127.0.0.1 | jq
@@ -27,9 +32,7 @@ cek-2020-08-08_14:52:20  dek-2020-08-08_14:52:20  json_jwe_token-2020-08-08_14:5
 A `dek`, `cek` and `jwe token` will be created for every HTTP request.
 
 ## Key Consumer Setup
-
 ### Salesforce
-
 - Get a developer account: https://developer.salesforce.com/signup
 - Configure `My Domain`: https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5
 - Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up

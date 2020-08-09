@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  reverseproxy:
+    image: nginxinc/nginx-unprivileged:stable-alpine
+    container_name: nginx
+    hostname: nginx
+    restart: always
+    ports:
+      - target: 8443
+        published: 443
+        protocol: tcp
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/hyok-wrapper.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - hyok-wrapper
+
+  hyok-wrapper:
+    image: pat/hyok-wrapper:0.1
+    container_name: hyok-wrapper
+    hostname: hyok-wrapper
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./output/:/opt/hyok-wrapper/output

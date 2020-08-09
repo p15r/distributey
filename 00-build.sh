@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # set
 # -e            exit on error
@@ -9,4 +9,7 @@
 
 set -euf -o pipefail
 
-gunicorn --workers 5 --bind 0.0.0.0:5000 --access-logfile - --error-logfile - wsgi:app
+openssl req -x509 -nodes -days 999 -newkey rsa:2048 -keyout certs/nginx.key -out certs/nginx.crt -subj "/C=SC/ST=SomeRegion/L=Some Valey/O=SomeOrg/OU=SomeOrgUnit/CN=somecommonname"
+chmod o+r certs/nginx.key certs/nginx.crt
+
+docker-compose build

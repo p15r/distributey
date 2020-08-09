@@ -9,14 +9,4 @@
 
 set -euf -o pipefail
 
-output_dir="output"
-if [ ! -d "$output_dir" ]; then
-    mkdir $output_dir
-fi
-
-docker create --name hyok-wrapper \
-    -p 0.0.0.0:443:443/tcp \
-    -v "$(pwd)"/output:/opt/hyok-wrapper/output \
-    pat/hyok-wrapper:0.1
-
-docker start hyok-wrapper
+docker-compose stop

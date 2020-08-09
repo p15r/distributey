@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # set
 # -e            exit on error
@@ -9,4 +9,11 @@
 
 set -euf -o pipefail
 
-gunicorn --workers 5 --bind 0.0.0.0:5000 --access-logfile - --error-logfile - wsgi:app
+output_dir="output"
+if [ ! -d "$output_dir" ]; then
+    mkdir $output_dir
+    # make it writable for gunicorn
+    chmod o+rwx $output_dir
+fi
+
+docker-compose up -d

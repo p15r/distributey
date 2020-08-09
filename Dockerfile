@@ -1,25 +1,29 @@
 FROM alpine:3.12
 
-# TODO: https, dedicated user, nginx as side-car
+LABEL maintainer="pat@p15r.net"
+
+ARG UNAME=hyok
+ARG UID=1337
+ARG GNAME=hyok
+ARG GID=1337
+ARG ROOT=/opt/hyok-wrapper
 
 # install deps first to benefit from docker caching
-RUN apk add python3 py3-pip build-base nginx
+RUN apk add python3 py3-pip build-base
+COPY requirements.txt /root/requirements.txt
+RUN python3 -m pip install -r /root/requirements.txt
 
-RUN mv /etc/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf_
+COPY --chown=nobody:nobody hyok-wrapper ${ROOT}
+COPY --chown=nobody:nobody entrypoint.sh ${ROOT}/entrypoint.sh
 
-COPY hyok-wrapper /opt/hyok-wrapper
-COPY tls /etc/nginx/tls
+# "output" dir must be writable by gunicorn
+RUN chown ${UID}:${GID} ${ROOT}/output
+VOLUME ${ROOT}/output
 
-RUN python3 -m pip install -r /opt/hyok-wrapper/requirements.txt
+EXPOSE 5000
 
-COPY entrypoint.sh /opt/hyok-wrapper/entrypoint.sh
-
-RUN ln -s /opt/hyok-wrapper/nginx.conf /etc/nginx/conf.d/hyok-wrapper.conf
-RUN ln -sf /dev/stdout /var/log/nginx/access.log \
-  && ln -sf /dev/stderr /var/log/nginx/error.log
-
-EXPOSE 443
+RUN addgroup -g ${GID} -S ${GNAME} && adduser -u ${UID} -G ${GNAME} -S -H ${UNAME}
+USER ${UID}
 
 WORKDIR /opt/hyok-wrapper
-
 CMD ["/opt/hyok-wrapper/entrypoint.sh"]

@@ -3,7 +3,7 @@ from Cryptodome.Random import get_random_bytes
 from Cryptodome.Cipher import PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Cipher import AES
-from Cryptodome.Util.Padding import pad
+# from Cryptodome.Util.Padding import pad
 import uuid
 import base64
 import json
@@ -53,7 +53,7 @@ def generate_jwe(kid: str = '', nonce: str = '') -> str:
 
     # Generate an initialization vector for use as input to the data encryption key’s AES wrapping.
     # Then encode it in base64url. BASE64URL(JWE Initialization Vector)
-    iv = get_random_bytes(12)
+    iv = get_random_bytes(12)   # 12 bytes * 8 = 96 bit
     b64_iv = base64.urlsafe_b64encode(iv)
 
     """
@@ -70,20 +70,17 @@ def generate_jwe(kid: str = '', nonce: str = '') -> str:
     # pyCryptoDome uses IV and NONCE interchangeably:
     #   - https://pycryptodome.readthedocs.io/en/latest/src/cipher/modern.html#modern-modes-of-operation-
     #       for-symmetric-block-ciphers
-    # References:
-    #   - pyjwkest (AES CTR): https://github.com/rohe/pyjwkest/blob/master/src/jwkest/jwe.py#L363
-    #   - Authlib (Chacha): https://github.com/lepture/authlib/blob/c6e284ab960fe90b712a1eb80f3d8515a8210dd2/
-    #       authlib/jose/drafts/_jwe_enc_cryptography.py#L24
 
-    # TODO: Convert to ASCII like: https://github.com/lepture/authlib/blob/master/authlib/jose/rfc7516/jwe.py#L97
+    # TODO: keep autom. padding or remove it?
 
     # Additional authenticated data (aad)
-    ascii_b64_protected_header = str(b64_protected_header).encode('ascii')
+    ascii_b64_protected_header = b64_protected_header.decode().encode('ascii', errors='strict')
 
     # mac_len=16: 128 bit authentication tag
     dek_cipher = AES.new(cek, AES.MODE_GCM, nonce=iv, mac_len=16)
     dek_cipher.update(ascii_b64_protected_header)
-    encrypted_dek, tag = dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
+    # encrypted_dek, tag = dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
+    encrypted_dek, tag = dek_cipher.encrypt_and_digest(dek)
 
     b64_encrypted_dek = base64.urlsafe_b64encode(encrypted_dek)
     b64_tag = base64.urlsafe_b64encode(tag)

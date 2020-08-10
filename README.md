@@ -7,6 +7,7 @@ The HYOK Wrapper provides key material, retrieved from a key service, wrapped an
 - Copy TLS cert & key for reverse proxy to:
   - Key: `docker/certs/nginx.key`
   - Cert: `docker/certs/nginx.crt`
+  - `chmod o+r docker/certs/nginx.{crt,key}`
 
 ### Build Service
 - Build docker images: `./00-build.sh`

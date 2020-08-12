@@ -4,16 +4,33 @@ The HYOK Wrapper provides key material, retrieved from a key service, wrapped an
 ## Setup
 ### Prerequisites
 - `docker-compose` (v3.7+): https://docs.docker.com/compose/install/
+- Retrieve certificate for key wrapping from Salesforce and copy it to: `HYOK-Wrapper/hyok-wrapper/key_consumer_cert.crt`
 - Copy TLS cert & key for reverse proxy to:
   - Key: `docker/certs/nginx.key`
   - Cert: `docker/certs/nginx.crt`
-  - `chmod o+r docker/certs/nginx.{crt,key}`
 
-### Build Service
+### HYOK Wrapper
 - Build docker images: `./00-build.sh`
-- Run service: `./01-run.sh`
+- Run service: `./01-start.sh`
 - Stop service: `./02-stop.sh`
 - Remove service: `./03-remove.sh`
+
+### Vault
+Either, configure a production-grade Hashicorp Vault instance as key management service or run a Vault dev instance.
+
+Configure creation of Salesforce key material similar to:
+- Enable dynamic secrets: `docker exec vault vault secrets enable transit`
+- Create Salesforce secret & mark it exportable: `docker exec vault vault write transit/keys/salesforce exportable=true`
+- Verify: `docker exec vault vault read transit/keys/salesforce`
+
+TODO: 
+ - Configure TTL for key in accordance to Salesforce policy?
+ - Does this configuration generate new keys every time I execute these cmds?
+
+Test your Vault configuration using the Vault cli:
+- `export VAULT_FORMAT=json`
+- `vault read transit/export/encryption-key/salesforce/latest | jq -r ".data.keys[]" > vault-dek.key.base64`
+- `vault write sys/tools/hash/sha2-256 input=$(cat vault-dek.key.base64) | jq -r ".data.sum" > vault-dek.key.hex`
 
 ## Usage
 Issue an HTTP request against the root directory to retrieve a jwe token:

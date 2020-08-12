@@ -9,6 +9,8 @@ import base64
 import json
 import datetime
 
+import vault_backend
+
 
 # This script implements: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
 
@@ -16,7 +18,13 @@ def generate_jwe(kid: str = '', nonce: str = '') -> str:
     now = datetime.datetime.utcnow().strftime('%Y-%m-%d_%H:%M:%S')
 
     # Generate a 256-bit AES data encryption key. You can use the cryptographically secure method of your choice.
-    dek = get_random_bytes(32)  # 32 bytes * 8 = 256 bit -> AES256
+    # dek = get_random_bytes(32)  # 32 bytes * 8 = 256 bit -> AES256
+    dek = vault_backend.get_dynamic_secret()
+
+    if not dek:
+        print('Cannot retrieve dek.')
+        return ''
+
     with open('output/dek-' + now, 'w') as f:
         f.write(dek.hex())
 
@@ -29,7 +37,7 @@ def generate_jwe(kid: str = '', nonce: str = '') -> str:
 
     # Generate and download your BYOK-compatible certificate.
     # key_consumer_key: public certificate from key consumer (e.g. Salesforce)
-    key_consumer_key = RSA.importKey(open('key_consumer_key.crt').read())
+    key_consumer_key = RSA.importKey(open('key_consumer_cert.crt').read())
 
     # Use KID provided by key consumer. If none was given, generate it.
     if not kid:

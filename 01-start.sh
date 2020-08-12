@@ -19,3 +19,15 @@ fi
 cd docker
 docker-compose up -d
 cd ..
+
+sleep 2 # give Vault time to start
+
+echo 'Configuring Vault..'
+
+# Enable dynamic secrets:
+docker exec vault vault secrets enable transit
+
+# Create Salesforce secret & mark it exportable:
+docker exec vault vault write transit/keys/salesforce exportable=true
+
+# Verify: `docker exec vault vault read transit/keys/salesforce`

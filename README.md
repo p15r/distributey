@@ -33,7 +33,7 @@ Currently supported integrations:
         - VAULT_TOKEN=root                      # cli config
     ```
     This will deploy Hashicorp Vault using its in-memory database.
-  - ⚠️ If you plan to run `HYOK Wrapper` in production, comment that block and use an other, production-ready Vault instance.
+  - ⚠️ If you plan to run `HYOK Wrapper` in production, comment that block and configure a production-ready Vault instance.
 4. 🛠️ Build docker images: `./00-build.sh`
 5. 🚀 Run service: `./01-start.sh`
 6. 🛑 Stop service: `./02-stop.sh`

@@ -1,60 +1,77 @@
 # HYOK-Wrapper
-The HYOK Wrapper provides key material, retrieved from a key service, wrapped and in the JWE format.
+The HYOK Wrapper provides key material, retrieved from a key service, wrapped and in the JWE format ([RFC7516](https://tools.ietf.org/html/rfc7516)), to a key consumer.
+
+Currently supported integrations:
+- Key service: Hashicorp Vault
+- Key consumer: Salesforce's [Cache-only Key Service](https://help.salesforce.com/articleView?id=security_pe_byok_cache.htm&type=5)
 
 ## Setup
-### Prerequisites
-- `docker-compose` (v3.7+): https://docs.docker.com/compose/install/
-- Retrieve certificate for key wrapping from Salesforce and copy it to: `HYOK-Wrapper/hyok-wrapper/key_consumer_cert.crt`
-- Copy TLS cert & key for reverse proxy to:
-  - Key: `docker/certs/nginx.key`
-  - Cert: `docker/certs/nginx.crt`
+### Prerequisites 📚
+- `docker-compose` (v3.7+)
+- Certificate for key wrapping from Key Consumer
+- TLS cert & key for reverse proxy
 
 ### HYOK Wrapper
-- Build docker images: `./00-build.sh`
-- Run service: `./01-start.sh`
-- Stop service: `./02-stop.sh`
-- Remove service: `./03-remove.sh`
+
+1. Copy certificate for key wrapping to `HYOK-Wrapper/hyok-wrapper/key_consumer_cert.crt`.
+2. Install TLS cert & key for reverse proxy:
+   1. Copy key to: `HYOK-Wrapper/docker/certs/nginx.key`
+   2. Copy cert to: `HYOK-Wrapper/docker/certs/nginx.crt`
+3. If you plan to run `HYOK Wrapper` in developer mode, uncomment the following block in `docker-compose.yaml`:
+    ```yaml
+    vault:
+      image: vault:1.5.0
+      container_name: vault
+      hostname: vault
+      restart: always
+      cap_add:
+        - IPC_LOCK
+      environment:
+        - VAULT_DEV_ROOT_TOKEN_ID=root          # server config
+        - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 # server config
+        - VAULT_ADDR=http://127.0.0.1:8200      # cli config
+        - VAULT_TOKEN=root                      # cli config
+    ```
+    This will deploy Hashicorp Vault using its in-memory database.
+  - ⚠️ If you plan to run `HYOK Wrapper` in production, comment that block and use an other, production-ready Vault instance. ⚠️
+4. 🛠️ Build docker images: `./00-build.sh`
+5. 🚀 Run service: `./01-start.sh`
+6. 🛑 Stop service: `./02-stop.sh`
+7. 🗑️ Remove service: `./03-remove.sh`
 
 ### Vault
-Either, configure a production-grade Hashicorp Vault instance as key management service or run a Vault dev instance.
 
-Configure creation of Salesforce key material similar to:
-- Enable dynamic secrets: `docker exec vault vault secrets enable transit`
-- Create Salesforce secret & mark it exportable: `docker exec vault vault write transit/keys/salesforce exportable=true`
 - Verify: `docker exec vault vault read transit/keys/salesforce`
-
-TODO:
- - Configure TTL for key in accordance to Salesforce policy?
- - Does this configuration generate new keys every time I execute these cmds?
-
-Test your Vault configuration using the Vault cli:
-- `export VAULT_FORMAT=json`
-- `vault read transit/export/encryption-key/salesforce/latest | jq -r ".data.keys[]" > vault-dek.key.base64`
-- `vault write sys/tools/hash/sha2-256 input=$(cat vault-dek.key.base64) | jq -r ".data.sum" > vault-dek.key.hex`
+- Todo
+  - Configure TTL for key in accordance to Salesforce cache-only key policy?
+  - Current configuration provides the same key for every request from Salesforce instead of generating a new one each time.
+- Test your Vault configuration using the Vault cli:
+  - `docker exec vault vault read -format=json transit/export/encryption-key/salesforce/latest | jq -r ".data.keys[]" > vault-dek.key.base64`
+  - `docker exec vault vault write -format=json sys/tools/hash/sha2-256 input=$(cat vault-dek.key.base64) | jq -r ".data.sum" > vault-dek.key.hex`
 
 ## Usage
-Issue an HTTP request against the root directory to retrieve a jwe token:
+Issue an HTTP request against the root directory to retrieve a `jwe` token:
 ```bash
-$ curl -k https://127.0.0.1/ | jq
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   630  100   630    0     0  27391      0 --:--:-- --:--:-- --:--:-- 27391
+$ curl -k --no-progress-meter https://127.0.0.1/kid?requestId=nonce | jq
 {
-  "kid": "7c0a90c5-97c0-4d58-8e7e-47070eaa4cbc",
-  "jwe": "eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogIjdjMGE5MGM1LTk3YzAtNGQ1OC04ZTdlLTQ3MDcwZWFhNGNiYyJ9.Fx187fQiRtrGDcObWuL_jDCLwYaJ1dAANBczv9d2jZpb7V68qSt8snHbeKnJ48LtBP1cTiM0bfsdZFrcqJT3mZHR0JyGqqM2VEuUVxkij_f3HwU5phOuu7YGsy7FQmnmjOpWLw1JQ7Ut_wfJ-qGUPx3wWCMsrk6KO9FpxwQ8OIx2pBjcMVwRzdLL14lwv3TZXP_Hc4WW7JpaOGK6CblwkjZFBMzfKLqMviY5WLMpeDlbW3tARFCoBc7dgKjhiqjht0cpLzvsq1cPTv_kYzUW6TwpbWkGS7-024HGTG4LI3daP7tCD1ck0MKQQLMh3yiyoMjSAWT2lwO7BUz3EvlqaQ==.MfJWE7Tnw-SvSOr08b5xmA==.atmlDpJpucNtYUwCDCd0otKLLr2pIFg376r-fcaQ0ImWLAIRhgg5MAy9Cspzg_j9.GkOSt7-NPulOlCSPPncrCw=="
+  "kid": "kid",
+  "jwe": "eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZCIsICJqdGkiOiAibm9uY2UifQ==.NMUv3Kui4-TSQnvKU39vmGPZ8fexJiHck5GPZTboziCy1RzPBUGPeLbP0trGKeRzl9rYQDOoIlNEKYOFSJ6sEF3B2TCprOxSs22q-P3ARrX6fjiPzdwHX09c65W39Ix9xy2aJEejj-lvc2OmNmBp8eMOZO_5z16hDHVfwhdX92Sxdh4-3gHIlI1Cr2ySqYCKUP8XzOPaLyXpq1VKlmaPZeoSkHO8GIU0sJrBXl3dyDc5SfjVIHyMAhM0dM-aiC9OhmaTxmKWDl3hCwsYv2TKyku2GTZvik4cycwUat8C2M2gi9cQsnsed2GpW9NmUW9Q2iVe2hbMZXoWhgn17T8qZ4AbSEZMCDnVKq5vh-i0o3WsN3D_LUPf9PzB1gNUvR5aBhtto69rXNSeacc_pvUAkBo8dug8xh1Jp6ZFNzL88foE_bn1aj7JSV_cCO_yi569MFnOG1eVFH1kD_OtmfUq62OE2hXfjbhBm6A-XrNBzYjxEL1oasmocqaCtWniqDEXy3VQH7trwAMc_5F3tvAkXPeyW35LFPxd5mA4lj2zf6WEq1tlDogbJCF9q8tsRHbUUYSIAidzcXz9aZs1-W5_6IGAthqhPHMULXt59d_UNCmd98RDbUJH-UfOMNi3QItip1rZBp9QPpJzZtDXGJvmffXAsCv6N0C85Ya2P7elP70=.4En4-wR-etKPOaCx.iUW5BCbUiSbQlAOnLZkrkLlbb8kODWt_sSoDTQaEApA=.4otC6CrDbr_hcLcfy3w3xw=="
 }
+
+# Check protected header
+$ echo "eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZCIsICJqdGkiOiAibm9uY2UifQ==" | base64 -d
+{"alg": "RSA-OAEP", "enc": "A256GCM", "kid": "kid", "jti": "nonce"}
 ```
 
-Check the generated `dek`, `cek` & `jwe token` in the `output/` dir:
+Access the generated `dek` (data encryption key), `cek` (content encryption) & `jwe token` in the `output/` dir:
 ```bash
 $ ls output/
 cek-2020-08-08_14:52:20  dek-2020-08-08_14:52:20  json_jwe_token-2020-08-08_14:52:20.json
 ```
 A `dek`, `cek` and `jwe token` will be created for every HTTP request.
 
-### Dev
-- Sync code to container: `./dev/cp_src_docker.sh`
-- `gunicorn` will automatically detect new files and reload itself.
+### Development
+Sync code to the `hyok-wrapper` container by executing `./dev/cp_src_docker.sh`. The HTTP server (`gunicorn`) will automatically detect new files and reload them.
 
 ## Key Consumer Setup
 ### Salesforce
@@ -67,7 +84,7 @@ A `dek`, `cek` and `jwe token` will be created for every HTTP request.
 
 ## Further reading
 - Salesforce HYOK format specification: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
-- Salesforce example key wrapper: https://github.com/forcedotcom/CacheOnlyKeyWrapper
-- JSON Web Encryption (JWE) RFC: https://tools.ietf.org/html/rfc7516
-- `pyjwkest`: https://github.com/rohe/pyjwkest
-- `Authlib`: https://docs.authlib.org/en/stable/jose/jwe.html
+- Salesforce key wrapper example: https://github.com/forcedotcom/CacheOnlyKeyWrapper
+- JWE libs (not used in `HYOK Wrapper`)
+  - `pyjwkest`: https://github.com/rohe/pyjwkest
+  - `Authlib`: https://docs.authlib.org/en/stable/jose/jwe.html

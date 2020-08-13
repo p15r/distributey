@@ -39,4 +39,4 @@ def get_dynamic_secret() -> str:
         print(e)
         return ''
 
-    return base64.b64decode(b64_key)
+    return base64.b64decode(b64_key).decode()

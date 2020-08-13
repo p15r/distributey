@@ -36,8 +36,9 @@ Currently supported integrations:
   - ⚠️ If you plan to run `HYOK Wrapper` in production, comment that block and configure a production-ready Vault instance.
 4. 🛠️ Build docker images: `./00-build.sh`
 5. 🚀 Run service: `./01-start.sh`
-6. 🛑 Stop service: `./02-stop.sh`
-7. 🗑️ Remove service: `./03-remove.sh`
+6. 🔄 (Re-) load config: `./02-load-config.sh`
+7. 🛑 Stop service: `./03-stop.sh`
+8. 🗑️ Remove service: `./04-remove.sh`
 
 ### Vault
 

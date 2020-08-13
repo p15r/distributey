@@ -18,7 +18,8 @@ RUN python3 -m pip install -r /root/requirements.txt
 COPY --chown=${UNAME}:${GNAME} hyok-wrapper ${ROOT}
 COPY --chown=${UNAME}:${GNAME} docker/entrypoint.sh ${ROOT}/entrypoint.sh
 
-VOLUME ["${ROOT}/output"]
+# prepare hyok-wrapper's config dir
+RUN mkdir ${ROOT}-config && chown -R ${UID}:${GID} ${ROOT}-config
 
 EXPOSE 5000
 

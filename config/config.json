@@ -1,3 +1,5 @@
 {
-    "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt"
+  "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",
+  "VAULT_TOKEN": "root",
+  "VAULT_URL": "http://vault:8200"
 }

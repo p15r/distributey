@@ -1,8 +1,8 @@
-import jwe
 from markupsafe import escape
 from flask import request
 from flask import Flask
 
+import jwe
 
 app = Flask(__name__)
 
@@ -11,10 +11,10 @@ app = Flask(__name__)
 def get_jwe_token(kid: str = ''):
     """
     kid: kid provided by Salesforce. Mandatory.
-    nonce: Nonce (?requestId=xxx) provided by Salesforce to prevent replay attacks. Optional.
+    nonce: Nonce (?requestId=x) provided by Salesforce (prevent replay attacks). Optional.
     """
 
-    json_jwe_token = jwe.generate_jwe(
+    json_jwe_token = jwe.get_wrapped_key_as_jwe(
         kid=str(escape(kid)),
         nonce=str(escape(request.args.get('requestId', ''))))
 

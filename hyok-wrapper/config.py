@@ -3,7 +3,7 @@
 import json
 
 
-def get_config(key: str) -> str:
+def get_config_by_key(key: str) -> str:
     try:
         with open('/opt/hyok-wrapper/config/config.json', 'r') as f:
             cfg = json.load(f)

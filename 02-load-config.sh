@@ -9,5 +9,9 @@
 
 set -euf -o pipefail
 
+# gunicorn only reloads if a python file changes..
+touch hyok-wrapper/app.py
+docker cp hyok-wrapper/app.py hyok-wrapper:/opt/hyok-wrapper/app.py
+
 docker cp config/ hyok-wrapper:/opt/hyok-wrapper
 docker exec -u root hyok-wrapper chown -R hyok:hyok /opt/hyok-wrapper/config

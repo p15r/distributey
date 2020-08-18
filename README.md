@@ -12,7 +12,6 @@ Currently supported integrations:
 - TLS cert & key for reverse proxy
 
 ### HYOK Wrapper
-
 1. Copy certificate for key wrapping to `HYOK-Wrapper/hyok-wrapper/key_consumer_cert.crt`.
 2. Install TLS cert & key for reverse proxy:
    1. Copy key to: `HYOK-Wrapper/docker/certs/nginx.key`
@@ -36,11 +35,11 @@ Currently supported integrations:
   - ⚠️ If you plan to run `HYOK Wrapper` in production, comment that block and configure a production-ready Vault instance.
 4. 🛠️ Build docker images: `./00-build.sh`
 5. 🚀 Run service: `./01-start.sh`
-6. 🛑 Stop service: `./02-stop.sh`
-7. 🗑️ Remove service: `./03-remove.sh`
+6. 🔄 (Re-) load config: `./02-load-config.sh`
+7. 🛑 Stop service: `./03-stop.sh`
+8. 🗑️ Remove service: `./04-remove.sh`
 
 ### Vault
-
 - Verify: `docker exec vault vault read transit/keys/salesforce`
 - Todo
   - Configure TTL for key in accordance to Salesforce cache-only key policy?

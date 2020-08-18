@@ -9,12 +9,12 @@
 
 set -euf -o pipefail
 
-output_dir="output"
-if [ ! -d "$output_dir" ]; then
-    mkdir $output_dir
+#output_dir="output"
+#if [ ! -d "$output_dir" ]; then
+#    mkdir $output_dir
     # make it writable for gunicorn
-    chmod o+rwx $output_dir
-fi
+#    chmod o+rwx $output_dir
+#fi
 
 cd docker
 docker-compose up -d

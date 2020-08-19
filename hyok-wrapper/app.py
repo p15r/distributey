@@ -23,8 +23,13 @@ logging.basicConfig(
 
 app = Flask(__name__)
 
+# URL-based API versioning
+root_path = '/'
+api_versioning_path = 'v1/'
+path_prefix = root_path + api_versioning_path
 
-@app.route('/<string:kid>', methods=['GET'])
+
+@app.route(path_prefix + '/<string:kid>', methods=['GET'])
 def get_jwe_token(kid: str = ''):
     """
     kid: kid provided by Salesforce. Mandatory.
@@ -48,6 +53,6 @@ def get_jwe_token(kid: str = ''):
         return 'Oops, internal error.', 500
 
     app.logger.debug(f'JWE token sent: {json_jwe_token}')
-    app.logger.info(f'JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent.')
+    app.logger.info(f'JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent in response.')
 
     return json_jwe_token

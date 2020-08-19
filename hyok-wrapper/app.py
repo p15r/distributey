@@ -36,7 +36,7 @@ def get_jwe_token(kid: str = ''):
         request_args.append(f'{key}: {request.args.get(key)}')
 
     app.logger.info(
-        f'Processing request from "{request.remote_addr}" ({request.user_agent})'
+        f'Processing request from "{request.headers["X-Real-Ip"]}" ({request.user_agent})'
         f' path: "{request.path}".'
         f' args: {request_args}')
 

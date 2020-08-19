@@ -19,7 +19,7 @@ else:
 logging.basicConfig(
     stream=sys.stderr,
     level=loglvl,
-    format='HYOK [%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s')
+    format='[%(asctime)s] HYOK {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 

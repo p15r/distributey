@@ -1,7 +1,7 @@
 {
   "KEY": "salesforce",
   "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",
-  "LOG_LEVEL": "debug",
+  "LOG_LEVEL": "info",
   "VAULT_TOKEN": "root",
   "VAULT_URL": "http://vault:8200"
 }

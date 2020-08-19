@@ -24,8 +24,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    volumes:
-      - ./volumes/responses/:/opt/hyok-wrapper/output/:rw
     depends_on:
       - vault
 

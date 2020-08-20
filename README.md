@@ -58,6 +58,7 @@ Currently supported integrations:
     ```
 
 ### Configure Mutual TLS for Salesforce
+First, get a certificate from your trusted CA, or use the following steps to create a self-signed CA for development purposes:
 
 1. Create CA key:
 ```bash
@@ -129,6 +130,8 @@ openssl x509 -text -noout -in myCert.crt
 ```bash
 openssl verify -CAfile myCA.crt myCert.crt
 ```
+12.  Configure `myCA.crt` for client auth in nginx. (TODO: more detailled explanation)
+13.  Upload `myCert.crt` to Salesforce for client auth.
 
 ## Usage
 Issue an HTTP request against the root directory to retrieve a `jwe` token:

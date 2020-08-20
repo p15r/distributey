@@ -57,6 +57,79 @@ Currently supported integrations:
       jq -r ".data.sum" > vault-dek.key.hex
     ```
 
+### Configure Mutual TLS for Salesforce
+
+1. Create CA key:
+```bash
+openssl genrsa -aes-256-cbc -out myCA.key 4096
+```
+2. Create CA config (`ca.cfg`):
+```bash
+[req]
+distinguished_name = req_distinguished_name
+prompt = no
+[req_distinguished_name]
+countryName = CH
+stateOrProvinceName = ZH
+localityName = SomeCity
+organizationName = SomeOrg
+organizationalUnitName = SomeOrgUnit
+commonName = example.com
+```
+3. Create CA cert:
+```bash
+openssl req -x509 -new -nodes -key myCA.key -sha512 -days 3650 -out myCA.crt -config ca.cfg
+```
+4. Verify CA cert:
+```bash
+openssl x509 -text -noout -in myCA.crt
+```
+5. Create cert key:
+```bash
+openssl genrsa -aes-256-cbc -out myCert.key 4096
+```
+6. Create cert config (`cert.cfg`):
+```bash
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+countryName = CH
+stateOrProvinceName = ZH
+localityName = SomeCity
+organizationName = SomeOrg
+organizationalUnitName = SomeOrgUnit
+commonName = client.example.com
+[v3_req]
+keyUsage = critical, digitalSignature, keyAgreement
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = client1.example.com
+IP.1 = 192.168.1.2
+```
+7. Create cert csr:
+```bash
+openssl req -new -sha512 -key myCert.key -config cert.cfg -out myCert.csr
+```
+8. Verify cert csr:
+```bash
+openssl req -noout -text -in myCert.csr
+```
+9. Create cert:
+```bash
+openssl x509 -req -in myCert.csr -CA myCA.crt -CAkey myCA.key -CAcreateserial -out myCert.crt -days 3650 -sha512 -extfile cert.cfg -extensions 'v3_req'
+```
+10. Verify cert:
+```bash
+openssl x509 -text -noout -in myCert.crt
+```
+11. Verify cert chain:
+```bash
+openssl verify -CAfile myCA.crt myCert.crt
+```
+
 ## Usage
 Issue an HTTP request against the root directory to retrieve a `jwe` token:
 ```bash
@@ -86,7 +159,8 @@ Sync code to the `hyok-wrapper` container by executing `./dev/cp_src_docker.sh`.
 - Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up
 - Create Tenant Secret: https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5
 - How to configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
-- Troubleshoot: https://help.salesforce.com/articleView?id=security_pe_byok_cache_troubleshoot.htm&type=5
+- Configure mutual TLS: https://help.salesforce.com/articleView?id=security_keys_uploading_mutual_auth_cert.htm&type=5
+- Troubleshoot: https://help.salesforce.com/articleView?id=security_pe_byok_cache_troubleshoot.htm&type=53
 
 ## Further reading
 - Salesforce HYOK format specification: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5

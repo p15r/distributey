@@ -71,15 +71,13 @@ $ echo "eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZCIsICJq
 {"alg": "RSA-OAEP", "enc": "A256GCM", "kid": "kid", "jti": "nonce"}
 ```
 
-Access the generated `dek` (data encryption key), `cek` (content encryption) & `jwe token` in the `output/` dir:
-```bash
-$ ls output/
-cek-2020-08-08_14:52:20  dek-2020-08-08_14:52:20  json_jwe_token-2020-08-08_14:52:20.json
-```
-A `dek`, `cek` and `jwe token` will be created for every HTTP request.
+A `cek` and `jwe token` will be created for every HTTP request.
 
 ### Development
 Sync code to the `hyok-wrapper` container by executing `./dev/cp_src_docker.sh`. The HTTP server (`gunicorn`) will automatically detect new files and reload them.
+
+## Architecture
+![worflow](docs/cache-only-key-service-v3.png)
 
 ## Key Consumer Setup
 ### Salesforce

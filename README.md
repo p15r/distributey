@@ -153,6 +153,8 @@ A `cek` and `jwe token` will be created for every HTTP request.
 Sync code to the `hyok-wrapper` container by executing `./dev/cp_src_docker.sh`. The HTTP server (`gunicorn`) will automatically detect new files and reload them.
 
 ## Architecture
+The following workflow is executed when Salesforce requests key material:
+
 ![worflow](docs/cache-only-key-service-v3.png)
 
 ## Key Consumer Setup

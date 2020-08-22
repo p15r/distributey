@@ -1,5 +1,5 @@
 # HYOK-Wrapper
-The HYOK Wrapper provides key material, retrieved from a key service, wrapped and in the JWE format ([RFC7516](https://tools.ietf.org/html/rfc7516)), to a key consumer.
+The HYOK Wrapper provides key material, retrieved from a key service, in the JWE format ([RFC7516](https://tools.ietf.org/html/rfc7516)), to a key consumer.
 
 Currently supported integrations:
 - Key service: Hashicorp Vault

@@ -8,7 +8,8 @@ Currently supported integrations:
 ## Setup
 1. Take care of the [prerequisites](docs/prerequisites.md).
 2. [Configure](docs/hyok_wrapper.md) the HYOK wrapper.
-3. Lean how to [use](docs/usage.md) the HYOK wrapper.
+3. Learn how to [use](docs/usage.md) the HYOK wrapper.
+4. [Configure](docs/key_consumer_setup.md) the key consumer.
 
 ### For developers
 1. [Verify](docs/vault.md) the Vault deployment.
@@ -17,9 +18,6 @@ Currently supported integrations:
 
 ## Architecture
 - Read more [here](docs/architecture.md)
-
-## Key Consumer Setup
-- Read more [here](docs/key_consumer_setup.md)
 
 ## Further reading
 - Salesforce key wrapper example: https://github.com/forcedotcom/CacheOnlyKeyWrapper

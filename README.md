@@ -6,14 +6,14 @@ Currently supported integrations:
 - Key consumer: Salesforce's [Cache-only Key Service](https://help.salesforce.com/articleView?id=security_pe_byok_cache.htm&type=5)
 
 ## Setup
-1. Take care of the [prerequisites](docs/prerequisites.md).
-2. [Configure](docs/hyok_wrapper.md) the HYOK wrapper.
-3. Learn how to [use](docs/usage.md) the HYOK wrapper.
-4. [Configure](docs/key_consumer_setup.md) the key consumer.
+1. Note the [prerequisites](docs/prerequisites.md)
+2. [Configure](docs/hyok_wrapper.md) the HYOK wrapper
+3. Learn how to [use](docs/usage.md) the HYOK wrapper
+4. [Configure](docs/key_consumer_setup.md) the key consumer
 
 ### For developers
-1. [Verify](docs/vault.md) the Vault deployment.
-2. Create a [CA](docs/certificate_authority.md).
+1. [Verify](docs/vault.md) the Vault deployment
+2. Create a [CA](docs/certificate_authority.md)
 3. Sync code into container: `./dev/cp_src_docker.sh`. (`gunicorn` detects changes and reload them.)
 
 ## Architecture

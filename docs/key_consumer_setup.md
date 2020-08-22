@@ -1,6 +1,10 @@
 # Key Consumer Setup
 Currently, HYOK Wrapper only supports Salesforce as a key consumer.
 
+Specs
+- Salesforce HYOK format specification: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
+
+Step-by-step
 - Get a developer account: https://developer.salesforce.com/signup
 - Configure `My Domain`: https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5
 - Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up

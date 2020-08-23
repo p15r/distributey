@@ -24,10 +24,12 @@ Step-by-step
          3. Password for jks must be between 6-8 letters.
       3. Upload to Salesforce: tbd
          1. if you get the error "Data Not Available The data you were trying to access could not be found. It may be due to another user deleting the data or a system error.", then apply the following workaround (https://developer.salesforce.com/forums/?id=9060G0000005bFJQAY):
-            1. >>create a self-signed cert in keys and cert management.
-            2. >>Enable Identity Provider and assigning the self-signed cert to it.
-            3. >>Then you would be able to import certificates/JKS.
-   2. Example requests header with JWT token from salesforce:
+            1. Create a self-signed cert in keys and cert management.
+            2. Enable Identity Provider and assigning the self-signed cert to it.
+            3. Then you would be able to import certificates/JKS.
+   2. To go "Named Credential" on Salesforce and select desired credential
+   3. Enable JWT token-based authentication: ![named credential w/ JWT-based auth](named-credential-jwt-auth.png)
+   4. Example HTTP request header with JWT token from salesforce:
    ```
    X-Real-Ip: 85.222.150.8
    Host: up-hyok-wrapper
@@ -37,6 +39,25 @@ Step-by-step
    Cache-Control: no-cache
    Pragma: no-cache
    Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2
+   ```
+   Example JWT header:
+   ```json
+   {
+     "kid": "jwtcert",
+     "typ": "JWT",
+     "alg": "RS256"
+   }
+   ```
+   Example JWT payload:
+   ```json
+   {
+     "iss": "issuer-myCA",
+     "sub": "subject-salesforce",
+     "aud": "urn: salesforce",
+     "nbf": 1598213299,
+     "iat": 1598213299,
+     "exp": 1598213599
+   }
    ```
 Further reading
 - Troubleshoot: https://help.salesforce.com/articleView?id=security_pe_byok_cache_troubleshoot.htm&type=53

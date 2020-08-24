@@ -101,7 +101,7 @@ def is_authenticated(header: EnvironHeaders) -> bool:
             f'Successfully authenticated token from {origin_id}.')
         return True
     else:
-        app.logger.error(f'Cannot authorize token from {origin_id}. Wrong subject "{payload["sub"]}"')
+        app.logger.error(f'Cannot authorize token from {origin_id}. Wrong subject "{payload["sub"]}".')
         return False
 
     return False

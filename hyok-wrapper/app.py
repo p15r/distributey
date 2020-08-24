@@ -98,8 +98,11 @@ def is_authenticated(header: EnvironHeaders) -> bool:
 
     if payload['sub'] == config.get_config_by_key('JWT_SUBJECT'):
         app.logger.info(
-            f'Successfully authenticated token from "{request.headers["X-Real-Ip"]}" ({request.user_agent}).')
+            f'Successfully authenticated token from {origin_id}.')
         return True
+    else:
+        app.logger.error(f'Cannot authorize token from {origin_id}. Wrong subject "{payload["sub"]}"')
+        return False
 
     return False
 

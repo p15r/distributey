@@ -4,6 +4,8 @@ from flask import Flask
 import json
 import logging
 import sys
+import jwt
+from werkzeug.datastructures import EnvironHeaders
 
 import jwe
 import config
@@ -29,12 +31,60 @@ api_versioning_path = 'v1/'
 path_prefix = root_path + api_versioning_path
 
 
+def is_authenticated(header: EnvironHeaders) -> bool:
+    """
+    If token has a valid signature and contains 'sub': 'salesforce-cacheonlyservice',
+    it is granted access.
+    """
+    # TODO: str is a class from flask.request.header. Improve type hinting.
+    validation_cert = config.get_config_by_key('JWT_VALIDATION_CERT')
+
+    # cert must be in PEM format, otherwise error msg: "Could not deserialize key data"
+    public_key = open(validation_cert).read()
+
+    # TODO: check if public_key is empty or not
+
+    token = header['Authorization']
+
+    # TODO: is there a scenarion where there is no Bearer?
+    if token.startswith('Bearer'):
+        token = token.split('Bearer')[1].strip()
+
+    try:
+        # TODO: this only allows to verify sign of specific cert. It is not possible to verify sign using CA cert. Why?
+        payload = jwt.decode(
+            token, public_key,
+            audience=['urn:hyok-wrapper'],
+            algorithms=['RS256'],
+            options={'verify_signature': True})
+    except jwt.exceptions.InvalidSignatureError as e:
+        app.logger.error(
+            f'Unauthorized login attempt using invalid certificate: {e}'
+            f' (source IP address "{request.headers["X-Real-Ip"]}" [{request.user_agent}])')
+        return False
+
+    # Example payload:
+    # {'iss': 'myCA', 'sub': 'salesforce-cacheonlyservice', 'aud': 'urn:hyok-wrapper',
+    #   'nbf': 1598271437, 'iat': 1598271437, 'exp': 1598271737}
+    app.logger.debug(f'payload: {payload}')
+
+    if payload['sub'] == 'salesforce-cacheonlyservice':
+        app.logger.info(
+            f'Successfully authenticated token from {request.headers["X-Real-Ip"]} ({request.user_agent}).')
+        return True
+
+    return False
+
+
 @app.route(path_prefix + '/<string:kid>', methods=['GET'])
 def get_jwe_token(kid: str = ''):
     """
     kid: kid provided by Salesforce. Mandatory.
     nonce: Nonce (?requestId=x) provided by Salesforce (prevent replay attacks). Optional.
     """
+
+    if not is_authenticated(request.headers):
+        return 'Unauthorized request.', 401
 
     request_args = []
     for key in request.args:

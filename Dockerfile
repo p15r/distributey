@@ -11,7 +11,8 @@ ARG ROOT=/opt/hyok-wrapper
 RUN addgroup -g ${GID} -S ${GNAME} && adduser -u ${UID} -G ${GNAME} -S -H ${UNAME}
 
 # install deps first to benefit from docker caching
-RUN apk add python3 py3-pip build-base
+# pyjwt[crypto] requires: python3-dev libffi-dev openssl-dev
+RUN apk add python3 python3-dev libffi-dev openssl-dev py3-pip build-base
 COPY requirements.txt /root/requirements.txt
 RUN python3 -m pip install -r /root/requirements.txt
 

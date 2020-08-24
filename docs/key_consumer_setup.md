@@ -29,6 +29,7 @@ Step-by-step
             3. Then you would be able to import certificates/JKS.
    2. To go "Named Credential" on Salesforce and select desired credential
    3. Enable JWT token-based authentication: ![named credential w/ JWT-based auth](named-credential-jwt-auth.png)
+   ℹ️ Note: `Audiences` must be `urn:hyok-wrapper` and `Named Principal Subject` must be `salesforce-cacheonlyservice`.
    4. Example HTTP request header with JWT token from salesforce:
    ```
    X-Real-Ip: 85.222.150.8
@@ -51,9 +52,9 @@ Step-by-step
    Example JWT payload:
    ```json
    {
-     "iss": "issuer-myCA",
-     "sub": "subject-salesforce",
-     "aud": "urn: salesforce",
+     "iss": "myCA",
+     "sub": "salesforce-cacheonlyservice",
+     "aud": "urn:hyok-wrapper",
      "nbf": 1598213299,
      "iat": 1598213299,
      "exp": 1598213599

@@ -1,4 +1,5 @@
 {
+  "JWT_VALIDATION_CERT": "config/jwt_validation.pem",
   "KEY": "salesforce",
   "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",
   "LOG_LEVEL": "info",

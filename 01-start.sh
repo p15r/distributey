@@ -27,3 +27,5 @@ docker exec vault vault secrets enable transit
 docker exec vault vault write transit/keys/salesforce exportable=true
 
 # Verify: `docker exec vault vault read transit/keys/salesforce`
+
+docker ps -a

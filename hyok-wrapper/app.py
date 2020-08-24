@@ -33,44 +33,72 @@ path_prefix = root_path + api_versioning_path
 
 def is_authenticated(header: EnvironHeaders) -> bool:
     """
-    If token has a valid signature and contains 'sub': 'salesforce-cacheonlyservice',
-    it is granted access.
+    Toke must..
+    - have a valid signature,
+    - contain 'sub': 'salesforce-cacheonlyservice',
+    - not have been expired yet
     """
-    # TODO: str is a class from flask.request.header. Improve type hinting.
+    x_real_ip = request.headers['X-Real-Ip']
+    user_agent = request.user_agent
+    origin_id = f'"{x_real_ip}" ({user_agent})'
+
     validation_cert = config.get_config_by_key('JWT_VALIDATION_CERT')
 
-    # cert must be in PEM format, otherwise error msg: "Could not deserialize key data"
+    # cert must be in PEM format, required by pyjwt[crypto]
     public_key = open(validation_cert).read()
 
-    # TODO: check if public_key is empty or not
+    if not public_key:
+        app.logger.error(f'Cannot read public key at "{validation_cert}". Make sure its format is PEM.')
+        return False
 
     token = header['Authorization']
 
-    # TODO: is there a scenarion where there is no Bearer?
-    if token.startswith('Bearer'):
-        token = token.split('Bearer')[1].strip()
-
-    try:
-        # TODO: this only allows to verify sign of specific cert. It is not possible to verify sign using CA cert. Why?
-        payload = jwt.decode(
-            token, public_key,
-            audience=['urn:hyok-wrapper'],
-            algorithms=['RS256'],
-            options={'verify_signature': True})
-    except jwt.exceptions.InvalidSignatureError as e:
+    # TODO: Is this always an OAuth Bearer Token (rfc6750)?
+    if not token.startswith('Bearer'):
         app.logger.error(
-            f'Unauthorized login attempt using invalid certificate: {e}'
-            f' (source IP address "{request.headers["X-Real-Ip"]}" [{request.user_agent}])')
+            f'Cannot get Bearer token from Authorization header. '
+            f'Cannot authorize request from {origin_id}')
+        app.logger.debug(f'Authorization header w/o Bearer: {token}')
         return False
 
-    # Example payload:
-    # {'iss': 'myCA', 'sub': 'salesforce-cacheonlyservice', 'aud': 'urn:hyok-wrapper',
-    #   'nbf': 1598271437, 'iat': 1598271437, 'exp': 1598271737}
-    app.logger.debug(f'payload: {payload}')
+    token = token.split('Bearer')[1].strip()
 
-    if payload['sub'] == 'salesforce-cacheonlyservice':
+    app.logger.debug(f'Received JWT token: {token} from {origin_id}')
+
+    try:
+        payload = jwt.decode(
+            token, public_key,
+            audience=config.get_config_by_key('JWT_AUDIENCE'),
+            algorithms=config.get_config_by_key('JWT_ALGORITHMS'),
+            options={
+                'require_exp': True,
+                'verify_signature': True,
+                'verify_exp': True
+                }
+            )
+    except jwt.InvalidSignatureError as e:
+        app.logger.error(
+            f'Unauthorized login attempt from {origin_id} using invalid certificate: {e}')
+        return False
+    except jwt.ExpiredSignatureError as e:
+        app.logger.error(
+            f'Cannot authorize request from {origin_id}, because token has expired: {e}')
+        return False
+
+    # Example JWT token payload:
+    # {
+    #     "iss": "myCA",
+    #     "sub": "salesforce-cacheonlyservice",
+    #     "aud": "urn:hyok-wrapper",
+    #     "nbf": 1598271437,
+    #     "iat": 1598271437,
+    #     "exp": 1598271737
+    # }
+    app.logger.debug(f'Payload of JWT token: {payload}')
+
+    if payload['sub'] == config.get_config_by_key('JWT_SUBJECT'):
         app.logger.info(
-            f'Successfully authenticated token from {request.headers["X-Real-Ip"]} ({request.user_agent}).')
+            f'Successfully authenticated token from "{request.headers["X-Real-Ip"]}" ({request.user_agent}).')
         return True
 
     return False

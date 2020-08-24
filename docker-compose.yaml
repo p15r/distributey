@@ -6,15 +6,17 @@ services:
     container_name: nginx
     hostname: nginx
     restart: always
+    command: ["sh", "-c", "sleep 10 && nginx -g 'daemon off;'"]
     ports:
       - target: 8443
         published: 443
         protocol: tcp
     volumes:
       - ./docker/nginx.conf:/etc/nginx/conf.d/hyok-wrapper.conf:ro
-      - ./docker/certs:/etc/nginx/certs:ro
+      - certs:/etc/nginx/certs
     depends_on:
       - hyok-wrapper
+      - vault-agent
 
   hyok-wrapper:
     image: pat/hyok-wrapper:0.1
@@ -39,3 +41,44 @@ services:
       - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 # server config
       - VAULT_ADDR=http://127.0.0.1:8200      # cli config
       - VAULT_TOKEN=root                      # cli config
+
+  terraform:
+    image: hashicorp/terraform:light
+    container_name: terraform
+    hostname: terraform
+    # remove state from old Vault dev mode, init, re-apply and leave running for debugging purposes
+    entrypoint: "/bin/sh -c 'rm -rf .terraform && rm -rf terraform.tfstate* && terraform init && terraform apply -auto-approve && sleep 3600'"
+    working_dir: "/terraform"
+    environment:
+      # - TF_LOG=debug
+      - VAULT_ADDR=http://vault:8200          # tf config
+      - VAULT_TOKEN=root                      # tf config
+    volumes:
+      - ./docker/terraform:/terraform
+      - approle:/approle          # write approle secret id to volume shared with vault-agent
+    depends_on:
+      - vault
+
+  vault-agent:
+    image: vault:1.5.0
+    container_name: vault-agent
+    hostname: vault-agent
+    build: vault-agent
+    cap_add:
+      - IPC_LOCK
+    command: ["agent", "-config", "/vault/config/vault-agent.hcl"]
+    volumes:
+      - ./vault-agent/config:/vault/config
+      - approle:/approle
+      - certs:/vault/certs
+    depends_on:
+    - terraform
+
+volumes:
+  # Shared mount between vault-agent and terraform
+  # to provision AppRole authentication credentials.
+  # Terraform on Docker is the Trusted Orchestrator:
+  # https://learn.hashicorp.com/tutorials/vault/secure-introduction
+  approle:
+  # Shared cert mount between vault-agent and reverse proxy 
+  certs:

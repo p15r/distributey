@@ -19,7 +19,7 @@ resource "vault_mount" "transit" {
   type = "transit"
 }
 
-resource "vault_transit_secret_backend_key" "salesforce" {
+resource "vault_transit_secret_backend_key" "hyok" {
   backend    = vault_mount.transit.path
   name       = var.transit_key_name
   exportable = var.transit_exportable

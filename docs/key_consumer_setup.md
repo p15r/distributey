@@ -62,3 +62,17 @@ Step-by-step
    ```
 Further reading
 - Troubleshoot: https://help.salesforce.com/articleView?id=security_pe_byok_cache_troubleshoot.htm&type=53
+
+# Alternative way to import CA-signed Cert
+
+Because step 6.1 seems not to work (importing CA signed cert), let's create CSR and import signed cert for jwt signing.
+
+- Doc: https://help.salesforce.com/articleView?id=security_keys_uploading_signed_cert.htm&type=5
+
+It seems not possible to create a CA-signed certificate, chain the cert and the ca and import it into Salesforce. Why not? Sure, creating CSR and import signed cert is more secure, because key will never leave Salesforce.
+
+1. Go to `Certificate and Key Management` and click on `Create CA-signed certificate`
+2. Fill in certificate information and save it.
+3. Download CSR by clicking `Download Certificate Signing Request`
+4. Create signed cert from CSR ([docs](certificate_authority.md))
+5. Upload signed cert by clicking `Upload Signed Certificate`

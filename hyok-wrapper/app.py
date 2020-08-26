@@ -44,7 +44,10 @@ def is_authenticated(header: EnvironHeaders) -> bool:
 
     validation_cert = config.get_config_by_key('JWT_VALIDATION_CERT')
 
-    # cert must be in PEM format, required by pyjwt[crypto]
+    # cert must be in PEM format, required by pyjwt[crypto] &
+    # not the cert, only the public key.
+    # Convert to PEM: openssl x509 -in mycert.crt -out mycert.pem -outform PEM
+    # Extract public key from cert: openssl x509 -pubkey -noout -in cert.pem  > pubkey.pem
     public_key = open(validation_cert).read()
 
     if not public_key:

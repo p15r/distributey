@@ -30,6 +30,15 @@ root_path = '/'
 api_versioning_path = 'v1/'
 path_prefix = root_path + api_versioning_path
 
+# TODO move is_authenticated() and get_kid_from_jwt() to own module
+
+
+def get_kid_from_jwt(token: str) -> str:
+    # base64 decode token
+    # token = json.loads(token)
+    # return token['kid']
+    return ''
+
 
 def is_authenticated(header: EnvironHeaders) -> bool:
     """
@@ -42,19 +51,26 @@ def is_authenticated(header: EnvironHeaders) -> bool:
     user_agent = request.user_agent
     origin_id = f'"{x_real_ip}" ({user_agent})'
 
-    validation_cert = config.get_config_by_key('JWT_VALIDATION_CERT')
+    # get validation cert from: JWT_VALIDATION_CERTS
+    validation_certs = config.get_config_by_key('JWT_VALIDATION_CERTS')
+
+    token = header['Authorization']
+
+    # something like:
+    kid = get_kid_from_jwt(token)
+    pubcert = validation_certs[kid]
 
     # cert must be in PEM format, required by pyjwt[crypto] &
     # not the cert, only the public key.
     # Convert to PEM: openssl x509 -in mycert.crt -out mycert.pem -outform PEM
     # Extract public key from cert: openssl x509 -pubkey -noout -in cert.pem  > pubkey.pem
-    public_key = open(validation_cert).read()
+    # TODO: extract key from cert programmatically:
+    #       https://pyjwt.readthedocs.io/en/latest/faq.html#how-can-i-extract-a-public-private-key-from-a-x509-certificate
+    cert = open(pubcert).read()
 
-    if not public_key:
-        app.logger.error(f'Cannot read public key at "{validation_cert}". Make sure its format is PEM.')
+    if not cert:
+        app.logger.error(f'Cannot read public key at "{cert}". Make sure its format is PEM.')
         return False
-
-    token = header['Authorization']
 
     # TODO: Is this always an OAuth Bearer Token (rfc6750)?
     if not token.startswith('Bearer'):
@@ -70,7 +86,7 @@ def is_authenticated(header: EnvironHeaders) -> bool:
 
     try:
         payload = jwt.decode(
-            token, public_key,
+            token, cert,
             audience=config.get_config_by_key('JWT_AUDIENCE'),
             algorithms=config.get_config_by_key('JWT_ALGORITHMS'),
             options={

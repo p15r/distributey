@@ -6,7 +6,9 @@
     "urn:hyok-wrapper"
   ],
   "JWT_SUBJECT": "salesforce-cacheonlyservice",
-  "JWT_VALIDATION_CERT": "config/jwt_validation.pem",
+  "JWT_VALIDATION_CERTS": {
+    "salesforce-serviceX-1234": "config/salesforce-serviceX-1234.crt"
+  },
   "KEY": "salesforce",
   "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",
   "LOG_LEVEL": "info",

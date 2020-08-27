@@ -34,15 +34,6 @@ resource "vault_pki_secret_backend_role" "server" {
   server_flag      = true
 }
 
-resource "vault_pki_secret_backend_role" "client" {
-  backend          = vault_mount.pki.path
-  name             = var.pki_role_name_client
-  allow_subdomains = var.pki_role_allow_subdomains
-  allowed_domains  = var.pki_role_allowed_domains
-  client_flag      = true
-  server_flag      = false
-}
-
 resource "vault_pki_secret_backend_root_cert" "ca" {
   backend     = vault_mount.pki.path
   type        = "internal"

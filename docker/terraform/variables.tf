@@ -50,11 +50,6 @@ variable pki_role_name_server {
   default = "server"
 }
 
-variable pki_role_name_client {
-  type    = string
-  default = "client"
-}
-
 variable pki_role_allow_subdomains {
   type    = bool
   default = false

@@ -45,8 +45,3 @@ template {
   source      = "/vault/config/templates/servercrt.tpl"
   destination = "/vault/certs/nginx.crt"
 }
-
-template {
-  source      = "/vault/config/templates/clientca.tpl"
-  destination = "/vault/certs/clientca.crt"
-}

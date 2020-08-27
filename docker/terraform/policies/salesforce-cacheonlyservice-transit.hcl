@@ -1,4 +1,7 @@
-path "transit/*" {
-   # todo: less capabilities
-   capabilities =  ["create", "read", "update", "delete", "list"]
+path "transit/export/encryption-key/salesforce*" {
+   capabilities =  ["read"]
+}
+
+path "transit/keys/salesforce" {
+   capabilities =  ["read"]
 }

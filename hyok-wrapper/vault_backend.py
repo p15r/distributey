@@ -6,6 +6,8 @@ import config
 import logging
 
 def authenticate(jwt_token: str) -> str:
+    logger = logging.getLogger(__name__)
+
     vault_url = config.get_config_by_key('VAULT_URL')
     client = hvac.Client(url=vault_url)
 

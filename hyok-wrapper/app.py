@@ -5,9 +5,9 @@ import json
 import logging
 import sys
 import jwt
-from werkzeug.datastructures import EnvironHeaders
 
 import jwe
+import vault_backend
 import config
 
 
@@ -30,9 +30,6 @@ root_path = '/'
 api_versioning_path = 'v1/'
 path_prefix = root_path + api_versioning_path
 
-# TODO move is_authenticated() and get_kid_from_jwt() to own module
-
-
 def get_kid_from_jwt(token: str) -> str:
     # base64 decode token
     # token = json.loads(token)
@@ -40,37 +37,18 @@ def get_kid_from_jwt(token: str) -> str:
     return ''
 
 
-def is_authenticated(header: EnvironHeaders) -> bool:
+@app.route(path_prefix + '/<string:kid>', methods=['GET'])
+def get_jwe_token(kid: str = ''):
     """
-    Toke must..
-    - have a valid signature,
-    - contain 'sub': 'salesforce-cacheonlyservice',
-    - not have been expired yet
+    kid: kid provided by Salesforce. Mandatory.
+    nonce: Nonce (?requestId=x) provided by Salesforce (prevent replay attacks). Optional.
     """
+
     x_real_ip = request.headers['X-Real-Ip']
     user_agent = request.user_agent
     origin_id = f'"{x_real_ip}" ({user_agent})'
 
-    # get validation cert from: JWT_VALIDATION_CERTS
-    validation_certs = config.get_config_by_key('JWT_VALIDATION_CERTS')
-
-    token = header['Authorization']
-
-    # something like:
-    kid = get_kid_from_jwt(token)
-    pubcert = validation_certs[kid]
-
-    # cert must be in PEM format, required by pyjwt[crypto] &
-    # not the cert, only the public key.
-    # Convert to PEM: openssl x509 -in mycert.crt -out mycert.pem -outform PEM
-    # Extract public key from cert: openssl x509 -pubkey -noout -in cert.pem  > pubkey.pem
-    # TODO: extract key from cert programmatically:
-    #       https://pyjwt.readthedocs.io/en/latest/faq.html#how-can-i-extract-a-public-private-key-from-a-x509-certificate
-    cert = open(pubcert).read()
-
-    if not cert:
-        app.logger.error(f'Cannot read public key at "{cert}". Make sure its format is PEM.')
-        return False
+    token = request.headers['Authorization']
 
     # TODO: Is this always an OAuth Bearer Token (rfc6750)?
     if not token.startswith('Bearer'):
@@ -84,57 +62,8 @@ def is_authenticated(header: EnvironHeaders) -> bool:
 
     app.logger.debug(f'Received JWT token: {token} from {origin_id}')
 
-    try:
-        payload = jwt.decode(
-            token, cert,
-            audience=config.get_config_by_key('JWT_AUDIENCE'),
-            algorithms=config.get_config_by_key('JWT_ALGORITHMS'),
-            options={
-                'require_exp': True,
-                'verify_signature': True,
-                'verify_exp': True
-                }
-            )
-    except jwt.InvalidSignatureError as e:
-        app.logger.error(
-            f'Unauthorized login attempt from {origin_id} using invalid certificate: {e}')
-        return False
-    except jwt.ExpiredSignatureError as e:
-        app.logger.error(
-            f'Cannot authorize request from {origin_id}, because token has expired: {e}')
-        return False
+    vault_token = vault_backend.authenticate(token)
 
-    # Example JWT token payload:
-    # {
-    #     "iss": "myCA",
-    #     "sub": "salesforce-cacheonlyservice",
-    #     "aud": "urn:hyok-wrapper",
-    #     "nbf": 1598271437,
-    #     "iat": 1598271437,
-    #     "exp": 1598271737
-    # }
-    app.logger.debug(f'Payload of JWT token: {payload}')
-
-    if payload['sub'] == config.get_config_by_key('JWT_SUBJECT'):
-        app.logger.info(
-            f'Successfully authenticated token from {origin_id}.')
-        return True
-    else:
-        app.logger.error(f'Cannot authorize token from {origin_id}. Wrong subject "{payload["sub"]}".')
-        return False
-
-    return False
-
-
-@app.route(path_prefix + '/<string:kid>', methods=['GET'])
-def get_jwe_token(kid: str = ''):
-    """
-    kid: kid provided by Salesforce. Mandatory.
-    nonce: Nonce (?requestId=x) provided by Salesforce (prevent replay attacks). Optional.
-    """
-
-    if not is_authenticated(request.headers):
-        return 'Unauthorized request.', 401
 
     request_args = []
     for key in request.args:
@@ -146,6 +75,7 @@ def get_jwe_token(kid: str = ''):
         f' args: {request_args}')
 
     json_jwe_token = jwe.get_wrapped_key_as_jwe(
+        vault_token,
         kid=str(escape(kid)),
         nonce=str(escape(request.args.get('requestId', ''))))
 

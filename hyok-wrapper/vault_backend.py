@@ -5,12 +5,24 @@ import hvac
 import config
 import logging
 
+def authenticate(jwt_token: str) -> str:
+    vault_url = config.get_config_by_key('VAULT_URL')
+    client = hvac.Client(url=vault_url)
 
-def get_dynamic_secret(key: str) -> bytes:
+    response = client.auth.jwt.jwt_login(
+        role = config.get_config_by_key('VAULT_JWT_DEFAULT_ROLE'),
+        jwt = jwt_token
+    )
+
+    vault_token = response['auth']['client_token']
+    logger.debug(f'Vault client token returned: {vault_token}')
+
+    return vault_token
+
+def get_dynamic_secret(key: str, vault_token: str) -> bytes:
     logger = logging.getLogger(__name__)
 
     vault_url = config.get_config_by_key('VAULT_URL')
-    vault_token = config.get_config_by_key('VAULT_TOKEN')
     client = hvac.Client(url=vault_url, token=vault_token)
 
     if not client.sys.is_initialized():

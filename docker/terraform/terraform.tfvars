@@ -3,7 +3,7 @@ services = ["salesforce-cacheonlyservice"]
 # policy name matches service name with suffix -transit
 policies = ["hyok-pki", "salesforce-cacheonlyservice-transit"]
 
-auth_jwt_default_role = "hyok"
+auth_jwt_default_role                 = "hyok"
 auth_jwt_default_role_bound_audiences = ["urn:hyok-wrapper"]
 auth_jwt_validation_pubkeys = [<<EOT
 -----BEGIN CERTIFICATE-----
@@ -43,8 +43,8 @@ XV26D5qwSQ+w0JRpY6SiNsOv0YlEOXTtD3ahl7aCYTz2Pq5UIbCbnRSvwXIExMte
 HXTos7UMNK3ogGLnf7uAtgmEXRm4AiLXROHVUQrkjlIs8egM9zQlPPhtlKU=
 -----END CERTIFICATE-----
 EOT
-,
-<<EOT
+  ,
+  <<EOT
 -----BEGIN CERTIFICATE-----
 MIIDPTCCAiWgAwIBAgIUSW/HjHg1vwHrZ51c6sLpiHNQy8MwDQYJKoZIhvcNAQEL
 BQAwEjEQMA4GA1UEAxMHUm9vdCBDQTAeFw0yMDA4MjcxMDA0MTRaFw0yNTA4MjYx

@@ -10,17 +10,17 @@ resource "vault_policy" "policy" {
 # Groups
 resource "vault_identity_group" "service" {
   for_each = toset(var.services)
-  name       = each.value
-  type       = "external"
+  name     = each.value
+  type     = "external"
 }
 resource "vault_identity_group_alias" "service_alias" {
-  for_each = vault_identity_group.service
+  for_each       = vault_identity_group.service
   name           = each.value.name
   mount_accessor = vault_jwt_auth_backend.jwt.accessor
   canonical_id   = each.value.id
 }
 resource "vault_identity_group" "internal" {
-  for_each = vault_identity_group.service
+  for_each         = vault_identity_group.service
   name             = "${each.value.name}-internal"
   policies         = ["${each.value.name}-transit"]
   member_group_ids = [each.value.id]
@@ -29,16 +29,16 @@ resource "vault_identity_group" "internal" {
 
 # JWT auth backend
 resource "vault_jwt_auth_backend" "jwt" {
-    path = var.auth_jwt_path
-    jwt_validation_pubkeys = var.auth_jwt_validation_pubkeys
-    default_role = var.auth_jwt_default_role
+  path                   = var.auth_jwt_path
+  jwt_validation_pubkeys = var.auth_jwt_validation_pubkeys
+  default_role           = var.auth_jwt_default_role
 }
 resource "vault_jwt_auth_backend_role" "role" {
   backend         = vault_jwt_auth_backend.jwt.path
   role_name       = var.auth_jwt_default_role
   bound_audiences = var.auth_jwt_default_role_bound_audiences
   user_claim      = "iss"
-  groups_claim      = "subj"
+  groups_claim    = "subj"
   role_type       = "jwt"
 }
 

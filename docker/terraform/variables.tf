@@ -1,11 +1,11 @@
 variable services {
-  type = list
-  default = ["salesforce"]
+  type        = list
+  default     = ["salesforce"]
   description = "List of external service names. This corresponds to the 'subj' field of a signed JWT token"
 }
 variable policies {
-  type = list
-  default = ["salesforce-transit"]
+  type        = list
+  default     = ["salesforce-transit"]
   description = "List of policies for external service names. The name corresponds to the 'service' variable with suffix '-transit'"
 }
 
@@ -23,8 +23,8 @@ variable auth_jwt_default_role {
 }
 variable auth_jwt_default_role_bound_audiences {
   description = "List of aud claims to match against. Any match is sufficient."
-  type    = list
-  default = []
+  type        = list
+  default     = []
 }
 
 variable transit_path {

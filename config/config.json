@@ -12,6 +12,6 @@
   "KEY": "salesforce",
   "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",
   "LOG_LEVEL": "info",
-  "VAULT_TOKEN": "root",
+  "VAULT_JWT_DEFAULT_ROLE": "hyok",
   "VAULT_URL": "http://vault:8200"
 }

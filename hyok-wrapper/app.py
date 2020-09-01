@@ -30,7 +30,7 @@ root_path = '/'
 api_versioning_path = 'v1/'
 path_prefix = root_path + api_versioning_path
 
-# TODO move is_authenticated() and get_kid_from_jwt() to own module
+# TODO move authenticate() and get_kid_from_jwt() to own module
 
 
 def get_kid_from_jwt(token: str) -> str:
@@ -64,7 +64,7 @@ def get_jwt_from_header(header: EnvironHeaders, origin_id: str) -> str:
     return token
 
 
-def is_authenticated(header: EnvironHeaders) -> bool:
+def authenticate(header: EnvironHeaders) -> str:
     """
     Toke must..
     - have a valid signature,
@@ -86,7 +86,7 @@ def is_authenticated(header: EnvironHeaders) -> bool:
 
     if not pubkey:
         app.logger.error(f'Cannot find pubkey in config.json to verify JWT signature for JWTs with kid "{kid}".')
-        return False
+        return ''
 
     # cert must be in PEM format, required by pyjwt[crypto] &
     # not the cert, only the public key.
@@ -98,7 +98,7 @@ def is_authenticated(header: EnvironHeaders) -> bool:
 
     if not cert:
         app.logger.error(f'Cannot read public key at "{cert}". Make sure its format is PEM.')
-        return False
+        return ''
 
     app.logger.debug(f'Received JWT token: {token} from {origin_id}')
 
@@ -116,11 +116,11 @@ def is_authenticated(header: EnvironHeaders) -> bool:
     except jwt.InvalidSignatureError as e:
         app.logger.error(
             f'Unauthorized login attempt from {origin_id} using invalid certificate: {e}')
-        return False
+        return ''
     except jwt.ExpiredSignatureError as e:
         app.logger.error(
             f'Cannot authorize request from {origin_id}, because the JWT has expired: {e}')
-        return False
+        return ''
 
     # Example JWT token payload:
     # {
@@ -136,12 +136,12 @@ def is_authenticated(header: EnvironHeaders) -> bool:
     if payload['sub'] == config.get_config_by_key('JWT_SUBJECT'):
         app.logger.info(
             f'Successfully authenticated token from {origin_id}.')
-        return True
+        return token
     else:
         app.logger.error(f'Cannot authorize token from {origin_id}. Wrong subject "{payload["sub"]}".')
-        return False
+        return ''
 
-    return False
+    return ''
 
 
 @app.route(path_prefix + '/<string:kid>', methods=['GET'])
@@ -151,7 +151,9 @@ def get_jwe_token(kid: str = ''):
     nonce: Nonce (?requestId=x) provided by Salesforce (prevent replay attacks). Optional.
     """
 
-    if not is_authenticated(request.headers):
+    token = authenticate(request.headers)
+
+    if not token:
         return 'Unauthorized request.', 401
 
     request_args = []
@@ -164,6 +166,7 @@ def get_jwe_token(kid: str = ''):
         f' args: {request_args}')
 
     json_jwe_token = jwe.get_wrapped_key_as_jwe(
+        token,
         kid=str(escape(kid)),
         nonce=str(escape(request.args.get('requestId', ''))))
 

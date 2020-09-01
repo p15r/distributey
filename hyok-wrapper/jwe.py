@@ -14,14 +14,14 @@ import config
 
 # This script implements: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
 
-def get_wrapped_key_as_jwe(vault_token: str, kid: str = '', nonce: str = '') -> str:
+def get_wrapped_key_as_jwe(jwt_token: str, kid: str = '', nonce: str = '') -> str:
     logger = logging.getLogger(__name__)
 
     key = config.get_config_by_key('KEY')
 
     # Generate a 256-bit AES data encryption key. You can use the cryptographically secure method of your choice.
     # dek = get_random_bytes(32)  # 32 bytes * 8 = 256 bit -> AES256
-    dek = vault_backend.get_dynamic_secret(key, vault_token)
+    dek = vault_backend.get_dynamic_secret(key, jwt_token)
 
     if not dek:
         logger.error('Cannot retrieve dek.')

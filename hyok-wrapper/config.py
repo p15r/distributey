@@ -4,7 +4,7 @@ import json
 import logging
 
 
-def get_config_by_key(key: str) -> str:
+def get_config_by_key(key: str) -> dict:
     logger = logging.getLogger(__name__)
 
     try:
@@ -13,7 +13,7 @@ def get_config_by_key(key: str) -> str:
     except FileNotFoundError as e:
         logger.error('Cannot load config file. Has "02-load-config.sh" already been executed?')
         logger.error(e)
-        return ''
+        return {}
 
     # Let this raise KeyError if key does not exist
     return cfg[key]

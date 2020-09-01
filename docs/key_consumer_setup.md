@@ -2,35 +2,46 @@
 Currently, HYOK Wrapper only supports Salesforce as a key consumer.
 
 Specs
-- Salesforce HYOK format specification: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
+- Salesforce HYOK format specification: [salesforce.com](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)
 
 Step-by-step
 1. Get a developer account: https://developer.salesforce.com/signup
 2. Configure `My Domain`: https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5
 3. Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up
 4. Create Tenant Secret: https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5
-5. How to configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
-6. Configure JWT auth: tbd
-   1. upload cert & key to Salesforce to sign JWT tokens
-      1. [create](certificate_authority.md) CA
-      2. Create keystore with cert & key: https://docs.oracle.com/en/database/other-databases/nosql-database/12.2.4.5/security/import-key-pair-java-keystore.html
-         1. Step-by-step:
-         ```bash
-         cat mtls/myCert.crt mtls/myCA.crt > import.pem
-         openssl pkcs12 -export -in import.pem -inkey mtls/myCert.key -name jwtcert > jwt.p12
-         keytool -importkeystore -srckeystore jwt.p12 -destkeystore salesforce.jks -srcstoretype pkcs12 -alias jwtcert
-         ```
-         2. Only works with Java 8! Not 11 [openjdk-8-jre-headless]. If you upload a jks created with Java 11, you will get "Error: Keystore file is corrupted."
-         3. Password for jks must be between 6-8 letters.
-      3. Upload to Salesforce: tbd
-         1. if you get the error "Data Not Available The data you were trying to access could not be found. It may be due to another user deleting the data or a system error.", then apply the following workaround (https://developer.salesforce.com/forums/?id=9060G0000005bFJQAY):
-            1. Create a self-signed cert in keys and cert management.
-            2. Enable Identity Provider and assigning the self-signed cert to it.
-            3. Then you would be able to import certificates/JKS.
-   2. To go "Named Credential" on Salesforce and select desired credential
-   3. Enable JWT token-based authentication: ![named credential w/ JWT-based auth](named-credential-jwt-auth.png)
+6. Configure Salesforce to authenticate against HYOK Wrapper using a JWT-based token:
+   1. Create pub/priv key for JWT token signing. It is recommended to create a dedicated pub/priv key per for every Salesforce service. Two options exist:
+      1. Create key in Salesforce (**Recommended**)
+         1. Go to `Certificate and Key Management` and click on `Create self-signed certificate`
+         2. Define the following values:
+            - `Label`: a representative name for the key
+            - `Unique Name`: this is the `KID` of the JWT token, thus must be unique
+            - Private key must not be exportable
+         3. Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper.
+      2. Import own key to Salesforce
+         > ⚠️ This Option is not recommended, because the private key needs to be transmitted.
+         1. [create](certificate_authority.md) CA
+         2. Create keystore with cert & key: https://docs.oracle.com/en/database/other-databases/nosql-database/12.2.4.5/security/import-key-pair-java-keystore.html
+            1. Step-by-step:
+               ```bash
+               cat mtls/myCert.crt mtls/myCA.crt > import.pem
+               openssl pkcs12 -export -in import.pem -inkey mtls/myCert.key -name jwtcert > jwt.p12
+               keytool -importkeystore -srckeystore jwt.p12 -destkeystore salesforce.jks -srcstoretype pkcs12 -alias jwtcert
+               ```
+            2. Only works with Java 8! Not 11 [openjdk-8-jre-headless]. If you upload a jks created with Java 11, you will get "Error: Keystore file is corrupted."
+            3. Password for jks must be between 6-8 letters.
+         3. Upload to Salesforce: tbd
+            1. if you get the error "Data Not Available The data you were trying to access could not be found. It may be due to another user deleting the data or a system error.", then apply the following workaround (https://developer.salesforce.com/forums/?id=9060G0000005bFJQAY):
+               1. Create a self-signed cert in keys and cert management.
+               2. Enable Identity Provider and assigning the self-signed cert to it.
+               3. Then you would be able to import certificates/JKS.
+   2. To go `Named Credential` on Salesforce and create `New Named Credential`
+     - `URL`: publicly reachable URL of HYOK wrapper
+     - `JWT Signing Certificate`: Select the previously created certificate.
+     ![named credential w/ JWT-based auth](named-credential-jwt-auth.png)
+   3. Configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
    ℹ️ Note: `Audiences` must be `urn:hyok-wrapper` and `Named Principal Subject` must be `salesforce-cacheonlyservice`.
-   4. Example HTTP request header with JWT token from salesforce:
+   1. Example HTTP request header with JWT token from salesforce:
    ```
    X-Real-Ip: 85.222.150.8
    Host: up-hyok-wrapper

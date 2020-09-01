@@ -3,7 +3,8 @@
 2. Install TLS cert & key for reverse proxy:
    1. Copy key to: `HYOK-Wrapper/docker/certs/nginx.key`
    2. Copy cert to: `HYOK-Wrapper/docker/certs/nginx.crt`
-3. If you plan to run `HYOK Wrapper` in developer mode, uncomment the following block in `docker-compose.yaml`:
+3. Save pub key from Salesforce to verify JWT tokens in `config/` and store its path in the key map `JWT_VALIDATION_CERTS`.
+4. If you plan to run `HYOK Wrapper` in developer mode, uncomment the following block in `docker-compose.yaml`:
     ```yaml
     vault:
       image: vault:1.5.0

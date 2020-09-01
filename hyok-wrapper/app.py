@@ -37,7 +37,31 @@ def get_kid_from_jwt(token: str) -> str:
     # base64 decode token
     # token = json.loads(token)
     # return token['kid']
-    return ''
+
+    try:
+        protected_header_unverified = jwt.get_unverified_header(token)
+    except jwt.DecodeError as e:
+        app.logger.error(f'Cannot decode JWT to get kid: {e}')
+        app.logger.debug(f'JWT: {token}')
+        return ''
+
+    return protected_header_unverified.get('kid', '')
+
+
+def get_jwt_from_header(header: EnvironHeaders, origin_id: str) -> str:
+    token = header['Authorization']
+
+    # TODO: Is this always an OAuth Bearer Token (rfc6750)?
+    if not token.startswith('Bearer'):
+        app.logger.error(
+            f'Cannot get Bearer token from Authorization header. '
+            f'Cannot authorize request from {origin_id}')
+        app.logger.debug(f'Authorization header w/o Bearer: {token}')
+        return ''
+
+    token = token.split('Bearer')[1].strip()
+
+    return token
 
 
 def is_authenticated(header: EnvironHeaders) -> bool:
@@ -54,11 +78,15 @@ def is_authenticated(header: EnvironHeaders) -> bool:
     # get validation cert from: JWT_VALIDATION_CERTS
     validation_certs = config.get_config_by_key('JWT_VALIDATION_CERTS')
 
-    token = header['Authorization']
+    token = get_jwt_from_header(header, origin_id)
 
     # something like:
     kid = get_kid_from_jwt(token)
-    pubcert = validation_certs[kid]
+    pubkey = validation_certs.get(kid, '')
+
+    if not pubkey:
+        app.logger.error(f'Cannot find pubkey in config.json to verify JWT signature for JWTs with kid "{kid}".')
+        return False
 
     # cert must be in PEM format, required by pyjwt[crypto] &
     # not the cert, only the public key.
@@ -66,21 +94,11 @@ def is_authenticated(header: EnvironHeaders) -> bool:
     # Extract public key from cert: openssl x509 -pubkey -noout -in cert.pem  > pubkey.pem
     # TODO: extract key from cert programmatically:
     #       https://pyjwt.readthedocs.io/en/latest/faq.html#how-can-i-extract-a-public-private-key-from-a-x509-certificate
-    cert = open(pubcert).read()
+    cert = open(pubkey).read()
 
     if not cert:
         app.logger.error(f'Cannot read public key at "{cert}". Make sure its format is PEM.')
         return False
-
-    # TODO: Is this always an OAuth Bearer Token (rfc6750)?
-    if not token.startswith('Bearer'):
-        app.logger.error(
-            f'Cannot get Bearer token from Authorization header. '
-            f'Cannot authorize request from {origin_id}')
-        app.logger.debug(f'Authorization header w/o Bearer: {token}')
-        return False
-
-    token = token.split('Bearer')[1].strip()
 
     app.logger.debug(f'Received JWT token: {token} from {origin_id}')
 
@@ -101,7 +119,7 @@ def is_authenticated(header: EnvironHeaders) -> bool:
         return False
     except jwt.ExpiredSignatureError as e:
         app.logger.error(
-            f'Cannot authorize request from {origin_id}, because token has expired: {e}')
+            f'Cannot authorize request from {origin_id}, because the JWT has expired: {e}')
         return False
 
     # Example JWT token payload:

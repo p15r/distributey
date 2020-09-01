@@ -7,7 +7,7 @@
   ],
   "JWT_SUBJECT": "salesforce-cacheonlyservice",
   "JWT_VALIDATION_CERTS": {
-    "salesforce-serviceX-1234": "config/salesforce-serviceX-1234.crt"
+    "my-key-id": "config/myCert.pem"
   },
   "KEY": "salesforce",
   "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",

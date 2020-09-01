@@ -115,7 +115,7 @@ def is_authenticated(header: EnvironHeaders) -> bool:
             )
     except jwt.InvalidSignatureError as e:
         app.logger.error(
-            f'Unauthorized login attempt from {origin_id} using invalid certificate: {e}')
+            f'Unauthorized login attempt from {origin_id} using invalid public key: {e}')
         return False
     except jwt.ExpiredSignatureError as e:
         app.logger.error(

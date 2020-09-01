@@ -15,4 +15,4 @@ payload = {
 
 token = jwt.encode(payload, private_key, algorithm='RS256').decode('utf-8')
 
-print(f'Bearer {token}\nThis token expires in {expiration_time/60} minutes.')
+print(f'Bearer {token}')

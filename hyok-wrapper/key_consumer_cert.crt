@@ -1,11 +1,3 @@
-# corresponds to 'subj' group_claim
-services = ["salesforce-cacheonlyservice"]
-# policy name matches service name with suffix -transit
-policies = ["hyok-pki", "salesforce-cacheonlyservice-transit"]
-
-auth_jwt_default_role                 = "hyok"
-auth_jwt_default_role_bound_audiences = ["urn:hyok-wrapper"]
-auth_jwt_validation_pubkeys = [<<EOT
 -----BEGIN CERTIFICATE-----
 MIIGWDCCBECgAwIBAgIOAXPHnUsjAAAAAGszk/swDQYJKoZIhvcNAQELBQAwdjEO
 MAwGA1UEAwwFVmF1bHQxGDAWBgNVBAsMDzAwRDJYMDAwMDAzSGhuYTEXMBUGA1UE
@@ -42,28 +34,3 @@ XV26D5qwSQ+w0JRpY6SiNsOv0YlEOXTtD3ahl7aCYTz2Pq5UIbCbnRSvwXIExMte
 /8LIb5wdMbfJi+JqMJeOXGy6QCAfOm95mewq4YQwt03jvDGJUPQrs17v4bJBK7Ih
 HXTos7UMNK3ogGLnf7uAtgmEXRm4AiLXROHVUQrkjlIs8egM9zQlPPhtlKU=
 -----END CERTIFICATE-----
-EOT
-  ,
-  <<EOT
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2bllPc23FAiNqU4vbq3H
-ebkzHbgUbzVWzhkctEj5G+2N0Q/Ahrb3u70qSViKQwDfng9pJKUiI5DXhMo9XLe2
-EtlN/Tetp9vVVrcLQ7FezJGCJ/vY88q7Bp0BuPnW6rfFTea9LV4HN9830US5smFe
-+AGDtmwJx0b+n9UBTnQFyj3jYzCvuWWDrRJdmACkvlEfbf4ruVAa94PquGo+thqG
-YS+Guft21ILR68UjDFCjc8jR0ZcYRZDNBxDP11NcQr3ssEBwBCbI9BbJdegprsRh
-oRApPEZsGjxndd/O1TbFzuFWtfC5z4wqNtVYSSdJ47vK0C8wxCnjUKpXFgXjlYkb
-RQIDAQAB
------END PUBLIC KEY-----
-EOT
-]
-
-pki_path                      = "HYOK-Wrapper"
-pki_root_cert_ttl             = 315360000 # 10 years
-pki_max_lease_ttl_seconds     = 220752000 # 7 years
-pki_default_lease_ttl_seconds = 157680000 # 5 years
-pki_root_cn                   = "Root CA"
-pki_role_allowed_domains      = ["hyok.vt.ch"]
-pki_role_allow_subdomains     = true
-approle_role_name             = "hyok"
-transit_key_name              = "salesforce"
-transit_exportable            = true

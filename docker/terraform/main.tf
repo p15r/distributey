@@ -38,7 +38,7 @@ resource "vault_jwt_auth_backend_role" "role" {
   role_name       = var.auth_jwt_default_role
   bound_audiences = var.auth_jwt_default_role_bound_audiences
   user_claim      = "iss"
-  groups_claim    = "subj"
+  groups_claim    = "sub"
   role_type       = "jwt"
 }
 

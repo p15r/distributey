@@ -7,7 +7,6 @@ private_key = open('mtls/myCert-nopwd.key').read()
 
 payload = {
     'sub': 'salesforce-cacheonlyservice',
-    'subj': 'salesforce-cacheonlyservice',
     'iss': 'salesforce',
     'aud': 'urn:hyok-wrapper',
     'iat': datetime.datetime.utcnow(),

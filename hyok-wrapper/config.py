@@ -1,10 +1,12 @@
 # Loads json config
 
+from typing import Union
+
 import json
 import logging
 
 
-def get_config_by_key(key: str) -> dict:
+def get_config_by_key(key: str) -> Union[str, list, dict]:
     logger = logging.getLogger(__name__)
 
     try:

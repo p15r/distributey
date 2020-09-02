@@ -1,12 +1,13 @@
 # Loads json config
 
-from typing import Union
-
 import json
 import logging
+from typing import Any
 
 
-def get_config_by_key(key: str) -> Union[str, list, dict]:
+def get_config_by_key(key: str) -> Any:
+    # Todo:
+    #  - more precise typing for key: Union[str, list, dict, int]
     logger = logging.getLogger(__name__)
 
     try:

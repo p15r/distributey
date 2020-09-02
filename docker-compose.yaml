@@ -84,5 +84,5 @@ volumes:
   # Terraform on Docker is the Trusted Orchestrator:
   # https://learn.hashicorp.com/tutorials/vault/secure-introduction
   approle:
-  # Shared cert mount between vault-agent and reverse proxy 
+  # Shared cert mount between vault-agent and reverse proxy
   certs:

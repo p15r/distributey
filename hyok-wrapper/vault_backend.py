@@ -5,6 +5,7 @@ import hvac
 import config
 import logging
 
+
 def get_dynamic_secret(key: str, jwt_token: str) -> bytes:
     logger = logging.getLogger(__name__)
 
@@ -12,8 +13,8 @@ def get_dynamic_secret(key: str, jwt_token: str) -> bytes:
     client = hvac.Client(url=vault_url)
 
     response = client.auth.jwt.jwt_login(
-        role = config.get_config_by_key('VAULT_JWT_DEFAULT_ROLE'),
-        jwt = jwt_token
+        role=config.get_config_by_key('VAULT_JWT_DEFAULT_ROLE'),
+        jwt=jwt_token
     )
 
     logger.debug(f'Vault login response: {response}')

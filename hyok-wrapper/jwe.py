@@ -19,7 +19,7 @@ def get_wrapped_key_as_jwe(jwt_token: str, kid: str = '', nonce: str = '') -> st
 
     key = config.get_config_by_key('KEY')
 
-    logger.debug(f'Fetching AES key for : {key}')
+    logger.debug(f'Fetching AES key for: {key}')
 
     # Generate a 256-bit AES data encryption key. You can use the cryptographically secure method of your choice.
     # dek = get_random_bytes(32)  # 32 bytes * 8 = 256 bit -> AES256

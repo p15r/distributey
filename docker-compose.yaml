@@ -13,7 +13,7 @@ services:
         protocol: tcp
     volumes:
       - ./docker/nginx.conf:/etc/nginx/conf.d/hyok-wrapper.conf:ro
-      - certs:/etc/nginx/certs
+      - ./docker/certs:/etc/nginx/certs
     depends_on:
       - hyok-wrapper
       - vault-agent
@@ -68,14 +68,15 @@ services:
     image: vault:1.5.0
     container_name: vault-agent
     hostname: vault-agent
-    build: vault-agent
+    build:
+      context: docker/vault-agent/
+      dockerfile: Dockerfile
     cap_add:
       - IPC_LOCK
     command: ["agent", "-config", "/vault/config/vault-agent.hcl"]
     volumes:
       - ./vault-agent/config:/vault/config
       - approle:/approle
-      - certs:/vault/certs
     depends_on:
     - terraform
 
@@ -85,5 +86,3 @@ volumes:
   # Terraform on Docker is the Trusted Orchestrator:
   # https://learn.hashicorp.com/tutorials/vault/secure-introduction
   approle:
-  # Shared cert mount between vault-agent and reverse proxy
-  certs:

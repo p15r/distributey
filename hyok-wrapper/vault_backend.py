@@ -6,7 +6,7 @@ import config
 import logging
 
 
-def get_dynamic_secret(key: str, jwt_token: str) -> bytes:
+def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
     logger = logging.getLogger(__name__)
 
     vault_url = config.get_config_by_key('VAULT_URL')
@@ -37,19 +37,20 @@ def get_dynamic_secret(key: str, jwt_token: str) -> bytes:
         logger.error(e)
         return b''
 
-    try:
-        latest_version = response['data']['latest_version']
-    except KeyError as e:
-        logger.error(f'Cannot get latest version of key "{key}":')
-        logger.error(e)
-        return b''
+    if key_version == 'latest':
+        try:
+            key_version = response['data']['latest_version']
+        except KeyError as e:
+            logger.error(f'Cannot get latest version of key "{key}":')
+            logger.error(e)
+            return b''
 
     # fetch key
     response = client.secrets.transit.export_key(
-        name=key, key_type='encryption-key', version=latest_version)
+        name=key, key_type='encryption-key', version=key_version)
 
     try:
-        b64_key = response['data']['keys'][str(latest_version)]
+        b64_key = response['data']['keys'][str(key_version)]
     except KeyError as e:
         logger.error(f'Cannot get key "{key}":')
         logger.error(e)

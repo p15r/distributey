@@ -3,7 +3,6 @@ from Cryptodome.Random import get_random_bytes
 from Cryptodome.Cipher import PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Cipher import AES
-import uuid
 import base64
 import json
 import logging
@@ -14,16 +13,24 @@ import config
 
 # This script implements: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
 
-def get_wrapped_key_as_jwe(jwt_token: str, kid: str = '', nonce: str = '') -> str:
+def get_wrapped_key_as_jwe(jwt_token: str, jwe_kid: str, nonce: str = '') -> str:
     logger = logging.getLogger(__name__)
 
-    key = config.get_config_by_key('KEY')
+    vault_path = config.get_jwe_kid_to_vault_path_mapping(jwe_kid)
 
-    logger.debug(f'Fetching AES key for: {key}')
+    if not vault_path:
+        # jwe kid not found in config,
+        # assume kid and vault path are the same
+        # and fetch latest version of secret
+        vault_path = jwe_kid + ':latest'
+
+    logger.debug(f'Fetching AES key for: {vault_path}')
+
+    vault_key, key_version = vault_path.split(':')
 
     # Generate a 256-bit AES data encryption key. You can use the cryptographically secure method of your choice.
     # dek = get_random_bytes(32)  # 32 bytes * 8 = 256 bit -> AES256
-    dek = vault_backend.get_dynamic_secret(key, jwt_token)
+    dek = vault_backend.get_dynamic_secret(vault_key, key_version, jwt_token)
 
     if not dek:
         logger.error('Cannot retrieve dek.')
@@ -52,13 +59,9 @@ def get_wrapped_key_as_jwe(jwt_token: str, kid: str = '', nonce: str = '') -> st
 
     key_consumer_cert = RSA.importKey(cert)
 
-    # Use KID provided by key consumer. If none was given, generate it.
-    if not kid:
-        kid = str(uuid.uuid4())
-
     # Create the JWE protected header.
     # Encode the JWE protected header as BASE64URL(UTF8(JWE Protected Header)).
-    protected_header = {'alg': 'RSA-OAEP', 'enc': 'A256GCM', 'kid': kid}
+    protected_header = {'alg': 'RSA-OAEP', 'enc': 'A256GCM', 'kid': jwe_kid}
 
     if nonce:
         protected_header['jti'] = nonce
@@ -117,7 +120,7 @@ def get_wrapped_key_as_jwe(jwt_token: str, kid: str = '', nonce: str = '') -> st
     jwe = b64_protected_header + b'.' + b64_cek_ciphertext + b'.' + b64_iv + b'.' + b64_encrypted_dek + b'.' + b64_tag
 
     jwe_token = {
-        'kid': kid,
+        'kid': jwe_kid,
         'jwe': jwe.decode()
     }
 

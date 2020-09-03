@@ -167,8 +167,8 @@ def get_jwe_token(kid: str = ''):
 
     json_jwe_token = jwe.get_wrapped_key_as_jwe(
         token,
-        kid=str(escape(kid)),
-        nonce=str(escape(request.args.get('requestId', ''))))
+        str(escape(kid)),
+        str(escape(request.args.get('requestId', ''))))
 
     if not json_jwe_token:
         return 'Oops, internal error.', 500

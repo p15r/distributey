@@ -1,4 +1,7 @@
 {
+  "JWE_KID_TO_VAULT_PATH_MAP": {
+    "kid-salesforce": "salesforce:latest"
+  },
   "JWT_ALGORITHMS": [
     "RS256"
   ],
@@ -9,7 +12,6 @@
   "JWT_VALIDATION_CERTS": {
     "my-key-id": "config/myCert.pem"
   },
-  "KEY": "salesforce",
   "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",
   "LOG_LEVEL": "info",
   "VAULT_JWT_DEFAULT_ROLE": "hyok",

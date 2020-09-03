@@ -32,16 +32,3 @@ auto_auth {
     }
   }
 }
-
-template {
-  source      = "/vault/config/templates/serverissue.tpl"
-  destination = "/vault/certs/serverissue.json"
-}
-template {
-  source      = "/vault/config/templates/serverkey.tpl"
-  destination = "/vault/certs/nginx.key"
-}
-template {
-  source      = "/vault/config/templates/servercrt.tpl"
-  destination = "/vault/certs/nginx.crt"
-}

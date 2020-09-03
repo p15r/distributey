@@ -5,3 +5,5 @@ docker/certs/nginx.crt
 docker/certs/nginx.key
 mtls
 docker/terraform/.terraform/
+docker/terraform/terraform-plugins/
+docker/terraform/terraform.tfstate

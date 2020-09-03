@@ -70,6 +70,10 @@ def authenticate(header: EnvironHeaders) -> str:
     - have a valid signature,
     - contain 'sub': 'salesforce-cacheonlyservice',
     - not have been expired yet
+
+    JWT signature verification might not be required, because this is done by Vault as well.
+    However, it might be useful to implement a vault token<->jwt cache,
+    which requires to authenticate in HYOK Wrapper too.
     """
     x_real_ip = request.headers['X-Real-Ip']
     user_agent = request.user_agent
@@ -135,7 +139,7 @@ def authenticate(header: EnvironHeaders) -> str:
 
     if payload['sub'] == config.get_config_by_key('JWT_SUBJECT'):
         app.logger.info(
-            f'Successfully authenticated token from {origin_id}.')
+            f'Successfully authenticated JWT from {origin_id}.')
         return token
     else:
         app.logger.error(f'Cannot authorize token from {origin_id}. Wrong subject "{payload["sub"]}".')

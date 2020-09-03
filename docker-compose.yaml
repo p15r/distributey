@@ -51,7 +51,8 @@ services:
     container_name: terraform
     hostname: terraform
     # remove state from old Vault dev mode, init, re-apply and leave running for debugging purposes
-    entrypoint: "/bin/sh -c 'rm -rf .terraform && rm -rf terraform.tfstate* && terraform init && terraform apply -auto-approve && sleep 3600'"
+    # sleep() gives `01-start.sh` time to install Terraform providers
+    entrypoint: "/bin/sh -c 'rm -rf .terraform && rm -rf terraform.tfstate* && echo Waiting for Terraform provisioners to be installed... && sleep 10 && terraform init && terraform apply -auto-approve && sleep 3600'"
     working_dir: "/terraform"
     environment:
       # - TF_LOG=debug

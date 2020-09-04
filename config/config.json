@@ -1,4 +1,5 @@
 {
+  "DEV_MODE": false,
   "JWE_KID_TO_VAULT_PATH_MAP": {
     "kid-salesforce": "salesforce:latest"
   },

@@ -27,8 +27,9 @@ curl --progress-bar -L -o terraform-provider-null_2.1.2_linux_amd64.zip $tr_prov
 echo 'Installing Terraform providers...'
 unzip -q -o terraform-provider-vault_2.13.0_linux_amd64.zip -d terraform_tmp
 unzip -q -o terraform-provider-null_2.1.2_linux_amd64.zip -d terraform_tmp
-docker exec -u 1000:1000 terraform mkdir -p /terraform/.terraform/plugins/registry.terraform.io/hashicorp/vault/2.13.0/linux_amd64/
-docker exec -u 1000:1000 terraform mkdir -p /terraform/.terraform/plugins/registry.terraform.io/hashicorp/null/2.1.2/linux_amd64/
+# $(id -u)/$(id -g) because this path is mounted from a local directory into the container (terraform runs w/ root anyway)
+docker exec -u $(id -u):$(id -g) terraform mkdir -p /terraform/.terraform/plugins/registry.terraform.io/hashicorp/vault/2.13.0/linux_amd64/
+docker exec -u $(id -u):$(id -g) terraform mkdir -p /terraform/.terraform/plugins/registry.terraform.io/hashicorp/null/2.1.2/linux_amd64/
 docker cp terraform_tmp/terraform-provider-vault_v2.13.0_x4 terraform:/terraform/.terraform/plugins/registry.terraform.io/hashicorp/vault/2.13.0/linux_amd64/terraform-provider-vault_v2.13.0_x4
 docker cp terraform_tmp/terraform-provider-null_v2.1.2_x4 terraform:/terraform/.terraform/plugins/registry.terraform.io/hashicorp/null/2.1.2/linux_amd64/terraform-provider-null_v2.1.2_x4
 echo 'Terraform providers installed.'

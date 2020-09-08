@@ -148,7 +148,7 @@ def authenticate(header: EnvironHeaders) -> str:
     return ''
 
 
-@app.route(path_prefix + '/<string:kid>', methods=['GET'])
+@app.route(path_prefix + 'sfhyok/<string:kid>', methods=['GET'])
 def get_jwe_token(kid: str = ''):
     """
     kid: kid provided by Salesforce. Mandatory.

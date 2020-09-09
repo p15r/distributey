@@ -30,7 +30,7 @@ services:
       - vault
 
   vault:
-    image: vault:1.5.0
+    image: vault:1.5.3
     container_name: vault
     hostname: vault
     restart: always
@@ -65,7 +65,7 @@ services:
       - vault
 
   vault-agent:
-    image: vault:1.5.0
+    image: vault:1.5.3
     container_name: vault-agent
     hostname: vault-agent
     build:

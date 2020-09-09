@@ -1,6 +1,7 @@
 from markupsafe import escape
 from flask import request
 from flask import Flask
+from flask import Response
 import json
 import logging
 import sys
@@ -145,6 +146,8 @@ def authenticate(header: EnvironHeaders) -> str:
         app.logger.error(f'Cannot authorize token from {origin_id}. Wrong subject "{payload["sub"]}".')
         return ''
 
+    # TODO: check for issuer? (iss) as well?
+
     return ''
 
 
@@ -177,7 +180,12 @@ def get_jwe_token(kid: str = ''):
     if not json_jwe_token:
         return 'Oops, internal error.', 500
 
-    app.logger.debug(f'JWE token sent: {json_jwe_token}')
-    app.logger.info(f'JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent in response.')
+    app.logger.info(f'Response JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent.')
+    app.logger.debug(f'Reponse JWE token sent: {json_jwe_token}')
 
-    return json_jwe_token
+    resp = Response(
+        response=json_jwe_token,
+        status=200,
+        mimetype='application/json')
+
+    return resp

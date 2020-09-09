@@ -16,7 +16,10 @@ Step-by-step
          2. Define the following values:
             - `Label`: a representative name for the key
             - `Unique Name`: this is the `KID` of the JWT token, thus must be unique
-            - Private key must not be exportable
+            - Configure according to [salesforce doc](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)
+              - Mark key as not exportable
+              - Use key size of 4096 bit
+              - Use platform encryption
          3. Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper.
       2. Import own key to Salesforce
          > ⚠️ This Option is not recommended, because the private key needs to be transmitted.

@@ -21,7 +21,9 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
 
     # todo: error handling if no vault_token
     vault_token = response['auth']['client_token']
-    logger.debug(f'Vault client token returned: {vault_token}')
+
+    if config.get_config_by_key('DEV_MODE'):
+        logger.debug(f'Vault client token returned: {vault_token}')
 
     client = hvac.Client(url=vault_url, token=vault_token)
 

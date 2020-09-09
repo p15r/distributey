@@ -186,6 +186,6 @@ def get_jwe_token(kid: str = ''):
     resp = Response(
         response=json_jwe_token,
         status=200,
-        mimetype='application/json')
+        content_type='application/json; charset=utf-8')
 
     return resp

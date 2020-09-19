@@ -2,46 +2,27 @@
 Currently, HYOK Wrapper only supports Salesforce as a key consumer.
 
 ## Specs
-- Salesforce HYOK format specification: [salesforce.com](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)
+- Salesforce HYOK format specification: [salesforce's cache-only service](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)
 
 ## Step-by-step
 1. Get a developer account: https://developer.salesforce.com/signup
 2. Configure `My Domain`: https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5
 3. Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up
 4. Create Tenant Secret: https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5
-6. Configure Salesforce to authenticate against HYOK Wrapper using a JWT-based token:
-   1. Create pub/priv key for JWT token signing. It is recommended to create a dedicated pub/priv key per for every Salesforce service. Two options exist:
-      1. Create key in Salesforce (**Recommended**)
-         1. Go to `Certificate and Key Management` and click on `Create self-signed certificate`
-         2. Define the following values:
+5. Configure Salesforce to authenticate against HYOK Wrapper using a JWT-based token:
+   - Create pub/priv keypair for JWT token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
+      - Create key in Salesforce (**Recommended**)
+         - Go to `Certificate and Key Management` and click on `Create self-signed certificate`
+         - Define the following values:
             - `Label`: a representative name for the key
             - `Unique Name`: this is the `KID` of the JWT token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
             - Configure certificate properties according to [salesforce doc](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)
-              - Mark key as not exportable
-              - Use key size of 4096 bit
-              - Use platform encryption
-         3. Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper (`config/auth/`).
-      2. Import own key to Salesforce
-         > ⚠️ This Option is not recommended, because the private key needs to be transmitted.
-         1. [create](certificate_authority.md) CA
-         2. Create keystore with cert & key: https://docs.oracle.com/en/database/other-databases/nosql-database/12.2.4.5/security/import-key-pair-java-keystore.html
-            1. Step-by-step:
-               ```bash
-               cat mtls/myCert.crt mtls/myCA.crt > import.pem
-               openssl pkcs12 -export -in import.pem -inkey mtls/myCert.key -name jwtcert > jwt.p12
-               keytool -importkeystore -srckeystore jwt.p12 -destkeystore salesforce.jks -srcstoretype pkcs12 -alias jwtcert
-               ```
-            2. Only works with Java 8! Not 11 [openjdk-8-jre-headless]. If you upload a jks created with Java 11, you will get "Error: Keystore file is corrupted."
-            3. Password for jks must be between 6-8 letters.
-         3. Upload to Salesforce:
-            1.  Go to `Certificate and Key Management` and click on `Import from Keystore`
-            2.  Select `JKS File` (`salesforce.jks`) and enter the `Keystore Password`
-            3.  Click `Save`
-            - If you get the error "Data Not Available The data you were trying to access could not be found. It may be due to another user deleting the data or a system error.", then apply the following workaround (https://developer.salesforce.com/forums/?id=9060G0000005bFJQAY):
-               1. Create a self-signed cert in keys and cert management.
-               2. Enable Identity Provider and assigning the self-signed cert to it.
-               3. Then you would be able to import certificates/JKS.
-   2. To go `Named Credential` on Salesforce and create `New Named Credential`
+              - Mark key as `not exportable`
+              - Use key size of `4096 bit`
+              - Use `platform encryption`
+         - Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper (`config/auth/`).
+      - Import own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
+   - To go `Named Credential` on Salesforce and create `New Named Credential`
 
       | Config name  | Value |
       | ------------- | ------------- |
@@ -57,7 +38,7 @@ Currently, HYOK Wrapper only supports Salesforce as a key consumer.
       | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
       | `Generate Authorization Header` | Check box to activate. |
 
-   3. Configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
+   - Configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
 
 ## Example Request from Key Consumer
 HTTP request header with JWT token from Salesforce:

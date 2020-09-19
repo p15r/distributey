@@ -13,15 +13,15 @@ Currently supported integrations:
 
 
 ### For developers
-1. Verify Vault deployment [[docs](docs/vault.md)]
-2. How to create a CA [[docs](docs/certificate_authority.md)]
-3. Sync code into container: `./dev/cp_src_docker.sh`. (`gunicorn` detects changes and reload them.)
+- Verify Vault deployment [[docs](docs/vault.md)]
+- How to create a CA [[docs](docs/certificate_authority.md)]
+- Sync source code into container `hyok-wrapper`: `./dev/sync_sc.sh`.
 
 ## Architecture
 - Read more [here](docs/architecture.md)
 
 ## Further reading
 - Salesforce key wrapper example: https://github.com/forcedotcom/CacheOnlyKeyWrapper
-- JWE libs (not used in `HYOK Wrapper`)
+- JWE libs (not used in `HYOK Wrapper`, but good references)
   - `pyjwkest`: https://github.com/rohe/pyjwkest (no longer maintained)
   - `Authlib`: https://docs.authlib.org/en/stable/jose/jwe.html

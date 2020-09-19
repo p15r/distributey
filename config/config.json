@@ -8,12 +8,12 @@
         "jwt_audience": "urn:hyok-wrapper",
         "jwt_subject": "tenant-subject",
         "jwt_validation_certs": {
-          "jwt-kid": "config/tenant-jwt-kid.pubkey"
+          "jwt-kid": "config/auth/tenant-jwt-kid.pubkey"
         }
       },
       "backend": {
         "jwe-kid": {
-          "key_consumer_cert": "config/tenant_servicename_key_consumer.crt",
+          "key_consumer_cert": "config/backend/tenant_servicename_key_consumer.crt",
           "vault_path": "vault-path:latest"
         }
       }

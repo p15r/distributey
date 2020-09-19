@@ -20,4 +20,5 @@ set -euf -o pipefail
 # openssl req -x509 -nodes -days 999 -newkey rsa:2048 -keyout docker/certs/nginx.key -out docker/certs/nginx.crt -subj "/C=SC/ST=SomeRegion/L=Some Valey/O=SomeOrg/OU=SomeOrgUnit/CN=somecommonname"
 chmod o+r docker/certs/nginx.key docker/certs/nginx.crt
 
+echo "⛏️ Building container images..."
 docker-compose build #--no-cache

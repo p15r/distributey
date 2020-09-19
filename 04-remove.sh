@@ -9,6 +9,7 @@
 
 set -euf -o pipefail
 
+echo "🛑 Removing containers..."
 cd docker
 docker-compose down
 cd ..

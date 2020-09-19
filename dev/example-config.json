@@ -2,17 +2,17 @@
   "DEV_MODE": false,
   "LOG_LEVEL": "info",
   "TENANT_CFG": {
-    "sfhyok": {
+    "salesforce": {
       "auth": {
         "jwt_algorithm": "RS256",
         "jwt_audience": "urn:hyok-wrapper",
         "jwt_subject": "salesforce-cacheonlyservice",
         "jwt_validation_certs": {
-          "my-key-id": "config/auth/jwt-sfhyok.pubkey"
+          "jwt_kid_salesforce_serviceX": "config/auth/jwt_salesforce_serviceX.pub"
         }
       },
       "backend": {
-        "kid-salesforce": {
+        "jwe-kid-salesforce-serviceX": {
           "key_consumer_cert": "config/backend/sfhyok_allservices_key_consumer.crt",
           "vault_path": "salesforce:latest"
         }

@@ -13,10 +13,12 @@ import config
 
 # This script implements: https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5
 
-def get_wrapped_key_as_jwe(jwt_token: str, jwe_kid: str, nonce: str = '') -> str:
+def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str = '') -> str:
     logger = logging.getLogger(__name__)
 
-    vault_path = config.get_jwe_kid_to_vault_path_mapping(jwe_kid)
+    logger.info(f'Creating JWE for tenant "{tenant}" with kid "{jwe_kid}".')
+
+    vault_path = config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)
 
     if not vault_path:
         # jwe kid not found in config,
@@ -50,7 +52,11 @@ def get_wrapped_key_as_jwe(jwt_token: str, jwe_kid: str, nonce: str = '') -> str
 
     # Generate and download your BYOK-compatible certificate.
     # key_consumer_cert: public certificate from key consumer (e.g. Salesforce)
-    key_consumer_cert_path = config.get_config_by_key('KEY_CONSUMER_CERT')
+    key_consumer_cert_path = config.get_key_consumer_cert_by_tenant_and_kid(tenant, jwe_kid)
+
+    if not key_consumer_cert_path:
+        logger.error(f'Cannot find key consumer cert for "{tenant}/{jwe_kid}". Configure it in config.json.')
+        return ''
 
     with open(key_consumer_cert_path) as f:
         cert = f.read()

@@ -8,6 +8,7 @@
 5. 🛠️ Build docker images: `./00-build.sh`
 6. 🚀 Run service: `./01-start.sh`
 7. ✏️ Configure service: `HYOK-Wrapper/config/config.json`
+   - Check example config: `HYOK-Wrapper/dev/example-config.json`
 8. 🔄 (Re-) load config: `./02-load-config.sh`
 
 To stop or uninstall HYOK Wrapper:

@@ -65,7 +65,7 @@ def get_jwt_from_header(header: EnvironHeaders, origin_id: str) -> str:
     return token
 
 
-def authenticate(header: EnvironHeaders) -> str:
+def authenticate(tenant: str, header: EnvironHeaders) -> str:
     """
     Toke must..
     - have a valid signature,
@@ -81,16 +81,13 @@ def authenticate(header: EnvironHeaders) -> str:
     origin_id = f'"{x_real_ip}" ({user_agent})'
 
     # get validation cert from: JWT_VALIDATION_CERTS
-    validation_certs = config.get_config_by_key('JWT_VALIDATION_CERTS')
-
     token = get_jwt_from_header(header, origin_id)
+    jwt_kid = get_kid_from_jwt(token)
+    validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
 
-    # something like:
-    kid = get_kid_from_jwt(token)
-    pubkey = validation_certs.get(kid, '')
-
-    if not pubkey:
-        app.logger.error(f'Cannot find pubkey in config.json to verify JWT signature for JWTs with kid "{kid}".')
+    if not validation_cert:
+        app.logger.error(
+            f'Cannot find validation cert in config.json to verify JWT signature for JWTs with kid "{jwt_kid}".')
         return ''
 
     # cert must be in PEM format, required by pyjwt[crypto] &
@@ -99,7 +96,7 @@ def authenticate(header: EnvironHeaders) -> str:
     # Extract public key from cert: openssl x509 -pubkey -noout -in cert.pem  > pubkey.pem
     # TODO: extract key from cert programmatically:
     #       https://pyjwt.readthedocs.io/en/latest/faq.html#how-can-i-extract-a-public-private-key-from-a-x509-certificate
-    cert = open(pubkey).read()
+    cert = open(validation_cert).read()
 
     if not cert:
         app.logger.error(f'Cannot read public key at "{cert}". Make sure its format is PEM.')
@@ -110,8 +107,8 @@ def authenticate(header: EnvironHeaders) -> str:
     try:
         payload = jwt.decode(
             token, cert,
-            audience=config.get_config_by_key('JWT_AUDIENCE'),
-            algorithms=config.get_config_by_key('JWT_ALGORITHMS'),
+            audience=config.get_jwt_audience_by_tenant(tenant),
+            algorithms=config.get_jwt_algorithm_by_tenant(tenant),
             options={
                 'require_exp': True,
                 'verify_signature': True,
@@ -138,7 +135,7 @@ def authenticate(header: EnvironHeaders) -> str:
     # }
     app.logger.debug(f'Payload of JWT token: {payload}')
 
-    if payload['sub'] == config.get_config_by_key('JWT_SUBJECT'):
+    if payload['sub'] == config.get_jwt_subject_by_tenant(tenant):
         app.logger.info(
             f'Successfully authenticated JWT from {origin_id}.')
         return token
@@ -151,14 +148,15 @@ def authenticate(header: EnvironHeaders) -> str:
     return ''
 
 
-@app.route(path_prefix + 'sfhyok/<string:kid>', methods=['GET'])
-def get_jwe_token(kid: str = ''):
+@app.route(path_prefix + '<string:tenant>/<string:kid>', methods=['GET'])
+def get_jwe_token(tenant: str = '', kid: str = ''):
     """
+    tenant: Tenant (key consumer) that makes a request. E.g. Salesforce. Mandatory.
     kid: kid provided by Salesforce. Mandatory.
     nonce: Nonce (?requestId=x) provided by Salesforce (prevent replay attacks). Optional.
     """
 
-    token = authenticate(request.headers)
+    token = authenticate(tenant, request.headers)
 
     if not token:
         return 'Unauthorized request.', 401
@@ -174,14 +172,15 @@ def get_jwe_token(kid: str = ''):
 
     json_jwe_token = jwe.get_wrapped_key_as_jwe(
         token,
+        str(escape(tenant)),
         str(escape(kid)),
         str(escape(request.args.get('requestId', ''))))
 
     if not json_jwe_token:
         return 'Oops, internal error.', 500
 
-    app.logger.info(f'Response JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent.')
-    app.logger.debug(f'Reponse JWE token sent: {json_jwe_token}')
+    app.logger.info(f'Response JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent to "{tenant}".')
+    app.logger.debug(f'Reponse JWE token sent to "{tenant}": {json_jwe_token}')
 
     resp = Response(
         response=json_jwe_token,

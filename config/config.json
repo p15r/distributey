@@ -1,20 +1,24 @@
 {
   "DEV_MODE": false,
-  "JWE_KID_TO_VAULT_PATH_MAP": {
-    "kid-salesforce": "salesforce:latest"
-  },
-  "JWT_ALGORITHMS": [
-    "RS256"
-  ],
-  "JWT_AUDIENCE": [
-    "urn:hyok-wrapper"
-  ],
-  "JWT_SUBJECT": "salesforce-cacheonlyservice",
-  "JWT_VALIDATION_CERTS": {
-    "my-key-id": "config/myCert.pem"
-  },
-  "KEY_CONSUMER_CERT": "config/key_consumer_cert.crt",
   "LOG_LEVEL": "info",
+  "TENANT_CFG": {
+    "tenant": {
+      "auth": {
+        "jwt_algorithm": "RS256",
+        "jwt_audience": "urn:hyok-wrapper",
+        "jwt_subject": "tenant-subject",
+        "jwt_validation_certs": {
+          "jwt-kid": "config/auth/tenant-jwt-kid.pubkey"
+        }
+      },
+      "backend": {
+        "jwe-kid": {
+          "key_consumer_cert": "config/backend/tenant_servicename_key_consumer.crt",
+          "vault_path": "vault-path:latest"
+        }
+      }
+    }
+  },
   "VAULT_JWT_DEFAULT_ROLE": "hyok",
   "VAULT_URL": "http://vault:8200"
 }

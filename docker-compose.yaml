@@ -26,8 +26,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    depends_on:
-      - vault
+    depends_on: # Remove for production.
+      - vault   # Remove for production.
+
+###################################
+# Comment until EOF for production.
+###################################
 
   vault:
     image: vault:1.5.3

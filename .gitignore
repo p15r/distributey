@@ -7,3 +7,5 @@ mtls
 docker/terraform/.terraform/
 docker/terraform/terraform-plugins/
 docker/terraform/terraform.tfstate
+config/auth/
+config/backend

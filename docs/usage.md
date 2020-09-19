@@ -32,4 +32,4 @@ eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNl
    b64_dek = "zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw="
    print(base64.b64decode(b64_dek).hex)
    ```
-4. Configure and run `dev/decrypt_dek.py` to decrypt `dek`.
+4. Configure and run `dev/decrypt_dek.py` to decrypt the `dek`.

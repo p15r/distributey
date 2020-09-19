@@ -5,40 +5,37 @@ Currently, HYOK Wrapper only supports Salesforce as a key consumer.
 - Salesforce HYOK format specification: [salesforce's cache-only service](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)
 
 ## Step-by-step
-1. Get a developer account: https://developer.salesforce.com/signup
-2. Configure `My Domain`: https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5
-3. Configure permission for Key Management: https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up
-4. Create Tenant Secret: https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5
-5. Configure Salesforce to authenticate against HYOK Wrapper using a JWT-based token:
-   - Create pub/priv keypair for JWT token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
-      - Create key in Salesforce (**Recommended**)
-         - Go to `Certificate and Key Management` and click on `Create self-signed certificate`
-         - Define the following values:
-            - `Label`: a representative name for the key
-            - `Unique Name`: this is the `KID` of the JWT token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
-            - Configure certificate properties according to [salesforce doc](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)
-              - Mark key as `not exportable`
-              - Use key size of `4096 bit`
-              - Use `platform encryption`
-         - Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper (`config/auth/`).
-      - Import own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
-   - To go `Named Credential` on Salesforce and create `New Named Credential`
-
-      | Config name  | Value |
-      | ------------- | ------------- |
-      | `Label` & `Name` | Choose appropriate name (e.g. `hyok-wrapper at example.com`). |
-      | `URL` | publicly reachable URL of HYOK wrapper. Expected scheme: `https://domainname/apiversion/tenant`. For example `https://hyok-wrapper.example.com/v1/salesforce/`. |
-      | `Certificate` | Leave this setting empty. |
-      | `Identity type` | Select `Named principal`. |
-      | `Authentication protocol` |Select `JWT`. |
-      | `Issuer` | Choose appropriate name (e.g. `salesforce`). |
-      | `Named Principal Subject` | This is the JWT subject, configure it accordingly. It must also be configured in `config/config.json`. |
-      | `Audiences` | Set `urn:hyok-wrapper`|
-      | `Token Valid for` | Set short time perion. E.g. `10 Seconds`. |
-      | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
-      | `Generate Authorization Header` | Check box to activate. |
-
-   - Configure HYOK (a.k.a Cache-only key connection): https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5
+1. Get a developer account: [[docs](https://developer.salesforce.com/signup)]
+2. Configure `My Domain`: [[docs](https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5)]
+3. Configure permission for Key Management: [[docs](https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up)]
+4. Create `Tenant Secret`: [[docs](https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5)]
+5. Configure Salesforce to authenticate against HYOK Wrapper using a JWT-based token. Create pub/priv keypair for JWT token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
+   - Create key in Salesforce (**Recommended**)
+     - Go to `Certificate and Key Management` and click on `Create self-signed certificate`
+     - Define the following values:
+       - `Label`: a representative name for the key
+       - `Unique Name`: this is the `KID` of the JWT token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
+       - Configure certificate properties according to [docs](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)
+         - Mark key as `not exportable`
+         - Use key size of `4096 bit`
+         - Use `platform encryption`
+     - Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper (`config/auth/`).
+   - Import own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
+6. To go `Named Credential` on Salesforce and create `New Named Credential` as following:
+   | Config name  | Value |
+   | ------------- | ------------- |
+   | `Label` & `Name` | Choose appropriate name (e.g. `hyok-wrapper at example.com`). |
+   | `URL` | publicly reachable URL of HYOK wrapper. Expected scheme: `https://domainname/apiversion/tenant`. For example `https://hyok-wrapper.example.com/v1/salesforce/`. |
+   | `Certificate` | Leave this setting empty. |
+   | `Identity type` | Select `Named principal`. |
+   | `Authentication protocol` |Select `JWT`. |
+   | `Issuer` | Choose appropriate name (e.g. `salesforce`). |
+   | `Named Principal Subject` | This is the JWT subject, configure it accordingly. It must also be configured in `config/config.json`. |
+   | `Audiences` | Set `urn:hyok-wrapper`|
+   | `Token Valid for` | Set short time perion. E.g. `10 Seconds`. |
+   | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
+   | `Generate Authorization Header` | Check box to activate. |
+7. Configure HYOK (a.k.a Cache-only key connection): [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)] **TODO**: be more precise.
 
 ## Example Request from Key Consumer
 HTTP request header with JWT token from Salesforce:
@@ -72,4 +69,4 @@ HTTP request header with JWT token from Salesforce:
    }
    ```
 ## Further reading
-- Troubleshoot: https://help.salesforce.com/articleView?id=security_pe_byok_cache_troubleshoot.htm&type=53
+- Troubleshoot: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_troubleshoot.htm&type=53)]

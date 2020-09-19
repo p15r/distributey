@@ -1,0 +1,24 @@
+{
+  "DEV_MODE": false,
+  "LOG_LEVEL": "info",
+  "TENANT_CFG": {
+    "sfhyok": {
+      "auth": {
+        "jwt_algorithm": "RS256",
+        "jwt_audience": "urn:hyok-wrapper",
+        "jwt_subject": "salesforce-cacheonlyservice",
+        "jwt_validation_certs": {
+          "my-key-id": "config/auth/jwt-sfhyok.pubkey"
+        }
+      },
+      "backend": {
+        "kid-salesforce": {
+          "key_consumer_cert": "config/backend/sfhyok_allservices_key_consumer.crt",
+          "vault_path": "salesforce:latest"
+        }
+      }
+    }
+  },
+  "VAULT_JWT_DEFAULT_ROLE": "hyok",
+  "VAULT_URL": "http://vault:8200"
+}

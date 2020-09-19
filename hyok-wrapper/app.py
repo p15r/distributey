@@ -85,6 +85,8 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
     jwt_kid = get_kid_from_jwt(token)
     validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
 
+    app.logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}".')
+
     if not validation_cert:
         app.logger.error(
             f'Cannot find validation cert in config.json to verify JWT signature for JWTs with kid "{jwt_kid}".')

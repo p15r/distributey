@@ -12,10 +12,6 @@ set -euf -o pipefail
 # Workaround: make nginx config accessible in container
 chmod o+r docker/nginx.conf
 
-cd docker
-docker-compose up -d
-cd ..
-
 echo 'Downloading Terraform providers...'
 # change URLs to custom provider mirrors if required
 tr_provider_url_vault="https://releases.hashicorp.com/terraform-provider-vault/2.13.0/terraform-provider-vault_2.13.0_linux_amd64.zip"
@@ -23,6 +19,10 @@ tr_provider_url_null="https://releases.hashicorp.com/terraform-provider-null/2.1
 
 curl --progress-bar -L -o terraform-provider-vault_2.13.0_linux_amd64.zip $tr_provider_url_vault
 curl --progress-bar -L -o terraform-provider-null_2.1.2_linux_amd64.zip $tr_provider_url_null
+
+cd docker
+docker-compose up -d
+cd ..
 
 echo 'Installing Terraform providers...'
 unzip -q -o terraform-provider-vault_2.13.0_linux_amd64.zip -d terraform_tmp

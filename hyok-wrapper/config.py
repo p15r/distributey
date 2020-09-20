@@ -1,4 +1,9 @@
-# Loads json config
+"""
+Loads JSON-based config.
+
+TODO:
+- rewrite using (json) query approach: https://github.com/mwilliamson/jq.py
+"""
 
 import json
 import logging

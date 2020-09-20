@@ -50,7 +50,14 @@ def get_kid_from_jwt(token: str) -> str:
 
 
 def get_jwt_from_header(header: EnvironHeaders, origin_id: str) -> str:
-    token = header['Authorization']
+    try:
+        token = header['Authorization']
+    except KeyError:
+        app.logger.error(
+            f'Request is missing "Authorization" header. '
+            f'Cannot authorize request from {origin_id}.')
+        app.logger.debug(f'Authorization header w/o Bearer: {header}')
+        return ''
 
     # TODO: Is this always an OAuth Bearer Token (rfc6750)?
     if not token.startswith('Bearer'):
@@ -80,9 +87,20 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
     user_agent = request.user_agent
     origin_id = f'"{x_real_ip}" ({user_agent})'
 
-    # get validation cert from: JWT_VALIDATION_CERTS
     token = get_jwt_from_header(header, origin_id)
+
+    if not token:
+        app.logger.error(f'Cannot get JWT from request ({origin_id}).')
+        app.logger.debug(f'Request header: {header}')
+        return ''
+
     jwt_kid = get_kid_from_jwt(token)
+
+    if not jwt_kid:
+        app.logger.error('Cannot get kid from JWT.')
+        app.logger.debug(f'JWT: {token}')
+        return ''
+
     validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
 
     app.logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}".')

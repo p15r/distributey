@@ -33,7 +33,7 @@ docker exec -u $(id -u):$(id -g) terraform mkdir -p /terraform/.terraform/plugin
 docker exec -u $(id -u):$(id -g) terraform mkdir -p /terraform/.terraform/plugins/registry.terraform.io/hashicorp/null/2.1.2/linux_amd64/
 docker cp terraform_tmp/terraform-provider-vault_v2.13.0_x4 terraform:/terraform/.terraform/plugins/registry.terraform.io/hashicorp/vault/2.13.0/linux_amd64/terraform-provider-vault_v2.13.0_x4
 docker cp terraform_tmp/terraform-provider-null_v2.1.2_x4 terraform:/terraform/.terraform/plugins/registry.terraform.io/hashicorp/null/2.1.2/linux_amd64/terraform-provider-null_v2.1.2_x4
-echo 'ℹ️ Terraform providers installed.'
+echo 'ℹ️  Terraform providers installed.'
 
 # Cleanup
 echo '🧹 Removing cached files..'
@@ -49,5 +49,5 @@ rm -r terraform_tmp
 # docker exec vault vault write transit/keys/salesforce exportable=true
 # Verify: `docker exec vault vault read transit/keys/salesforce`
 
-echo "ℹ️ Running containers:"
+echo "ℹ️  Container processes:"
 docker ps -a

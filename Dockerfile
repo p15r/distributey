@@ -12,7 +12,8 @@ RUN addgroup -g ${GID} -S ${GNAME} && adduser -u ${UID} -G ${GNAME} -S -H ${UNAM
 
 # install deps first to benefit from docker caching
 # pyjwt[crypto] requires: python3-dev libffi-dev openssl-dev
-RUN apk add python3 python3-dev libffi-dev openssl-dev py3-pip build-base
+# python3>=3.8: for walrus operator support
+RUN apk add python3>=3.8 python3-dev libffi-dev openssl-dev py3-pip build-base
 COPY requirements.txt /root/requirements.txt
 RUN python3 -m pip install -r /root/requirements.txt
 

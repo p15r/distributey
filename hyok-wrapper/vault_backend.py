@@ -48,6 +48,12 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
             return b''
 
     # fetch key
+    # HVAC, and requests respectively, store the exported secret in memory as
+    # (immutable) string and cannot be safely erased from memory:
+    # - https://github.com/hvac/hvac/blob/b9343973307eaba1bbe28ebf9e1911520ffcbf0a/
+    #       hvac/api/secrets_engines/transit.py#L274
+    # - https://github.com/hvac/hvac/blob/b9343973307eaba1bbe28ebf9e1911520ffcbf0a/hvac/adapters.py#L94
+    # - https://github.com/hvac/hvac/blob/b9343973307eaba1bbe28ebf9e1911520ffcbf0a/hvac/adapters.py#L287
     response = client.secrets.transit.export_key(
         name=key, key_type='encryption-key', version=key_version)
 

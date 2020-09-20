@@ -144,8 +144,7 @@ def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str
     logger.debug(f'Created jwe token: {json_jwe_token}')
 
     # cleanup
-    # Todo: also unset vars in vault_backend
-    dek = b''
-    cek = False
+    del dek
+    del cek
 
     return json_jwe_token

@@ -13,41 +13,48 @@ set -euf -o pipefail
 chmod o+r docker/nginx.conf
 
 echo '💾 Downloading Terraform providers...'
-# change URLs to custom provider mirrors if required
-tr_provider_url_vault="https://releases.hashicorp.com/terraform-provider-vault/2.13.0/terraform-provider-vault_2.13.0_linux_amd64.zip"
-tr_provider_url_null="https://releases.hashicorp.com/terraform-provider-null/2.1.2/terraform-provider-null_2.1.2_linux_amd64.zip"
 
-curl --progress-bar -L -o terraform-provider-vault_2.13.0_linux_amd64.zip $tr_provider_url_vault
-curl --progress-bar -L -o terraform-provider-null_2.1.2_linux_amd64.zip $tr_provider_url_null
+# Create terraform provider mirror zip archive:
+# - cd ./emptydir/
+# - cp HYOK-Wrapper/docker/terraform/main.tf .
+# - terraform providers mirror tf-cache
+# - zip -r tf-cache.zip tf-cache/
+# - upload tf-cache.zip to mirror server & set var tf_provider_url_mirror_zip below
 
-echo "🛫 Starting containers..."
+# if this URL is configured, terraform will not try to download providers from internet
+# tf_provider_url_mirror_zip="https://my-mirror.net/tf-cache.zip"
+
+if [ -z ${tf_provider_url_mirror_zip+x} ]; then
+    echo 'ℹ️  Attempting to download providers from internet...';
+    cd docker/terraform && terraform providers mirror tf-cache && cd ../../
+else
+    echo "ℹ️  Fetching terraform providers from '$tf_provider_url_mirror_zip'...";
+    terraform_zip='tf-cache.zip'
+    curl --progress-bar -L -o $terraform_zip $tf_provider_url_mirror_zip
+    unzip -q -o $terraform_zip
+
+    echo '🔧 Installing Terraform providers...'
+    mv tf-cache docker/terraform
+
+    rm $terraform_zip
+fi
+
+echo '🛫 Starting containers...'
 cd docker
 docker-compose up -d
 cd ..
 
-echo '🔧 Installing Terraform providers...'
-unzip -q -o terraform-provider-vault_2.13.0_linux_amd64.zip -d terraform_tmp
-unzip -q -o terraform-provider-null_2.1.2_linux_amd64.zip -d terraform_tmp
-# $(id -u)/$(id -g) because this path is mounted from a local directory into the container (terraform runs w/ root anyway)
-docker exec -u $(id -u):$(id -g) terraform mkdir -p /terraform/.terraform/plugins/registry.terraform.io/hashicorp/vault/2.13.0/linux_amd64/
-docker exec -u $(id -u):$(id -g) terraform mkdir -p /terraform/.terraform/plugins/registry.terraform.io/hashicorp/null/2.1.2/linux_amd64/
-docker cp terraform_tmp/terraform-provider-vault_v2.13.0_x4 terraform:/terraform/.terraform/plugins/registry.terraform.io/hashicorp/vault/2.13.0/linux_amd64/terraform-provider-vault_v2.13.0_x4
-docker cp terraform_tmp/terraform-provider-null_v2.1.2_x4 terraform:/terraform/.terraform/plugins/registry.terraform.io/hashicorp/null/2.1.2/linux_amd64/terraform-provider-null_v2.1.2_x4
-echo 'ℹ️  Terraform providers installed.'
-
 # Cleanup
-echo '🧹 Removing cached files..'
-rm terraform-provider-vault_2.13.0_linux_amd64.zip terraform-provider-null_2.1.2_linux_amd64.zip
-rm -r terraform_tmp
+echo '🧹 Removing locally cached files..'
+rm -r docker/terraform/tf-cache
 
 # Manually provision Vault like:
 # sleep 2 # give Vault time to start
-# echo 'Configuring Vault..'
 # Enable dynamic secrets:
 # docker exec vault vault secrets enable transit
 # Create Salesforce secret & mark it exportable:
 # docker exec vault vault write transit/keys/salesforce exportable=true
 # Verify: `docker exec vault vault read transit/keys/salesforce`
 
-echo "ℹ️  Container processes:"
+echo 'ℹ️  Container processes:'
 docker ps -a

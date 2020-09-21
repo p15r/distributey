@@ -56,12 +56,13 @@ services:
     hostname: terraform
     # remove state from old Vault dev mode, init, re-apply and leave running for debugging purposes
     # sleep() gives `01-start.sh` time to install Terraform providers
-    entrypoint: "/bin/sh -c 'rm -rf .terraform && rm -rf terraform.tfstate* && echo Waiting for Terraform provisioners to be installed... && sleep 10 && terraform init && terraform apply -auto-approve && sleep 3600'"
+    entrypoint: "/bin/sh -c 'rm -rf .terraform && rm -rf terraform.tfstate* && terraform init -plugin-dir /terraform/tf-cache && terraform apply -auto-approve && sleep 3600'"
     working_dir: "/terraform"
     environment:
       # - TF_LOG=debug
       - VAULT_ADDR=http://vault:8200          # tf config
       - VAULT_TOKEN=root                      # tf config
+      - CHECKPOINT_DISABLE=true               # prevent tf from checking for updates
     volumes:
       - ./docker/terraform:/terraform
       - approle:/approle          # write approle secret id to volume shared with vault-agent

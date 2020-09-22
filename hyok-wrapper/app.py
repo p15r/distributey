@@ -31,7 +31,7 @@ def get_kid_from_jwt(token: str) -> str:
     try:
         protected_header_unverified = jwt.get_unverified_header(token)
     except jwt.DecodeError as e:
-        logger.error(f'Cannot decode JWT to get kid: {e}')
+        logger.error(f'Cannot decode JWT in order to get kid: {e}')
         logger.debug(f'JWT: {token}')
         return ''
 
@@ -42,17 +42,13 @@ def get_jwt_from_header(header: EnvironHeaders) -> str:
     try:
         token = header['Authorization']
     except KeyError:
-        logger.error(
-            'Request is missing "Authorization" header. '
-            'Cannot authorize request.')
-        logger.debug(f'Authorization header w/o Bearer: {header}')
+        logger.error('Request is missing "Authorization" header. Cannot authorize request.')
+        logger.debug(f'Malformed header: {header}')
         return ''
 
     # TODO: Is this always an OAuth Bearer Token (rfc6750)?
     if not token.startswith('Bearer'):
-        logger.error(
-            'Cannot get Bearer token from Authorization header. '
-            'Cannot authorize request.')
+        logger.error('Cannot get Bearer token from Authorization header. Cannot authorize request.')
         logger.debug(f'Authorization header w/o Bearer: {token}')
         return ''
 
@@ -75,6 +71,7 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
 
     token = get_jwt_from_header(header)
 
+    # TODO: walrus operator
     if not token:
         logger.error('Cannot get JWT from request.')
         logger.debug(f'Request header: {header}')
@@ -82,20 +79,20 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
 
     jwt_kid = get_kid_from_jwt(token)
 
+    # TODO: walrus operator
     if not jwt_kid:
         logger.error('Cannot get kid from JWT.')
         logger.debug(f'JWT: {token}')
         return ''
 
-    validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
+    logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
 
-    logger.info(
-        f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
+    validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
 
     if not validation_cert:
         logger.error(
-            f'Cannot find validation certificate in config.json '
-            f'to verify JWT signature for JWTs with kid "{jwt_kid}".')
+            f'No validation certificate exists in config.json '
+            f'to verify signature for JWTs with kid "{jwt_kid}".')
         return ''
 
     # cert must be in PEM format, required by pyjwt[crypto] &
@@ -111,7 +108,7 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
             f'Cannot read public key at "{cert}". Make sure its format is PEM.')
         return ''
 
-    logger.debug(f'Received JWT token: {token}')
+    logger.debug(f'Received JWT: {token}')
 
     try:
         payload = jwt.decode(
@@ -135,15 +132,14 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
 
     # Example JWT token payload:
     # {
-    #     "iss": "myCA",
+    #     "iss": "salesforce",
     #     "sub": "salesforce-cacheonlyservice",
     #     "aud": "urn:hyok-wrapper",
     #     "nbf": 1598271437,
     #     "iat": 1598271437,
     #     "exp": 1598271737
     # }
-    logger.debug(
-        f'Payload of JWT token with kid "{jwt_kid}": {payload}')
+    logger.debug(f'Payload of JWT with kid "{jwt_kid}": {payload}')
 
     if payload['sub'] == config.get_jwt_subject_by_tenant(tenant):
         logger.info(
@@ -151,7 +147,7 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
         return token
     else:
         logger.error(
-            f'Cannot authorize token. Wrong subject "{payload["sub"]}".')
+            f'Cannot authorize JWT. Wrong subject "{payload["sub"]}".')
         return ''
 
     # TODO: check for issuer? (iss) as well?
@@ -175,10 +171,7 @@ def get_jwe_token(tenant: str = '', jwe_kid: str = ''):
     for key in request.args:
         request_args.append(f'{key}: {request.args.get(key)}')
 
-    logger.info(
-        f'Processing request with'
-        f' path: "{request.path}" and'
-        f' args: "{request_args}"')
+    logger.info(f'Processing request (path: "{request.path}", args: "{request_args}"...')
 
     json_jwe_token = jwe.get_wrapped_key_as_jwe(
         token,
@@ -190,9 +183,9 @@ def get_jwe_token(tenant: str = '', jwe_kid: str = ''):
         return 'Oops, internal error.', 500
 
     logger.info(
-        f'Response JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent to tenant "{tenant}".',)
+        f'Response JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent.',)
     logger.debug(
-        f'Reponse JWE token sent to tenant "{tenant}": {json_jwe_token}',)
+        f'Reponse JWE token sent: {json_jwe_token}',)
 
     resp = Response(
         response=json_jwe_token,

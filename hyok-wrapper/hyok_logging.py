@@ -14,7 +14,7 @@ else:
 class __RequestFormatter(logging.Formatter):
     def format(self, record):
         if has_request_context():
-            record.tenant = request.path.split('/')[2]                    # ugly
+            record.tenant = request.path.split('/')[2]                    # TODO: ugly
             record.x_real_ip = request.headers['X-Real-Ip']
             record.user_agent = request.user_agent
         else:

@@ -14,10 +14,11 @@ from hyok_logging import logger
 
 
 def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str = '') -> str:
-    logger.info(f'Creating JWE for tenant "{tenant}" with kid "{jwe_kid}"...')
+    logger.info(f'Creating JWE token for request with kid "{jwe_kid}"...')
 
     vault_path = config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)
 
+    # TODO: walrus operator
     if not vault_path:
         # jwe kid not found in config,
         # assume kid and vault path are the same
@@ -32,6 +33,7 @@ def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str
     # dek = get_random_bytes(32)  # 32 bytes * 8 = 256 bit -> AES256
     dek = vault_backend.get_dynamic_secret(vault_key, key_version, jwt_token)
 
+    # TODO: walrus operator
     if not dek:
         logger.error('Cannot retrieve dek.')
         return ''
@@ -46,7 +48,7 @@ def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str
     cek = get_random_bytes(32)
 
     if config.get_config_by_key('DEV_MODE'):
-        logger.debug(f'Created cek (BYOK AES key): {cek.hex()} (hex)')
+        logger.debug(f'Generated cek (BYOK AES key): {cek.hex()} (hex)')
 
     # Generate and download your BYOK-compatible certificate.
     # key_consumer_cert: public certificate from key consumer (e.g. Salesforce)
@@ -54,14 +56,14 @@ def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str
 
     if not key_consumer_cert_path:
         logger.error(
-            f'Cannot find key consumer cert for "{tenant}/{jwe_kid}". Configure it in config.json.')
+            f'Cannot find key consumer certificate for "{tenant}/{jwe_kid}". Configure it in config/config.json.')
         return ''
 
     with open(key_consumer_cert_path) as f:
         cert = f.read()
 
     if not cert:
-        logger.error('Cannot read key consumer certificate. Exiting..')
+        logger.error(f'Cannot read key consumer certificate at "{key_consumer_cert_path}".')
         return ''
 
     key_consumer_cert = RSA.importKey(cert)
@@ -142,7 +144,7 @@ def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str
 
     json_jwe_token = json.dumps(jwe_token)
 
-    logger.debug(f'Created JWE token for: {json_jwe_token}')
+    logger.debug(f'Created JWE token: {json_jwe_token}')
 
     # cleanup
     del dek

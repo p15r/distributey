@@ -10,7 +10,7 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
     vault_url = config.get_config_by_key('VAULT_URL')
     client = hvac.Client(url=vault_url)
 
-    logger.debug(f'Attemping to authenticate against Vault with token: {jwt_token}')
+    logger.debug(f'Attempting to authenticate against Vault with JWT: {jwt_token}')
 
     response = client.auth.jwt.jwt_login(
         role=config.get_config_by_key('VAULT_JWT_DEFAULT_ROLE'),
@@ -60,8 +60,7 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
     try:
         b64_key = response['data']['keys'][str(key_version)]
     except KeyError as e:
-        logger.error(f'Cannot get key "{key}":')
-        logger.error(e)
+        logger.error(f'Cannot get key "{key}": {e}')
         return b''
 
     return base64.b64decode(b64_key)

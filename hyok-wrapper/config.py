@@ -9,6 +9,7 @@ import json
 import logging
 from typing import Any
 
+# do not use logger.get_loger(), because that would create import loop
 logger = logging.getLogger(__name__)
 
 

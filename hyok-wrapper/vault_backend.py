@@ -3,14 +3,14 @@
 import base64
 import hvac
 import config
-import logging
+from hyok_logging import logger
 
 
 def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
-    logger = logging.getLogger(__name__)
-
     vault_url = config.get_config_by_key('VAULT_URL')
     client = hvac.Client(url=vault_url)
+
+    logger.debug(f'Attemping to authenticate against Vault with token: {jwt_token}')
 
     response = client.auth.jwt.jwt_login(
         role=config.get_config_by_key('VAULT_JWT_DEFAULT_ROLE'),

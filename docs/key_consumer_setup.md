@@ -30,12 +30,24 @@ Currently, HYOK Wrapper only supports Salesforce as a key consumer.
    | `Identity type` | Select `Named principal`. |
    | `Authentication protocol` |Select `JWT`. |
    | `Issuer` | Choose appropriate name (e.g. `salesforce`). |
-   | `Named Principal Subject` | This is the JWT subject, configure it accordingly. It must also be configured in `config/config.json`. |
+   | `Named Principal Subject` | This is the JWT subject, configure it accordingly. It must also be configured in `config/config.json`. For example `salesforce-cacheonlyservice`. |
    | `Audiences` | Set `urn:hyok-wrapper`|
    | `Token Valid for` | Set short time perion. E.g. `10 Seconds`. |
    | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
    | `Generate Authorization Header` | Check box to activate. |
-7. Configure HYOK (a.k.a Cache-only key connection): [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)] **TODO**: be more precise.
+7. Configure HYOK (a.k.a Cache-only key connection): [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]
+   - Create wrapping certificate
+     - Go to `Security Controls` -> `Certificate and Key Management` and click on `Create Self-Signed Certificate`.
+     - Set `Label`/`Unique Name` to something meaningful. For example `hyok-key-consumer_cert`. Key can be marked as not exportable.
+   - Configure cache-only key service
+     - Go to `Security Controls` -> `Platform Encryption` -> `Key Management` and click on `Generate Tenant Secret` if none exists.
+       - ⚠️ Depending on your organization's service contracts, this action might lock the generation of `Bring Your Own Key` between 4h and 24h.
+     - Go to `Security Controls` -> `Platform Encryption` -> `Advanced Settings` and enable `Allow Cache-Only Keys with BYOK` & `Enable Replay Detection for Cache-Only Keys`.
+     - Go to `Security Controls` -> `Platform Encryption` -> `Key Management` and click on `Bring Your Own Key`.
+     - Select key consumer certificate (`hyok-key-consumer_cert`)
+     - Select `Use a Cache-Only Key`
+     - Set `Unique Key Identifier` to something meaningful. For example `jwe-kid-salesforce-serviceX`.
+     - Select `Named Credential` that was previously created (`hyok-wrapper at example.com`)
 
 ## Example Request from Key Consumer
 HTTP request header with JWT token from Salesforce:

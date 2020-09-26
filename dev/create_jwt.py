@@ -3,7 +3,7 @@ import datetime
 
 expiration_time = 300
 
-private_key = open('mtls/myCert-nopwd.key').read()
+private_key = open('dev/tmp/jwt.key').read()
 
 payload = {
     'sub': 'salesforce-cacheonlyservice',

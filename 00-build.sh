@@ -29,7 +29,6 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dev/tmp/jwt.key -out
 openssl x509 -pubkey -noout -in dev/tmp/jwt.pem > dev/tmp/jwt.pub
 
 # Ugly hack to add pubkey to tfvars. Terraform should read pubkey file.
-echo "ℹ️  Adding developer JWT to Terraform config..."
-python3 dev/write_jwt_to_tfvars.py
+echo "ℹ️  Add developer JWT to Terraform config by typing: \"python3 dev/write_jwt_to_tfvars.py\""
 
 echo "ℹ️  Add \"dev/tmp/jwt.pub\" to your HYOK Wrapper config if you want to log in using the developer JWT."

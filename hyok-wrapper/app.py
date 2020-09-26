@@ -87,7 +87,11 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
 
     logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
 
-    validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
+    try:
+        validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
+    except KeyError as e:
+        logger.error(f'Cannot find tenant or jwt kid in config: {e}.')
+        return ''
 
     if not validation_cert:
         logger.error(
@@ -165,7 +169,17 @@ def get_jwe_token(tenant: str = '', jwe_kid: str = ''):
     token = authenticate(tenant, request.headers)
 
     if not token:
-        return f'Unauthorized request from {request.headers["X-Real-Ip"]}, ({request.user_agent}).', 401
+        try:
+            jwt_audience = config.get_jwt_audience_by_tenant(tenant)
+        except KeyError:
+            jwt_audience = 'unknown'
+
+        # https://tools.ietf.org/html/rfc6750#section-3
+        return Response(
+            response=f'Unauthorized request from {request.headers["X-Real-Ip"]}, ({request.user_agent}).',
+            status=401,
+            content_type='text/html; charset=utf-8',
+            headers={'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'})
 
     request_args = []
     for key in request.args:

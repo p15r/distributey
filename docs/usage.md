@@ -1,27 +1,33 @@
 # Usage
-- Create a dummy JWT: `python3 dev/create_jwt.py`
-- Issue an HTTP request against the root directory to retrieve a `jwe` token:
+## Get JWE token
+- Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
+- Issue an HTTP request to retrieve a `jwe` token:
   ```bash
-  $ curl -k --no-progress-meter https://127.0.0.1/v1/kid-salesforce?requestId=nonce -H "Authorization: $(python3 dev/create_jwt.py)" | jq
+  $ curl -k --no-progress-meter https://localhost/v1/salesforce/jwe-kid-salesforce-serviceX?requestId=nonce -H "Authorization: $(python3 dev/create_jwt.py)" | jq
   {
-    "kid": "kid",
-    "jwe": "eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZCIsICJqdGkiOiAibm9uY2UifQ==.NMUv3Kui4-TSQnvKU39vmGPZ8fexJiHck5GPZTboziCy1RzPBUGPeLbP0trGKeRzl9rYQDOoIlNEKYOFSJ6sEF3B2TCprOxSs22q-P3ARrX6fjiPzdwHX09c65W39Ix9xy2aJEejj-lvc2OmNmBp8eMOZO_5z16hDHVfwhdX92Sxdh4-3gHIlI1Cr2ySqYCKUP8XzOPaLyXpq1VKlmaPZeoSkHO8GIU0sJrBXl3dyDc5SfjVIHyMAhM0dM-aiC9OhmaTxmKWDl3hCwsYv2TKyku2GTZvik4cycwUat8C2M2gi9cQsnsed2GpW9NmUW9Q2iVe2hbMZXoWhgn17T8qZ4AbSEZMCDnVKq5vh-i0o3WsN3D_LUPf9PzB1gNUvR5aBhtto69rXNSeacc_pvUAkBo8dug8xh1Jp6ZFNzL88foE_bn1aj7JSV_cCO_yi569MFnOG1eVFH1kD_OtmfUq62OE2hXfjbhBm6A-XrNBzYjxEL1oasmocqaCtWniqDEXy3VQH7trwAMc_5F3tvAkXPeyW35LFPxd5mA4lj2zf6WEq1tlDogbJCF9q8tsRHbUUYSIAidzcXz9aZs1-W5_6IGAthqhPHMULXt59d_UNCmd98RDbUJH-UfOMNi3QItip1rZBp9QPpJzZtDXGJvmffXAsCv6N0C85Ya2P7elP70=.4En4-wR-etKPOaCx.iUW5BCbUiSbQlAOnLZkrkLlbb8kODWt_sSoDTQaEApA=.4otC6CrDbr_hcLcfy3w3xw=="
+    "kid": "jwe-kid-salesforce-serviceX",
+    "jwe": "eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImp3ZS1raWQtc2FsZXNmb3JjZS1zZXJ2aWNlWCIsICJqdGkiOiAibm9uY2UifQ==.ZPlJ1ZIesHRu-RXcGHIqYrfun4sbZTi2DsTY5YS6citlzgFHPBlTlV-EGBPe5QU8ahjqL6X3KpC7iFgWIng2E43v844uI8jFTMJetwYdP3yU7ckdxw73IvaARuG_ZCB_1xpxfxy4GpLE-u5552jKI8bqjUuWeDTD-Nb9DfyTdA6YEK4atZ6q1mZFUpdewtl9oMEag40G_TUb-K0gtScYhiKWpbHnEvtfUzlAka4F8vrmtGI5GUM84dk_40r5YTT-db3z_uqFj2DzYvXgnPxpJK4k6okqUEWuPAf3gZKWY8ftKP5UbDDD5gnElPL1N72-HcSStn2WDtCjFK8dlLBUDNiOVrGVcAm9Pwt4Ae70XDi7708aGbhdZQ7kqib1V5tJKea088_r6LuuralGsMrYV-E3LY2Drxh73pXWTFVLT8SQ5ezUBeAavQl4NoBtd9j4Vw3tHxnMR6P9mZBFf82EaG4ms7DDgSPwHNsLh7It3HxnFDkGr7cituNlEwzIO0EB_MLLvM51TMQKAL6KO8g1MW7FAO5CXayoIwo-IeV9lqjAM8T8MLutDyrOZy9DXRM_zXMBwQyVnP7JAeMV-KLh6dEwUtm6o0zpxRwF9o0d-ZEwrnR4qe6VQOACeTeJaZlKTtoOvE2qG8tA6stvN2s--qTWK2h4IEEM9f5nBLyACHc=.NIwqi-yT54wS74e3.1pR8BPVAmxYy6m2DNlCa5eEAyhKOmfVzWnNQ_59pv10=.WxOpn6Vj3Ib0VYR16SHOCg=="
   }
 
-  # Check protected header
+  # Check protected header (first dot-separated string)
   $ echo "eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZCIsICJqdGkiOiAibm9uY2UifQ==" | base64 -d
-  {"alg": "RSA-OAEP", "enc": "A256GCM", "kid": "kid", "jti": "nonce"}
+  {"alg": "RSA-OAEP", "enc": "A256GCM", "kid": "jwe-kid-salesforce-serviceX", "jti": "nonce"}
   ```
-  A new `cek` and `jwe token` will be created for every HTTP request.
+
+## Debugging
+- Check if container `hyok-wrapper`, `nginx` (and `vault if in developer mode) are running: `docker ps -a`
+- Check logs: `docker logs -f hyok-wrapper`
+- Enable debug logs
+  - Set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json`
+  - Load new config: `./02-load-config.sh`
 
 ## Decrypt JWE
-
 An example JWE to decrypt:
 ```
 eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNlIiwgImp0aSI6ICIzNzQ4OTFiNjg2MmZhNGVjY2RmMzNiYTg5MDBjOWQ2ZSJ9.cNwudQ5B3yJTRsztSbxtKFzZetL_tPOR_343Y8ZU96jO6cgUPAozrraYN9JhOk8tSM-FP7grG-HwlW0aVKPDfcy1GnePOUGCOE48u9gKzkEDXbrVX4QZbDdR9YFdba-UBk6k7fhzLc_FY_O18UzqaqaJhg-SPcDYnE6CBdl-lgqVO7VUf5guE9Jf8ORWwJvNr9n8jC2WaQ2XPhc5hvFCGJHfxDOswWCiQWOFHZuUXDrNp-evFQPm-VglvO-Lem5zvbAKquoYpWdN7uRu1be9_AUJaCNNCtVGaouXw0UUNgt_E54Z7BYgl8bky0fKs0z9shIvya4cTuFvTQv4TuQtGig7d5F0sVXu5EHtdrpVAHtrxf38Fk_NCHvKzJ2uPHYINSincG-TnAOTVsZNz_atv3GJEYfi9XoSF0XeKxZVM0DHJJM34AJpx6mFi5OQckNizqNmSLgYT0K3b0ajUtAmgOeLpWw9nqZqeQaP0Q1YkdX9h_7gtN_OHrbpRYip9nG8h3d17kX1SZpGxMlDb_fxhIufKhGC9BT47zFvNgnFNRENlJXifXVOG5OsoTue8xeZvXmGOaIe3lHGf67R3nYM_zD-VSU8C8pVo9KrVEu-xw8k581mO-OiN82WcHrjkxc77-5cJCtqp3m0w6cbLVwukBfLxiiJw0Pn5srEUpzvgDE=.dpZl1EF4YNayGWht.zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=.27vOkMxjnnhHN_Cp9xsveQ==¨
 ```
 
-1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` to log the secrets.
+1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json` to log secrets.
 2. Extract encrypted `dek` from JWE token by getting the second last dot-separated string: `zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=`
 3. Convert `dek` to hex:
    ```python

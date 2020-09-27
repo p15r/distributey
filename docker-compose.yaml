@@ -13,7 +13,7 @@ services:
         protocol: tcp
     volumes:
       - ./docker/nginx.conf:/etc/nginx/conf.d/hyok-wrapper.conf:ro
-      - ./docker/certs:/etc/nginx/certs
+      - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
       - hyok-wrapper
       - vault-agent
@@ -26,8 +26,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    depends_on: # Remove for production.
-      - vault   # Remove for production.
+    depends_on: # Comment for production.
+      - vault   # Comment for production.
 
 ###################################
 # Comment until EOF for production.

@@ -9,17 +9,11 @@
 
 set -euf -o pipefail
 
-# Workaround: make nginx config accessible in container
-chmod o+r docker/nginx.conf
+# Workaround: make nginx config & TLS files accessible in container
+chmod o+x docker/certs/
+chmod -R o+r docker/nginx.conf docker/certs/
 
 echo '💾 Downloading Terraform providers...'
-
-# Create terraform provider mirror zip archive:
-# - cd ./emptydir/
-# - cp HYOK-Wrapper/docker/terraform/main.tf .
-# - terraform providers mirror tf-cache
-# - zip -r tf-cache.zip tf-cache/
-# - upload tf-cache.zip to mirror server & set var tf_provider_url_mirror_zip below
 
 # if this URL is configured, terraform will not try to download providers from internet
 # tf_provider_url_mirror_zip="https://my-mirror.net/tf-cache.zip"
@@ -46,7 +40,8 @@ cd ..
 
 # Cleanup
 echo '🧹 Removing locally cached files..'
-rm -r docker/terraform/tf-cache
+# TODO: this is a bug! It removes the cache before docker containers started, thus removes the providers cache too early!
+#rm -r docker/terraform/tf-cache
 
 # Manually provision Vault like:
 # sleep 2 # give Vault time to start

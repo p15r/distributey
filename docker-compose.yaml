@@ -80,7 +80,7 @@ services:
       - IPC_LOCK
     command: ["agent", "-config", "/vault/config/vault-agent.hcl"]
     volumes:
-      - ./vault-agent/config:/vault/config
+      - ./docker/vault-agent/config:/vault/config
       - approle:/approle
     depends_on:
     - terraform

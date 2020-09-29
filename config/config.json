@@ -6,7 +6,8 @@
       "auth": {
         "jwt_algorithm": "RS256",
         "jwt_audience": "urn:hyok-wrapper",
-        "jwt_subject": "tenant-subject",
+        "jwt_issuer": "issuer",
+        "jwt_subject": "subject",
         "jwt_validation_certs": {
           "jwt-kid": "config/auth/tenant-jwt-kid.pubkey"
         }

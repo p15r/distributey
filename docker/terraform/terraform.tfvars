@@ -1,7 +1,7 @@
-# corresponds to 'subj' group_claim
-services = ["salesforce-cacheonlyservice"]
+# corresponds to 'sub' group_claim
+services = ["cacheonlyservice"]
 # policy name matches service name with suffix -transit
-policies = ["hyok-pki", "salesforce-cacheonlyservice-transit"]
+policies = ["hyok-pki", "cacheonlyservice-transit"]
 
 auth_jwt_default_role                 = "hyok"
 auth_jwt_default_role_bound_audiences = ["urn:hyok-wrapper"]

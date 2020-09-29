@@ -43,11 +43,6 @@ cd docker
 docker-compose up -d
 cd ..
 
-# Cleanup
-echo '🧹 Removing locally cached files..'
-# TODO: this is a bug! It removes the cache before docker containers started, thus removes the providers cache too early!
-#rm -r docker/terraform/tf-cache
-
 # Manually provision Vault like:
 # sleep 2 # give Vault time to start
 # Enable dynamic secrets:

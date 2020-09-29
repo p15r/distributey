@@ -16,10 +16,7 @@ from hyok_logging import logger
 def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str = '') -> str:
     logger.info(f'Creating JWE token for request with kid "{jwe_kid}"...')
 
-    vault_path = config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)
-
-    # TODO: walrus operator
-    if not vault_path:
+    if not (vault_path := config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)):
         # jwe kid not found in config,
         # assume kid and vault path are the same
         # and fetch latest version of secret
@@ -31,10 +28,8 @@ def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str
 
     # Generate a 256-bit AES data encryption key. You can use the cryptographically secure method of your choice.
     # dek = get_random_bytes(32)  # 32 bytes * 8 = 256 bit -> AES256
-    dek = vault_backend.get_dynamic_secret(vault_key, key_version, jwt_token)
 
-    # TODO: walrus operator
-    if not dek:
+    if not (dek := vault_backend.get_dynamic_secret(vault_key, key_version, jwt_token)):
         logger.error('Cannot retrieve dek.')
         return ''
 
@@ -114,7 +109,8 @@ def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str
     # mac_len=16: 128 bit authentication tag
     dek_cipher = AES.new(cek, AES.MODE_GCM, nonce=iv, mac_len=16)
     dek_cipher.update(ascii_b64_protected_header)
-    # TODO: Autom. padding helpful?
+
+    # TODO: Autom. padding helpful? Might replace pycryptodome anyway.
     # from Cryptodome.Util.Padding import pad
     # encrypted_dek, tag = dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
     encrypted_dek, tag = dek_cipher.encrypt_and_digest(dek)

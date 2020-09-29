@@ -13,10 +13,8 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+# TODO: be more specific than "Any" type hint.
 def get_config_by_key(key: str) -> Any:
-    # Todo:
-    #  - more precise typing for key: Union[str, list, dict, int]
-
     try:
         with open('/opt/hyok-wrapper/config/config.json', 'r') as f:
             cfg = json.load(f)
@@ -72,6 +70,15 @@ def get_jwt_subject_by_tenant(tenant: str) -> str:
     except KeyError as e:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_subject')
+        raise e
+
+
+def get_jwt_issuer_by_tenant(tenant: str) -> str:
+    try:
+        return get_config_by_key('TENANT_CFG')[tenant]['auth']['jwt_issuer']
+    except KeyError as e:
+        logger.error(
+                f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_issuer')
         raise e
 
 

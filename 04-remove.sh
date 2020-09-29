@@ -13,3 +13,6 @@ echo "🛑 Removing containers..."
 cd docker
 docker-compose down
 cd ..
+
+echo '🧹 Removing locally cached files..'
+rm -r docker/terraform/tf-cache

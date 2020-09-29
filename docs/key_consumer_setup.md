@@ -20,6 +20,7 @@ Currently, HYOK Wrapper only supports Salesforce as a key consumer.
          - Use key size of `4096 bit`
          - Use `platform encryption`
      - Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper (`config/auth/`).
+       - Salesforce provides a certificate from which `HYOK-Wrapper` only needs the public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pem`
    - Import own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
 6. To go `Named Credential` on Salesforce and create `New Named Credential` as following:
    | Config name  | Value |
@@ -30,7 +31,7 @@ Currently, HYOK Wrapper only supports Salesforce as a key consumer.
    | `Identity type` | Select `Named principal`. |
    | `Authentication protocol` |Select `JWT`. |
    | `Issuer` | Choose appropriate name (e.g. `salesforce`). |
-   | `Named Principal Subject` | This is the JWT subject, configure it accordingly. It must also be configured in `config/config.json`. For example `salesforce-cacheonlyservice`. |
+   | `Named Principal Subject` | This is the JWT subject, configure it accordingly. It must also be configured in `config/config.json`. For example `cacheonlyservice`. |
    | `Audiences` | Set `urn:hyok-wrapper`|
    | `Token Valid for` | Set short time perion. E.g. `10 Seconds`. |
    | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
@@ -72,8 +73,8 @@ HTTP request header with JWT token from Salesforce:
    Example JWT payload:
    ```json
    {
-     "iss": "myCA",
-     "sub": "salesforce-cacheonlyservice",
+     "iss": "salesforce",
+     "sub": "cacheonlyservice",
      "aud": "urn:hyok-wrapper",
      "nbf": 1598213299,
      "iat": 1598213299,

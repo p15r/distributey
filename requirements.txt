@@ -6,3 +6,4 @@ pyjwt[crypto]==1.7.1
 
 # dev
 flake8
+mypy

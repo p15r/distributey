@@ -19,7 +19,6 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
 
     logger.debug(f'Vault login response: {response}')
 
-    # todo: error handling if no vault_token
     vault_token = response['auth']['client_token']
 
     if config.get_config_by_key('DEV_MODE'):
@@ -32,22 +31,14 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
         return b''
 
     # fetch latest version of key
-    try:
-        response = client.secrets.transit.read_key(name=key)
-    except Exception as e:
-        logger.error(f'Transit key "{key}" cannot be read.')
-        logger.error(e)
-        return b''
+    response = client.secrets.transit.read_key(name=key)
 
     if key_version == 'latest':
-        try:
-            key_version = response['data']['latest_version']
-        except KeyError as e:
-            logger.error(f'Cannot get latest version of key "{key}":')
-            logger.error(e)
-            return b''
+        key_version = response['data']['latest_version']
 
     # fetch key
+
+    # Security Note:
     # HVAC, and requests respectively, store the exported secret in memory as
     # (immutable) string and cannot be safely erased from memory:
     # - https://github.com/hvac/hvac/blob/b9343973307eaba1bbe28ebf9e1911520ffcbf0a/
@@ -57,10 +48,6 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
     response = client.secrets.transit.export_key(
         name=key, key_type='encryption-key', version=key_version)
 
-    try:
-        b64_key = response['data']['keys'][str(key_version)]
-    except KeyError as e:
-        logger.error(f'Cannot get key "{key}": {e}')
-        return b''
+    b64_key = response['data']['keys'][str(key_version)]
 
     return base64.b64decode(b64_key)

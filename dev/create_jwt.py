@@ -6,7 +6,7 @@ expiration_time = 300
 private_key = open('dev/tmp/jwt.key').read()
 
 payload = {
-    'sub': 'salesforce-cacheonlyservice',
+    'sub': 'cacheonlyservice',
     'iss': 'salesforce',
     'aud': 'urn:hyok-wrapper',
     'iat': datetime.datetime.utcnow(),

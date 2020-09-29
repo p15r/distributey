@@ -6,7 +6,8 @@
       "auth": {
         "jwt_algorithm": "RS256",
         "jwt_audience": "urn:hyok-wrapper",
-        "jwt_subject": "salesforce-cacheonlyservice",
+        "jwt_issuer": "salesforce",
+        "jwt_subject": "cacheonlyservice",
         "jwt_validation_certs": {
           "jwt_kid_salesforce_serviceX": "config/auth/jwt_salesforce_serviceX.pub"
         }

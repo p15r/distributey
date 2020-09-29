@@ -1,6 +1,7 @@
 - Import own key to Salesforce
     > ⚠ This Option is not recommended, because the private key needs to be transmitted.
     - Create own keypair (like `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dev/tmp/jwt.key -out dev/tmp/jwt.pem -subj "/C=No/ST=NoState/L=NoLocation/O=NoOrg/OU=NoOrgUnit/CN=NoCommonName/emailAddress=NoEmailAddress"`)
+    - In case the certificate has been generated using another tool, make sure it is in PEM format. If not, convert it: `openssl x509 -in your-certificate.crt -out dev/tmp/jwt.pem -outform PEM`
     - Create keystore with cert & key: https://docs.oracle.com/en/database/other-databases/nosql-database/12.2.4.5/security/import-key-pair-java-keystore.html
     - Step-by-step:
         ```bash

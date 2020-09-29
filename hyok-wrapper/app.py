@@ -20,10 +20,8 @@ root_path = '/'
 api_versioning_path = 'v1/'
 path_prefix = root_path + api_versioning_path
 
-# TODO move authenticate() and get_kid_from_jwt() to own module
 
-
-def get_kid_from_jwt(token: str) -> str:
+def _get_kid_from_jwt(token: str) -> str:
     # base64 decode token
     # token = json.loads(token)
     # return token['kid']
@@ -38,7 +36,7 @@ def get_kid_from_jwt(token: str) -> str:
     return protected_header_unverified.get('kid', '')
 
 
-def get_jwt_from_header(header: EnvironHeaders) -> str:
+def _get_jwt_from_header(header: EnvironHeaders) -> str:
     try:
         token = header['Authorization']
     except KeyError:
@@ -46,9 +44,8 @@ def get_jwt_from_header(header: EnvironHeaders) -> str:
         logger.debug(f'Malformed header: {header}')
         return ''
 
-    # TODO: Is this always an OAuth Bearer Token (rfc6750)?
     if not token.startswith('Bearer'):
-        logger.error('Cannot get Bearer token from Authorization header. Cannot authorize request.')
+        logger.error('Cannot fetch Bearer token from Authorization header.')
         logger.debug(f'Authorization header w/o Bearer: {token}')
         return ''
 
@@ -57,11 +54,13 @@ def get_jwt_from_header(header: EnvironHeaders) -> str:
     return token
 
 
-def authenticate(tenant: str, header: EnvironHeaders) -> str:
+def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     """
+    Authentication requires a bearer token in JWT format.
+
     Toke must..
     - have a valid signature,
-    - contain 'sub': 'salesforce-cacheonlyservice',
+    - contain 'iss': 'salesforce' & 'sub': 'cacheonlyservice',
     - not have been expired yet
 
     JWT signature verification might not be required, because this is done by Vault as well.
@@ -69,18 +68,12 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
     which requires to authenticate in HYOK Wrapper too.
     """
 
-    token = get_jwt_from_header(header)
-
-    # TODO: walrus operator
-    if not token:
+    if not (token := _get_jwt_from_header(header)):
         logger.error('Cannot get JWT from request.')
         logger.debug(f'Request header: {header}')
         return ''
 
-    jwt_kid = get_kid_from_jwt(token)
-
-    # TODO: walrus operator
-    if not jwt_kid:
+    if not (jwt_kid := _get_kid_from_jwt(token)):
         logger.error('Cannot get kid from JWT.')
         logger.debug(f'JWT: {token}')
         return ''
@@ -99,12 +92,10 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
             f'to verify signature for JWTs with kid "{jwt_kid}".')
         return ''
 
-    # cert must be in PEM format, required by pyjwt[crypto] &
-    # not the cert, only the public key.
-    # Convert to PEM: openssl x509 -in mycert.crt -out mycert.pem -outform PEM
-    # Extract public key from cert: openssl x509 -pubkey -noout -in cert.pem  > pubkey.pem
-    # TODO: extract key from cert programmatically:
-    #       https://pyjwt.readthedocs.io/en/latest/faq.html#how-can-i-extract-a-public-private-key-from-a-x509-certificate
+    # pyjwt[crypto] requires cert to be in PEM format & only the public key.
+    # TODO: Extract key from cert programmatically:
+    #       https://pyjwt.readthedocs.io/en/latest/faq.html
+    #           how-can-i-extract-a-public-private-key-from-a-x509-certificate
     cert = open(validation_cert).read()
 
     if not cert:
@@ -115,8 +106,10 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
     logger.debug(f'Received JWT: {token}')
 
     try:
+        # 10s leeway as clock skew margin
         payload = jwt.decode(
             token, cert,
+            leeway=10,
             audience=config.get_jwt_audience_by_tenant(tenant),
             algorithms=config.get_jwt_algorithm_by_tenant(tenant),
             options={
@@ -134,27 +127,17 @@ def authenticate(tenant: str, header: EnvironHeaders) -> str:
             f'Cannot authorize request, because the JWT has expired: {e}')
         return ''
 
-    # Example JWT token payload:
-    # {
-    #     "iss": "salesforce",
-    #     "sub": "salesforce-cacheonlyservice",
-    #     "aud": "urn:hyok-wrapper",
-    #     "nbf": 1598271437,
-    #     "iat": 1598271437,
-    #     "exp": 1598271737
-    # }
     logger.debug(f'Payload of JWT with kid "{jwt_kid}": {payload}')
 
-    if payload['sub'] == config.get_jwt_subject_by_tenant(tenant):
+    if (payload.get('sub', '') == config.get_jwt_subject_by_tenant(tenant)) \
+            and (payload.get('iss', '') == config.get_jwt_issuer_by_tenant(tenant)):
         logger.info(
             f'Successfully authenticated JWT with kid "{jwt_kid}".')
         return token
     else:
         logger.error(
-            f'Cannot authorize JWT. Wrong subject "{payload["sub"]}".')
+                f'Cannot authorize JWT. Wrong issuer "{payload.get("iss", "")}" or subject "{payload.get("sub", "")}".')
         return ''
-
-    # TODO: check for issuer? (iss) as well?
 
     return ''
 
@@ -166,7 +149,7 @@ def get_jwe_token(tenant: str = '', jwe_kid: str = ''):
     jwe_kid: kid provided by Salesforce. Mandatory.
     nonce: Nonce (?requestId=x) provided by Salesforce (prevent replay attacks). Optional.
     """
-    token = authenticate(tenant, request.headers)
+    token = _authenticate(tenant, request.headers)
 
     if not token:
         try:

@@ -14,7 +14,8 @@ else:
 class __RequestFormatter(logging.Formatter):
     def format(self, record):
         if has_request_context():
-            record.tenant = request.path.split('/')[2]                    # TODO: ugly
+            # request.path.split() is safe, because URL is verified by Flask on entry.
+            record.tenant = request.path.split('/')[2]
             record.x_real_ip = request.headers['X-Real-Ip']
             record.user_agent = request.user_agent
         else:

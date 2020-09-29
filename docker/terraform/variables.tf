@@ -1,11 +1,11 @@
 variable services {
   type        = list
-  default     = ["salesforce"]
-  description = "List of external service names. This corresponds to the 'subj' field of a signed JWT token"
+  default     = ["cacheonlyservice"]
+  description = "List of external service names. This corresponds to the 'sub' field of a signed JWT token"
 }
 variable policies {
   type        = list
-  default     = ["salesforce-transit"]
+  default     = ["cacheonlyservice-transit"]
   description = "List of policies for external service names. The name corresponds to the 'service' variable with suffix '-transit'"
 }
 

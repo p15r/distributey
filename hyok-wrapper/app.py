@@ -81,7 +81,7 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
 
     try:
-        validation_cert = config.get_jwt_validation_certs_by_tenant_and_kid(tenant, jwt_kid)
+        validation_cert = config.get_jwt_validation_cert_by_tenant_and_kid(tenant, jwt_kid)
     except KeyError as e:
         logger.error(f'Cannot find tenant or jwt kid in config: {e}.')
         return ''

@@ -82,7 +82,7 @@ def get_jwt_issuer_by_tenant(tenant: str) -> str:
         raise e
 
 
-def get_jwt_validation_certs_by_tenant_and_kid(tenant: str, jwt_kid: str) -> str:
+def get_jwt_validation_cert_by_tenant_and_kid(tenant: str, jwt_kid: str) -> str:
     try:
         return get_config_by_key('TENANT_CFG')[tenant]['auth']['jwt_validation_certs'][jwt_kid]
     except KeyError as e:

@@ -1,11 +1,10 @@
 __pycache__/
-docker/terraform/.terraform/
-dev/key_consumer_cert.crt
-docker/certs/nginx.crt
-docker/certs/nginx.key
+docker/certs/
 docker/terraform/terraform-plugins/
 docker/terraform/terraform.tfstate
-config/auth/
-config/backend
-dev/tmp/
+docker/terraform/.terraform/
 docker/terraform/tf-cache/
+config/auth/
+config/backend/
+dev/tmp/
+dev/key_consumer_cert.crt

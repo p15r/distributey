@@ -1,5 +1,5 @@
 # https://github.com/hashicorp/vault/blob/master/scripts/docker/Dockerfile
-FROM hashicorp/vault
+FROM vault:1.5.3
 
 RUN apk add shadow
 

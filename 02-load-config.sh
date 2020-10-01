@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 
-# set
-# -e            exit on error
-# -u            treat unset variables as an error
-# -f            disable filename expansion (globbing)
-# -o pipefail   the return value of a pipeline is the value of the last (rightmost)
-#                   command to exit with a non-zero status
-
 set -euf -o pipefail
-
 
 # Create backup of existing config & copy new config to container
 timestamp=$(date +%Y-%m-%d_%H:%M:%S)
@@ -28,7 +20,7 @@ docker cp config/ hyok-wrapper:/opt/hyok-wrapper/
 echo "🔧 Set file permissions.."
 docker exec -u root hyok-wrapper chown -R hyok:hyok /opt/hyok-wrapper/config
 
-# gunicorn only reloads if a python file changes..
+# gunicorn reloads only if a python file changes..
 touch hyok-wrapper/app.py
 docker cp hyok-wrapper/app.py hyok-wrapper:/opt/hyok-wrapper/app.py
 docker exec -u root hyok-wrapper chown -R hyok:hyok /opt/hyok-wrapper/app.py

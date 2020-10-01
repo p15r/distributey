@@ -1,4 +1,4 @@
-# Example Vault agent configuration file with AppRole authentication:
+# Example Vault Agent configuration with AppRole authentication:
 # https://www.vaultproject.io/docs/agent/template#example-configuration
 
 pid_file = "/tmp/vault-agent.pidfile"

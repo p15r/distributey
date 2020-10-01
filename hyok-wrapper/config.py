@@ -1,15 +1,10 @@
-"""
-Loads JSON-based config.
-
-TODO:
-- rewrite using (json) query approach: https://github.com/mwilliamson/jq.py
-"""
+# TODO: Rewrite using (json) query approach: https://github.com/mwilliamson/jq.py
 
 import json
 import logging
 from typing import Any
 
-# do not use hyok_logging.logger(), because that would create import loop
+# hyok_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +16,7 @@ def get_config_by_key(key: str) -> Any:
     except FileNotFoundError as e:
         logger.error('Cannot load config file. Has "02-load-config.sh" already been executed?')
         logger.error(e)
-        return {}
+        return False
 
     # Let this raise KeyError if key does not exist
     return cfg[key]
@@ -34,7 +29,7 @@ def get_key_consumer_cert_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" '
             f'in path TENANT_CFG.{tenant}.backend.{jwe_kid}.key_consumer_cert')
-        raise e
+        return ''
 
 
 def get_vault_path_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
@@ -43,7 +38,7 @@ def get_vault_path_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
     except KeyError as e:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.backend.{jwe_kid}.vault_path')
-        raise e
+        return ''
 
 
 def get_jwt_algorithm_by_tenant(tenant: str) -> str:
@@ -52,7 +47,7 @@ def get_jwt_algorithm_by_tenant(tenant: str) -> str:
     except KeyError as e:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_algorithm')
-        raise e
+        return ''
 
 
 def get_jwt_audience_by_tenant(tenant: str) -> str:
@@ -61,7 +56,7 @@ def get_jwt_audience_by_tenant(tenant: str) -> str:
     except KeyError as e:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_audience')
-        raise e
+        return ''
 
 
 def get_jwt_subject_by_tenant(tenant: str) -> str:
@@ -70,7 +65,7 @@ def get_jwt_subject_by_tenant(tenant: str) -> str:
     except KeyError as e:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_subject')
-        raise e
+        return ''
 
 
 def get_jwt_issuer_by_tenant(tenant: str) -> str:
@@ -79,7 +74,7 @@ def get_jwt_issuer_by_tenant(tenant: str) -> str:
     except KeyError as e:
         logger.error(
                 f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_issuer')
-        raise e
+        return ''
 
 
 def get_jwt_validation_cert_by_tenant_and_kid(tenant: str, jwt_kid: str) -> str:
@@ -89,4 +84,4 @@ def get_jwt_validation_cert_by_tenant_and_kid(tenant: str, jwt_kid: str) -> str:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" in path '
             f'TENANT_CFG.{tenant}.auth.jwt_validation_certs.{jwt_kid}')
-        raise e
+        return ''

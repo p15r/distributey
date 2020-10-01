@@ -79,10 +79,8 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
 
     if not (validation_cert := config.get_jwt_validation_cert_by_tenant_and_kid(tenant, jwt_kid)):
-        logger.error(
-            'No validation certificate exists in config.json '
-            f'to verify signature for JWTs with kid "{jwt_kid}".')
-        return ''
+        raise Exception(
+                f'No validation certificate exists in config.json to verify signature for JWTs with kid "{jwt_kid}".')
 
     logger.debug(f'Attempting to validate JWT signature using cert "{validation_cert}".')
 
@@ -90,22 +88,23 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     # TODO: Extract key from cert programmatically:
     #       https://pyjwt.readthedocs.io/en/latest/faq.html
     #           how-can-i-extract-a-public-private-key-from-a-x509-certificate
-    try:
-        cert = open(validation_cert).read()
-    except Exception as e:
-        logger.error(
-            f'Cannot read public key at "{validation_cert}" for JWT signature validation: {e}.')
-        return ''
+    cert = open(validation_cert).read()
 
     logger.debug(f'Received JWT: {token}')
+
+    if not (aud := config.get_jwt_audience_by_tenant(tenant)):
+        raise Exception(f'Cannot get JWT audience for tenant "{tenant}" from config.')
+
+    if not (algos := config.get_jwt_algorithm_by_tenant(tenant)):
+        raise Exception(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
 
     try:
         # 10s leeway as clock skew margin
         payload = jwt.decode(
             token, cert,
             leeway=10,
-            audience=config.get_jwt_audience_by_tenant(tenant),
-            algorithms=config.get_jwt_algorithm_by_tenant(tenant),
+            audience=aud,
+            algorithms=algos,
             options={
                 'require_exp': True,
                 'verify_signature': True,
@@ -123,8 +122,13 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
 
     logger.debug(f'Payload of JWT with kid "{jwt_kid}": {payload}')
 
-    if (payload.get('sub', '') == config.get_jwt_subject_by_tenant(tenant)) \
-            and (payload.get('iss', '') == config.get_jwt_issuer_by_tenant(tenant)):
+    if not (sub := config.get_jwt_subject_by_tenant(tenant)):
+        raise Exception(f'Cannot get JWT subject for tenant "{tenant}" from config.')
+
+    if not (iss := config.get_jwt_issuer_by_tenant(tenant)):
+        raise Exception(f'Cannot get JWT issuer for tenant "{tenant}" from config.')
+
+    if (payload.get('sub', '') == sub) and (payload.get('iss', '') == iss):
         logger.info(
             f'Successfully authenticated JWT with kid "{jwt_kid}".')
         return token
@@ -146,9 +150,7 @@ def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):
     token = _authenticate(tenant, request.headers)
 
     if not token:
-        try:
-            jwt_audience = config.get_jwt_audience_by_tenant(tenant)
-        except KeyError:
+        if not (jwt_audience := config.get_jwt_audience_by_tenant(tenant)):
             jwt_audience = 'unknown'
 
         # WWW-Authenticate header according to: https://tools.ietf.org/html/rfc6750#section-3

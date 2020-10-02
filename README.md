@@ -1,7 +1,7 @@
-[![Known Vulnerabilities](https://snyk.io/test/github/p15r/HYOK-Wrapper/badge.svg)](https://snyk.io/test/github/p15r/HYOK-Wrapper)
+[![Known Vulnerabilities](https://snyk.io/test/github/p15r/HYOK-Wrapper/badge.svg)](https://snyk.io/test/github/p15r/HYOK-Wrapper) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=p15r_HYOK-Wrapper&metric=alert_status)](https://sonarcloud.io/dashboard?id=p15r_HYOK-Wrapper)
 
 # HYOK-Wrapper
-The HYOK Wrapper acts as a middleman between a key service and a key consumer. It receives key material requests from a key consumer, retrieves it from the key service, and sends wrapped responses using the JWE standard ([RFC7516](https://tools.ietf.org/html/rfc7516)).
+The HYOK Wrapper acts as a middleman between a key consumer and a key service. It receives requests designated to the key service, fetches key material and sends JWE-wrapped ([RFC7516](https://tools.ietf.org/html/rfc7516)) responses to the consumer.
 
 Currently supported integrations:
 - Key services: Hashicorp Vault

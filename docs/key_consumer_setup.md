@@ -2,27 +2,32 @@
 Currently, HYOK Wrapper only supports Salesforce as a key consumer.
 
 ## Specs
-- Salesforce HYOK format specification: [salesforce's cache-only service](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)
+- Salesforce HYOK format specification: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)]
 
-## Step-by-step
+## Prerequisites
 1. Get a developer account: [[docs](https://developer.salesforce.com/signup)]
 2. Configure `My Domain`: [[docs](https://help.salesforce.com/articleView?id=domain_name_overview.htm&type=5)]
 3. Configure permission for Key Management: [[docs](https://trailhead.salesforce.com/en/content/learn/modules/spe_admins/spe_admins_set_up)]
 4. Create `Tenant Secret`: [[docs](https://help.salesforce.com/articleView?id=security_pe_ui_setup.htm&type=5)]
-5. Configure Salesforce to authenticate against HYOK Wrapper using a JWT-based token. Create pub/priv keypair for JWT token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
+
+## Step-by-step
+### Key Consumer Authentication
+Configure Salesforce to authenticate against `HYOK Wrapper` using a JWT-based token.
+
+1. Create pub/priv keypair for `JWT` token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
    - Create key in Salesforce (**Recommended**)
      - Go to `Certificate and Key Management` and click on `Create self-signed certificate`
-     - Define the following values:
+     - Configure the following settings:
        - `Label`: a representative name for the key
-       - `Unique Name`: this is the `KID` of the JWT token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
-       - Configure certificate properties according to [docs](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)
+       - `Unique Name`: this is the `KID` of the `JWT` token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
+       - Configure certificate properties [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)]
          - Mark key as `not exportable`
          - Use key size of `4096 bit`
          - Use `platform encryption`
-     - Download the public key and save it by its `Unique Name`. This pub key must later be configured in HYOK wrapper (`config/auth/`).
-       - Salesforce provides a certificate from which `HYOK-Wrapper` only needs the public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pem`
-   - Import own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
-6. To go `Named Credential` on Salesforce and create `New Named Credential` as following:
+     - Download the certificate and save it by its `Unique Name`. It must later be configured in `HYOK wrapper` (`config/auth/`).
+     - Salesforce provides a certificate from which `HYOK-Wrapper` only needs the public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pub`
+   - Import your own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
+2. To go `Named Credential` on Salesforce and create a `New Named Credential` as following:
    | Config name  | Value |
    | ------------- | ------------- |
    | `Label` & `Name` | Choose appropriate name (e.g. `hyok-wrapper at example.com`). |
@@ -36,13 +41,13 @@ Currently, HYOK Wrapper only supports Salesforce as a key consumer.
    | `Token Valid for` | Set short time perion. E.g. `10 Seconds`. |
    | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
    | `Generate Authorization Header` | Check box to activate. |
-7. Configure HYOK (a.k.a Cache-only key connection): [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]
-   - Create wrapping certificate
+3. Configure HYOK (a.k.a Cache-only key connection) [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]:
+   - Create key wrapping certificate
      - Go to `Security Controls` -> `Certificate and Key Management` and click on `Create Self-Signed Certificate`.
      - Set `Label`/`Unique Name` to something meaningful. For example `hyok-key-consumer_cert`. Key can be marked as not exportable.
    - Configure cache-only key service
      - Go to `Security Controls` -> `Platform Encryption` -> `Key Management` and click on `Generate Tenant Secret` if none exists.
-       - ⚠️ Depending on your organization's service contracts, this action might lock the generation of `Bring Your Own Key` between 4h and 24h.
+       - ⚠️ Depending on your organization's service contracts, this action might lock the import of any further certificates, including `Bring Your Own Key`, for 4h to 24h.
      - Go to `Security Controls` -> `Platform Encryption` -> `Advanced Settings` and enable `Allow Cache-Only Keys with BYOK` & `Enable Replay Detection for Cache-Only Keys`.
      - Go to `Security Controls` -> `Platform Encryption` -> `Key Management` and click on `Bring Your Own Key`.
      - Select key consumer certificate (`hyok-key-consumer_cert`)

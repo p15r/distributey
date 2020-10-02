@@ -1,6 +1,5 @@
 # Usage
 ## Get JWE token
-- Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
 - Issue an HTTP request to retrieve a `jwe` token:
   ```bash
   $ curl -k --no-progress-meter https://localhost/v1/salesforce/jwe-kid-salesforce-serviceX?requestId=nonce -H "Authorization: $(python3 dev/create_jwt.py)" | jq
@@ -15,10 +14,14 @@
   ```
 
 ## Debugging
-- Check if container `hyok-wrapper`, `nginx` (and `vault if in developer mode) are running: `docker ps -a`
+- Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
+- Check if container `hyok-wrapper`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`
 - Check logs: `docker logs -f hyok-wrapper`
 - Enable debug logs
   - Set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json`
+  - Load new config: `./02-load-config.sh`
+- Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
+  - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `HYOK-Wrapper/config/config.json`
   - Load new config: `./02-load-config.sh`
 
 ## Decrypt JWE
@@ -29,4 +32,4 @@ eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNl
 
 1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json` to log secrets.
 2. Extract encrypted `dek` from JWE token by getting the second last dot-separated string: `zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=`
-3. Configure and run `dev/decrypt_dek.py` to decrypt the `dek`.
+3. Configure and run `dev/decrypt_dek.py` to decrypt the `dek` (data encryption key; the requested key by the key consumer).

@@ -1,11 +1,11 @@
 # HYOK-Wrapper
-The HYOK Wrapper provides key material, retrieved from a key service, in the JWE format ([RFC7516](https://tools.ietf.org/html/rfc7516)), to a key consumer.
+The HYOK Wrapper acts as a middleman between a key service and a key consumer. It receives requests for key material from a key consumer and responds using the JWE standard ([RFC7516](https://tools.ietf.org/html/rfc7516)).
 
 Currently supported integrations:
-- Key service: Hashicorp Vault
+- Key services: Hashicorp Vault
 - Key consumer: Salesforce's [Cache-only Key Service](https://help.salesforce.com/articleView?id=security_pe_byok_cache.htm&type=5)
 
-## Setup
+## Installation
 1. Fulfill prerequisites [[docs](docs/prerequisites.md)]
 2. Configure key consumer [[docs](docs/key_consumer_setup.md)]
 3. Configure HYOK wrapper [[docs](docs/hyok_wrapper.md)]
@@ -14,7 +14,6 @@ Currently supported integrations:
 
 ### For developers
 - Verify Vault deployment [[docs](docs/vault.md)]
-- How to create a CA [[docs](docs/certificate_authority.md)]
 - Sync source code into container `hyok-wrapper`: `./dev/sync_sc.sh`.
 
 ## Architecture

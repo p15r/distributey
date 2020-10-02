@@ -10,12 +10,12 @@
     openssl pkcs12 -export -in import.pem -inkey myCert.key -name jwtcert > jwt.p12
     keytool -importkeystore -srckeystore jwt.p12 -destkeystore salesforce.jks -srcstoretype pkcs12 -alias jwtcert
     ```
-    - Salesforce requires the trust store to be generated using Java 8 (openjdk-8-jre-headless). If trust store is created with Java 11, the following error will occur `Error: Keystore file is corrupted.`.
-    - Password for jks must be between 6-8 letters.
-    - Upload to Salesforce:
-      - Go to `Certificate and Key Management` and click on `Import from Keystore`
-      - Select `JKS File` (`salesforce.jks`) and enter the `Keystore Password`
-      - If you get the error `Data Not Available. The data you were trying to access could not be found. It may be due to another user deleting the data or a system error.`, then apply the following workaround (https://developer.salesforce.com/forums/?id=9060G0000005bFJQAY) (it is unclear why this is required):
-        - Create a self-signed cert in keys and cert management.
-        - Enable Identity Provider and assigning the self-signed cert to it.
-        - Then you would be able to import certificates/JKS.
+  - Salesforce requires the trust store to be generated using Java 8 (`openjdk-8-jre-headless`). If trust store is created with Java 11, the following error will occur `Error: Keystore file is corrupted.`.
+  - Password for jks must be between 6-8 letters.
+  - Upload to Salesforce:
+    - Go to `Certificate and Key Management` and click on `Import from Keystore`
+    - Select `JKS File` (`salesforce.jks`) and enter the `Keystore Password`
+    - If you get the error `Data Not Available. The data you were trying to access could not be found. It may be due to another user deleting the data or a system error.`, then apply the following workaround (https://developer.salesforce.com/forums/?id=9060G0000005bFJQAY) (it is unclear why this is required):
+      - Create a self-signed cert in keys and cert management.
+      - Enable Identity Provider and assigning the self-signed cert to it.
+      - Then you would be able to import certificates/JKS.

@@ -15,10 +15,13 @@
 
 ## Debugging
 - Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
-- Check if container `hyok-wrapper`, `nginx` (and `vault if in developer mode) are running: `docker ps -a`
+- Check if container `hyok-wrapper`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`
 - Check logs: `docker logs -f hyok-wrapper`
 - Enable debug logs
   - Set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json`
+  - Load new config: `./02-load-config.sh`
+- Enable developer mode to log key material & cryptographic material such as additional authenticated data, initialization vectors, etc.
+  - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `HYOK-Wrapper/config/config.json`
   - Load new config: `./02-load-config.sh`
 
 ## Decrypt JWE

@@ -20,7 +20,7 @@ Configure Salesforce to authenticate against `HYOK Wrapper` using a JWT-based to
      - Configure the following settings:
        - `Label`: a representative name for the key
        - `Unique Name`: this is the `KID` of the `JWT` token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
-       - Configure certificate properties according to [docs](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)
+       - Configure certificate properties [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)]
          - Mark key as `not exportable`
          - Use key size of `4096 bit`
          - Use `platform encryption`

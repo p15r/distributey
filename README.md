@@ -1,3 +1,5 @@
+[![Known Vulnerabilities](https://snyk.io/test/github/p15r/HYOK-Wrapper/badge.svg)](https://snyk.io/test/github/p15r/HYOK-Wrapper)
+
 # HYOK-Wrapper
 The HYOK Wrapper acts as a middleman between a key service and a key consumer. It receives requests for key material from a key consumer and responds using the JWE standard ([RFC7516](https://tools.ietf.org/html/rfc7516)).
 

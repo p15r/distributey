@@ -10,7 +10,7 @@
     openssl pkcs12 -export -in import.pem -inkey myCert.key -name jwtcert > jwt.p12
     keytool -importkeystore -srckeystore jwt.p12 -destkeystore salesforce.jks -srcstoretype pkcs12 -alias jwtcert
     ```
-  - Salesforce requires the trust store to be generated using Java 8 (`openjdk-8-jre-headless`). If trust store is created with Java 11, the following error will occur `Error: Keystore file is corrupted.`.
+  - Salesforce requires the key store to be generated using Java 8 (`openjdk-8-jre-headless`). If key store is created with Java 11, the following error will occur `Error: Keystore file is corrupted.`.
   - Password for jks must be between 6-8 letters.
   - Upload to Salesforce:
     - Go to `Certificate and Key Management` and click on `Import from Keystore`
@@ -19,3 +19,4 @@
       - Create a self-signed cert in keys and cert management.
       - Enable Identity Provider and assigning the self-signed cert to it.
       - Then you would be able to import certificates/JKS.
+      - Upload key store again.

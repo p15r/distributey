@@ -6,5 +6,5 @@ The following workflow is executed when a key consumer requests key material:
 3. `HYOK Wrapper` creates a `JWE`.
 4. The key consumer unwraps the key material in the `JWE` and imports it.
 
-The workflow is similar for every key consumer. However, this example illustrates the process in case of Salesforce.
+The workflow is similar for every key consumer. However, this example illustrates the process for Salesforce.
 ![workflow](cache-only-key-service-v3.png)

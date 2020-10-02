@@ -20,7 +20,7 @@
 - Enable debug logs
   - Set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json`
   - Load new config: `./02-load-config.sh`
-- Enable developer mode to log any cryptographic material such as additional authenticated data, initialization vectors, etc.
+- Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
   - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `HYOK-Wrapper/config/config.json`
   - Load new config: `./02-load-config.sh`
 

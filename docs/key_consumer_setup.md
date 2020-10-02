@@ -2,7 +2,7 @@
 Currently, HYOK Wrapper only supports Salesforce as a key consumer.
 
 ## Specs
-- Salesforce HYOK format specification: [salesforce's cache-only service](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)
+- Salesforce HYOK format specification: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)]
 
 ## Prerequisites
 1. Get a developer account: [[docs](https://developer.salesforce.com/signup)]

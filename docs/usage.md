@@ -32,4 +32,4 @@ eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNl
 
 1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json` to log secrets.
 2. Extract encrypted `dek` from JWE token by getting the second last dot-separated string: `zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=`
-3. Configure and run `dev/decrypt_dek.py` to decrypt the `dek`.
+3. Configure and run `dev/decrypt_dek.py` to decrypt the `dek` (data encryption key; the requested key by the key consumer).

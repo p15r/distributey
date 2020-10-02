@@ -41,7 +41,7 @@ Configure Salesforce to authenticate against `HYOK Wrapper` using a JWT-based to
    | `Token Valid for` | Set short time perion. E.g. `10 Seconds`. |
    | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
    | `Generate Authorization Header` | Check box to activate. |
-3. Configure HYOK (a.k.a Cache-only key connection): [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]
+3. Configure HYOK (a.k.a Cache-only key connection) [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]:
    - Create key wrapping certificate
      - Go to `Security Controls` -> `Certificate and Key Management` and click on `Create Self-Signed Certificate`.
      - Set `Label`/`Unique Name` to something meaningful. For example `hyok-key-consumer_cert`. Key can be marked as not exportable.

@@ -1,6 +1,5 @@
 # Usage
 ## Get JWE token
-- Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
 - Issue an HTTP request to retrieve a `jwe` token:
   ```bash
   $ curl -k --no-progress-meter https://localhost/v1/salesforce/jwe-kid-salesforce-serviceX?requestId=nonce -H "Authorization: $(python3 dev/create_jwt.py)" | jq
@@ -15,6 +14,7 @@
   ```
 
 ## Debugging
+- Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
 - Check if container `hyok-wrapper`, `nginx` (and `vault if in developer mode) are running: `docker ps -a`
 - Check logs: `docker logs -f hyok-wrapper`
 - Enable debug logs

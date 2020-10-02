@@ -6,6 +6,7 @@ import json
 import jwt
 from werkzeug.datastructures import EnvironHeaders
 from os import getpid
+from typing import Tuple
 
 import jwe
 import config
@@ -51,14 +52,50 @@ def _get_jwt_from_header(header: EnvironHeaders) -> str:
     return token
 
 
-def _authenticate(tenant: str, header: EnvironHeaders) -> str:
+def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     """
-    Authentication requires a bearer token in JWT format.
-
-    The token must..
+    The jwt_token must..
     - have a valid signature,
     - contain 'iss' & 'sub' claims
     - not have expired (leeway of 10s for clock skew is tolerated)
+    """
+
+    if not (aud := config.get_jwt_audience_by_tenant(tenant)):
+        raise Exception(f'Cannot get JWT audience for tenant "{tenant}" from config.')
+
+    if not (algos := config.get_jwt_algorithm_by_tenant(tenant)):
+        raise Exception(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
+
+    try:
+        # 10s leeway as clock skew margin
+        payload = jwt.decode(
+            jwt_token, cert,
+            leeway=10,
+            audience=aud,
+            algorithms=algos,
+            options={
+                'require_exp': True,
+                'verify_signature': True,
+                'verify_exp': True
+                }
+            )
+    except jwt.InvalidSignatureError as e:
+        logger.error(
+            f'Unauthorized login attempt using invalid public key: {e}')
+        return '', ''
+    except jwt.ExpiredSignatureError as e:
+        logger.error(
+            f'Cannot authorize request, because the JWT has expired: {e}')
+        return '', ''
+
+    logger.debug(f'Successfully decoded JWT payload: {payload}')
+
+    return payload.get('sub', ''), payload.get('iss', '')
+
+
+def _authenticate(tenant: str, header: EnvironHeaders) -> str:
+    """
+    Authentication requires a bearer token in JWT format.
 
     JWT signature verification might not be required at this point,
     because it is done by Vault as well.
@@ -92,49 +129,21 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
 
     logger.debug(f'Received JWT: {token}')
 
-    if not (aud := config.get_jwt_audience_by_tenant(tenant)):
-        raise Exception(f'Cannot get JWT audience for tenant "{tenant}" from config.')
+    token_sub, token_iss = _decode_jwt(tenant, token, cert)
 
-    if not (algos := config.get_jwt_algorithm_by_tenant(tenant)):
-        raise Exception(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
-
-    try:
-        # 10s leeway as clock skew margin
-        payload = jwt.decode(
-            token, cert,
-            leeway=10,
-            audience=aud,
-            algorithms=algos,
-            options={
-                'require_exp': True,
-                'verify_signature': True,
-                'verify_exp': True
-                }
-            )
-    except jwt.InvalidSignatureError as e:
-        logger.error(
-            f'Unauthorized login attempt using invalid public key: {e}')
-        return ''
-    except jwt.ExpiredSignatureError as e:
-        logger.error(
-            f'Cannot authorize request, because the JWT has expired: {e}')
-        return ''
-
-    logger.debug(f'Payload of JWT with kid "{jwt_kid}": {payload}')
-
-    if not (sub := config.get_jwt_subject_by_tenant(tenant)):
+    if not (cfg_sub := config.get_jwt_subject_by_tenant(tenant)):
         raise Exception(f'Cannot get JWT subject for tenant "{tenant}" from config.')
 
-    if not (iss := config.get_jwt_issuer_by_tenant(tenant)):
+    if not (cfg_iss := config.get_jwt_issuer_by_tenant(tenant)):
         raise Exception(f'Cannot get JWT issuer for tenant "{tenant}" from config.')
 
-    if (payload.get('sub', '') == sub) and (payload.get('iss', '') == iss):
+    if (token_sub == cfg_sub) and (token_iss == cfg_iss):
         logger.info(
-            f'Successfully authenticated JWT with kid "{jwt_kid}".')
+            f'Successfully authenticated JWT (issuer: {token_iss}, subject: {token_sub}).')
         return token
     else:
         logger.error(
-                f'Cannot authorize JWT. Wrong issuer "{payload.get("iss", "")}" or subject "{payload.get("sub", "")}".')
+            f'Cannot authorize JWT. Wrong issuer "{token_iss}" or subject "{token_sub}".')
         return ''
 
     return ''
@@ -147,9 +156,8 @@ def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):
     jwe_kid: kid provided by Salesforce. Mandatory.
     nonce: Nonce (?requestId=x) provided by Salesforce (to prevent replay attacks). Optional.
     """
-    token = _authenticate(tenant, request.headers)
 
-    if not token:
+    if not (token := _authenticate(tenant, request.headers)):
         if not (jwt_audience := config.get_jwt_audience_by_tenant(tenant)):
             jwt_audience = 'unknown'
 

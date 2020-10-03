@@ -146,8 +146,6 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
             f'Cannot authorize JWT. Wrong issuer "{token_iss}" or subject "{token_sub}".')
         return ''
 
-    return ''
-
 
 @app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
 def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):

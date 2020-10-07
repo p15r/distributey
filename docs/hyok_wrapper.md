@@ -4,7 +4,7 @@ If you install `HYOK Wrapper` in an environment that has no internet access, fol
 
 The following actions are required to configure & run `HYOK-Wrapper`:
 -  If you plan to run `HYOK Wrapper` in production, edit `docker-compose.yaml` and comment configuration as documented with in-line comments. The default configuration runs `HYOK Wrapper` in development mode, which deploys Hashicorp Vault using its in-memory database.
-- Build service: run `./00-build.sh` & follow instructions
+- Build service: run `./00-build.sh` (`./00-build.sh -d` if you are developer)
 - Run service: `./01-start.sh`
 - Configure service: `config/config.json`
    - Check example config: `dev/example-config.json`

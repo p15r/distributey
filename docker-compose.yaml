@@ -25,7 +25,7 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/hyok-wrapper-dockerfile
     depends_on: # Comment for production.
       - vault   # Comment for production.
 

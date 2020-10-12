@@ -1,0 +1,55 @@
+swagger: '2.0'
+info:
+    title: hyok-wrapper
+    description: API of the HYOK Wrapper.
+    contact:
+        name: Author
+        url: 'link'
+        email: author@example.com
+    version: '0.1'
+host: hyok-wrapper.example.com
+basePath: /v1
+schemes:
+    - https
+consumes:
+    - application/json
+produces:
+    - application/json
+paths:
+    '/{tenant}/{kid}':
+        get:
+            summary: Request JWE tokens.
+            description: |-
+                Call this API like host/v1/tenant/kid?resourceId=nonce.
+                In response, a JWE is sent containing a wrapped key.
+            responses:
+                '200':
+                    description: ''
+                '401':
+                    description: If JWT token signature cannot be verified.
+                '500':
+                    description: If HYOK Wrapper crashes and responds with HTTP 500.
+        parameters:
+            -   name: resourceId
+                in: query
+                description: A nonce that prevents the replay attack.
+                required: true
+                type: string
+            -   name: tenant
+                in: path
+                description: Name of key consumer.
+                required: true
+                type: string
+            -   name: kid
+                in: path
+                description: The JWE kid (key id)
+                required: true
+                type: string
+securityDefinitions:
+    Bearer:
+        type: apiKey
+        description: A bearer token in JWT format.
+        name: Authorization
+        in: header
+security:
+    -   Bearer: []

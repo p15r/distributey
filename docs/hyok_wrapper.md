@@ -9,6 +9,8 @@ The following actions are required to configure & run `HYOK-Wrapper`:
 - Configure service: `config/config.json`
    - Check example config: `dev/example-config.json`
 - (Re-) load config: `./02-load-config.sh`
+- `HYOK Wrapper` is now operational
+- For audit purposes, container logs are written to the host's logging infrastructure. `docker-compose.yaml` can be edited to forward logs to a remote logging infrastructure [link](https://docs.docker.com/config/containers/logging/syslog/)
 
 To stop or uninstall `HYOK Wrapper`:
 - Stop service: `./03-stop.sh`

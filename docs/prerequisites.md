@@ -1,4 +1,5 @@
 # Prerequisites 📚
+- `openssl`
 - `docker` (tested with `19.03.13`)
   - add user to group `docker`(`sudo usermod -a -G docker USER`) or run scripts with `sudo`
 - `docker-compose` (tested with `v3.7`)

@@ -7,6 +7,10 @@ services:
     hostname: nginx
     restart: always
     command: ["sh", "-c", "sleep 10 && nginx -g 'daemon off;'"]
+    logging:
+      driver: syslog
+      options:
+        tag: "{{.Name}}/{{.ID}}"
     ports:
       - target: 8443
         published: 443
@@ -26,6 +30,10 @@ services:
     build:
       context: .
       dockerfile: docker/hyok-wrapper-dockerfile
+    logging:
+      driver: syslog
+      options:
+        tag: "{{.Name}}/{{.ID}}"
     depends_on: # Comment for production.
       - vault   # Comment for production.
 

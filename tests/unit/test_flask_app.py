@@ -36,3 +36,7 @@ class TestFlaskApp():
         monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
 
         assert app._authenticate('salesforce', self.header) == self.jwt_token
+
+    def test_get_wrapped_key(self):
+        # TODO: implement
+        pass

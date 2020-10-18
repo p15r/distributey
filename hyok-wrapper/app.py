@@ -52,7 +52,7 @@ def _get_jwt_from_header(header: EnvironHeaders) -> str:
     return token
 
 
-def _decode_jwt(tenant: str, jwt_token: str, cert: str, verify_exp: bool = True) -> Tuple[str, str]:
+def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     """
     The jwt_token must..
     - have a valid signature,
@@ -76,7 +76,7 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str, verify_exp: bool = True)
             options={
                 'require_exp': True,
                 'verify_signature': True,
-                'verify_exp': verify_exp
+                'verify_exp': True
                 }
             )
     except jwt.InvalidSignatureError as e:

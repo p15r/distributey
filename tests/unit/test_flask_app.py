@@ -1,5 +1,6 @@
 import pytest
 import app
+import config
 from werkzeug.datastructures import Headers
 
 
@@ -25,11 +26,19 @@ class TestFlaskApp():
             ('Accept', '*/*'),
             ('Authorization', f'Bearer {self.jwt_token.decode()}')])
 
-    def test_get_kid_from_jwt(self):
+        self.jwt_signing_pubkey = open('dev/tmp/jwt.pub').read()
+
+    def test__get_kid_from_jwt(self):
         assert app._get_kid_from_jwt(self.jwt_token) == 'jwt_kid_salesforce_serviceX'
 
-    def test_get_jwt_from_header(self):
+    def test__get_jwt_from_header(self):
         assert app._get_jwt_from_header(self.header) == self.jwt_token.decode()
 
-    def test_decode_jwt(self):
+    def test__decode_jwt(self, monkeypatch):
+        monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
+
+        assert app._decode_jwt('salesforce', self.jwt_token, self.jwt_signing_pubkey, verify_exp=False) == \
+            ('cacheonlyservice', 'salesforce')
+
+    def test__authenticate(self):
         assert False

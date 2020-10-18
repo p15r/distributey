@@ -11,4 +11,4 @@ fi
 
 echo 'Running tests & create coverage report...'
 coverage run -m pytest -s -vv tests/unit/
-coverage report -m
+#coverage report -m

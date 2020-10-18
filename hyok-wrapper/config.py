@@ -7,11 +7,13 @@ from typing import Any
 # hyok_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
+CFG_PATH = '/opt/hyok-wrapper/config/config.json'
+
 
 # TODO: be more specific than "Any" type hint.
 def get_config_by_key(key: str) -> Any:
     try:
-        with open('/opt/hyok-wrapper/config/config.json', 'r') as f:
+        with open(CFG_PATH, 'r') as f:
             cfg = json.load(f)
     except FileNotFoundError as e:
         logger.error('Cannot load config file. Has "02-load-config.sh" already been executed?')

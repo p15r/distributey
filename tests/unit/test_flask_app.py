@@ -37,6 +37,10 @@ class TestFlaskApp():
 
         assert app._authenticate('salesforce', self.header) == self.jwt_token
 
-    def test_get_wrapped_key(self):
-        # TODO: implement
-        pass
+    def test_get_wrapped_key(self, http_client):
+        # this feels more like an integration test.. wrong place?
+        response = http_client.get('/path/to/get/jwe')
+
+        print(response)
+
+        assert False

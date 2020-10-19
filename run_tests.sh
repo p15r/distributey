@@ -9,6 +9,6 @@ else
     export PYTHONPATH="hyok-wrapper"/
 fi
 
-echo 'Running tests & create coverage report...'
+echo 'Running tests & creating coverage report...'
 coverage run -m pytest -s -vv tests/unit/
 coverage report -m $(find hyok-wrapper/ -name "*.py")

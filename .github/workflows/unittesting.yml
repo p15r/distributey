@@ -14,10 +14,14 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
       - name: Execute unit tests.
         run: |
           cd $GITHUB_WORKSPACE
-          python3 --version
           python3 -m pip install -r requirements.txt
           python3 -m pip install -r requirements_dev.txt
           ./run_tests.sh -u

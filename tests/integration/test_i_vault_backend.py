@@ -1,11 +1,4 @@
-import pytest
-import config
 import vault_backend
-
-
-@pytest.fixture(autouse=True)
-def setup_module(monkeypatch):
-    monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
 
 
 class TestVaultBackend():

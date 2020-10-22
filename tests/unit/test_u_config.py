@@ -1,10 +1,4 @@
-import pytest
 import config
-
-
-@pytest.fixture(autouse=True)
-def setup_module(monkeypatch):
-    monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
 
 
 class TestUnitConfig():

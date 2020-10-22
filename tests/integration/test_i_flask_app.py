@@ -1,14 +1,9 @@
-import config
 import base64
 import json
 
 
 class TestIntegrationFlaskApp():
     def test_get_wrapped_key(self, http_client, monkeypatch, get_jwt):
-        # this feels more like an integration test.. wrong place?
-
-        monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
-
         kid = 'jwe-kid-salesforce-serviceX'
         nonce = 'randomstring'
         test_url = f'/v1/salesforce/{kid}?requestId={nonce}'

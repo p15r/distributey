@@ -1,14 +1,6 @@
-import pytest
-import config
 import jwe
 import base64
 import json
-
-
-# TODO: put this into a central place, is in every unittest (and integration test?) module
-@pytest.fixture(autouse=True)
-def setup_module(monkeypatch):
-    monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
 
 
 class TestJwe():

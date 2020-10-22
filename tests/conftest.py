@@ -2,9 +2,12 @@ import pytest
 from app import app
 from werkzeug.datastructures import Headers
 import dev.create_jwt
+import config
 
 
-# TODO: return vs yield
+# Note about yield vs return:
+# By using a yield statement instead of return,
+# all the code after the yield statement serves as the teardown code.
 
 def get_jwt():
     return dev.create_jwt.token
@@ -47,3 +50,8 @@ def http_client():
 
     with app.test_client() as client:
         yield client
+
+
+@pytest.fixture(autouse=True)
+def setup_module(monkeypatch):
+    monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')

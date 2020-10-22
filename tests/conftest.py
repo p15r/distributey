@@ -15,6 +15,16 @@ def get_jwt_fixture():
     return get_jwt()
 
 
+@pytest.fixture()
+def get_protected_headers():
+    # ascii_b64_protected_header
+    return (
+            b'eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5'
+            b'jIjogIkEyNTZHQ00iLCAia2lkIjogIm'
+            b'p3ZS1raWQtc2FsZXNmb3JjZS1zZXJ2a'
+            b'WNlWCIsICJqdGkiOiAibm9uY2UifQ==')
+
+
 @pytest.fixture
 def get_headers():
     return Headers([

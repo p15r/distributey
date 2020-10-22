@@ -18,8 +18,8 @@ function help {
 
 function unittest {
     echo 'Running tests & creating coverage report...'
-    coverage run -m pytest -s -vv tests/unit/
-    coverage report -m $(find hyok-wrapper/ -name "*.py")
+    python3 -m coverage run -m pytest -s -vv tests/unit/
+    python3 -m coverage report -m $(find hyok-wrapper/ -name "*.py")
 }
 
 function integrationtest {

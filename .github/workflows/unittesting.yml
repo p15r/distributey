@@ -1,0 +1,22 @@
+name: Unit tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unittesting:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Execute unit tests.
+        run: |
+          cd $GITHUB_WORKSPACE
+          python3 -m pip install -r requirements.txt
+          python3 -m pip install -r requirements_dev.txt
+          ./run_tests.sh -u

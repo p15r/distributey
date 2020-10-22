@@ -17,6 +17,7 @@ jobs:
       - name: Execute unit tests.
         run: |
           cd $GITHUB_WORKSPACE
+          python3 --version
           python3 -m pip install -r requirements.txt
           python3 -m pip install -r requirements_dev.txt
           ./run_tests.sh -u

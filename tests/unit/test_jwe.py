@@ -59,10 +59,3 @@ class TestJwe():
         protected_header = json.loads(base64.urlsafe_b64decode(b64_protected_header))
         assert protected_header['kid'] == jwe_kid
         assert protected_header['jti'] == nonce
-
-    def test_get_wrapped_key_as_jwe(self, get_jwt):
-        nonce = 'random-nonce'
-        jwe_kid = 'jwe-kid-salesforce-serviceX'
-        jwe_token = jwe.get_wrapped_key_as_jwe(get_jwt, 'salesforce', jwe_kid, nonce)
-        assert json.loads(jwe_token)['kid'] == jwe_kid
-        # test__create_jwe_token_json() tests the rest

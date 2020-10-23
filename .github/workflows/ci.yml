@@ -7,34 +7,33 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  unittesting:
+  testing:
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of sonar scan
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
 
-      - name: Execute unit tests.
+      - name: Install Python dependencies.
         run: |
           cd $GITHUB_WORKSPACE
           python3 -m pip install -r requirements.txt
           python3 -m pip install -r requirements_dev.txt
+
+      - name: Execute unit tests.
+        run: |
+          cd $GITHUB_WORKSPACE
           ./dev/dev_setup.sh
           ./run_tests.sh -u
 
-  SAST:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: SonarCloud Scan
+      - name: Conduct Sonar Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

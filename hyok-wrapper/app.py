@@ -61,10 +61,10 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     """
 
     if not (aud := config.get_jwt_audience_by_tenant(tenant)):
-        raise Exception(f'Cannot get JWT audience for tenant "{tenant}" from config.')
+        raise ValueError(f'Cannot get JWT audience for tenant "{tenant}" from config.')
 
     if not (algos := config.get_jwt_algorithm_by_tenant(tenant)):
-        raise Exception(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
+        raise ValueError(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
 
     try:
         # 10s leeway as clock skew margin
@@ -116,7 +116,7 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
 
     if not (validation_cert := config.get_jwt_validation_cert_by_tenant_and_kid(tenant, jwt_kid)):
-        raise Exception(
+        raise ValueError(
                 f'No validation certificate exists in config.json to verify signature for JWTs with kid "{jwt_kid}".')
 
     logger.debug(f'Attempting to validate JWT signature using cert "{validation_cert}".')
@@ -132,10 +132,10 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     token_sub, token_iss = _decode_jwt(tenant, token, cert)
 
     if not (cfg_sub := config.get_jwt_subject_by_tenant(tenant)):
-        raise Exception(f'Cannot get JWT subject for tenant "{tenant}" from config.')
+        raise ValueError(f'Cannot get JWT subject for tenant "{tenant}" from config.')
 
     if not (cfg_iss := config.get_jwt_issuer_by_tenant(tenant)):
-        raise Exception(f'Cannot get JWT issuer for tenant "{tenant}" from config.')
+        raise ValueError(f'Cannot get JWT issuer for tenant "{tenant}" from config.')
 
     if (token_sub == cfg_sub) and (token_iss == cfg_iss):
         logger.info(

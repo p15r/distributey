@@ -1,0 +1,49 @@
+name: Unittesting
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unittesting:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Execute unit tests.
+        run: |
+          cd $GITHUB_WORKSPACE
+          python3 -m pip install -r requirements.txt
+          python3 -m pip install -r requirements_dev.txt
+          ./dev/dev_setup.sh
+          ./run_tests.sh -u
+
+#  sonarcloud:
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@v2
+#      with:
+#        # Disabling shallow clone is recommended for improving relevancy of reporting
+#        fetch-depth: 0
+#    - name: SonarCloud Scan
+#      uses: sonarsource/sonarcloud-github-action@master
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#      with:
+#        args: >
+#          -Dsonar.organization=p15r
+#          -Dsonar.projectKey=p15r_HYOK-Wrapper
+#          -Dsonar.python.coverage.reportPaths=coverage.xml
+#          -Dsonar.test.exclusions=tests/**
+#          -Dsonar.tests=tests/
+#          -Dsonar.verbose=true

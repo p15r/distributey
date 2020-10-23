@@ -1,6 +1,6 @@
-import jwe
 import base64
 import json
+import jwe
 
 
 class TestJwe():

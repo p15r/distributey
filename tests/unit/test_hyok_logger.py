@@ -1,5 +1,5 @@
-from hyok_logging import logger
 import logging
+from hyok_logging import logger
 
 
 def test_hyok_logging():

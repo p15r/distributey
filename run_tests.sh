@@ -26,6 +26,7 @@ function integrationtest {
     echo 'Running tests & creating coverage report...'
     coverage run -m pytest -s -vv tests/integration/
     coverage report -m $(find hyok-wrapper/ -name "*.py")
+    coverage xml $(find hyok-wrapper/ -name "*.py")
 }
 
 while getopts hui flag

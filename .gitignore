@@ -9,3 +9,4 @@ config/backend/
 dev/tmp/
 dev/key_consumer_cert.crt
 .coverage
+coverage.xml

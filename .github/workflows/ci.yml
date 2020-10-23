@@ -29,6 +29,10 @@ jobs:
           ./dev/dev_setup.sh
           ./run_tests.sh -u
 
+  SAST:
+    runs-on: ubuntu-latest
+
+    steps:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:

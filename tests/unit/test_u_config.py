@@ -18,29 +18,42 @@ class TestUnitConfig():
 
     def test_get_key_consumer_cert_by_tenant_and_kid(self):
         cfg = config.get_key_consumer_cert_by_tenant_and_kid(self.tenant, self.jwe_kid)
-
         assert cfg == 'config/backend/sfhyok_allservices_key_consumer.crt'
+
+        assert config.get_key_consumer_cert_by_tenant_and_kid('nonexistingtenant', self.jwe_kid) == ''
 
     def test_get_vault_path_by_tenant_and_kid(self):
         cfg = config.get_vault_path_by_tenant_and_kid(self.tenant, self.jwe_kid)
         assert cfg == 'salesforce:latest'
 
+        assert config.get_vault_path_by_tenant_and_kid('nonexistingtenant', self.jwe_kid) == ''
+
     def test_get_jwt_algorithm_by_tenant(self):
         cfg = config.get_jwt_algorithm_by_tenant(self.tenant)
         assert cfg == 'RS256'
+
+        assert config.get_jwt_algorithm_by_tenant('nonexistingtenant') == ''
 
     def test_get_jwt_audience_by_tenant(self):
         cfg = config.get_jwt_audience_by_tenant(self.tenant)
         assert cfg == 'urn:hyok-wrapper'
 
+        assert config.get_jwt_audience_by_tenant('nonexistingtenant') == ''
+
     def test_get_jwt_subject_by_tenant(self):
         cfg = config.get_jwt_subject_by_tenant(self.tenant)
         assert cfg == 'cacheonlyservice'
+
+        assert config.get_jwt_subject_by_tenant('nonexistingtenant') == ''
 
     def test_get_jwt_issuer_by_tenant(self):
         cfg = config.get_jwt_issuer_by_tenant(self.tenant)
         assert cfg == 'salesforce'
 
+        assert config.get_jwt_issuer_by_tenant('nonexistingtenant') == ''
+
     def test_get_jwt_validation_cert_by_tenant_and_kid(self):
         cfg = config.get_jwt_validation_cert_by_tenant_and_kid(self.tenant, self.jwt_kid)
         assert cfg == 'config/auth/jwt_salesforce_serviceX.pub'
+
+        assert config.get_jwt_validation_cert_by_tenant_and_kid('nonexistingtenant', self.jwt_kid) == ''

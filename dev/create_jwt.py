@@ -3,7 +3,8 @@ import datetime
 
 expiration_time = 300
 
-private_key = open('dev/tmp/jwt.key').read()
+with open('dev/tmp/jwt.key') as f:
+    private_key = f.read()
 
 payload = {
     'sub': 'cacheonlyservice',

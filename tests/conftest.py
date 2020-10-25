@@ -41,7 +41,10 @@ def get_headers():
 
 @pytest.fixture
 def get_jwt_signing_pubkey():
-    return open('dev/tmp/jwt.pub').read()
+    with open('dev/tmp/jwt.pub') as f:
+        cnt = f.read()
+
+    return cnt
 
 
 @pytest.fixture

@@ -31,6 +31,29 @@ class TestUnitFlaskApp():
         assert app._decode_jwt('salesforce', get_jwt, get_jwt_signing_pubkey) == \
             ('cacheonlyservice', 'salesforce')
 
+        # test w/ non existing tenant
+        try:
+            app._decode_jwt('nonexistingtenant', get_jwt, get_jwt_signing_pubkey)
+            assert False, 'Should fail if non existing tenant is given.'
+        except ValueError:
+            assert True, 'Failed as expected on non existing tenant.'
+
+        # test w/ expired token
+        old_token = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZC'
+                     'I6Imp3dF9raWRfc2FsZXNmb3JjZV9zZXJ2aWNlWCJ9.eyJzdW'
+                     'IiOiJjYWNoZW9ubHlzZXJ2aWNlIiwiaXNzIjoic2FsZXNmb3J'
+                     'jZSIsImF1ZCI6InVybjpoeW9rLXdyYXBwZXIiLCJpYXQiOjE2'
+                     'MDM2NTE2MTMsImV4cCI6MTYwMzY1MTkxM30.NBhBFYLm4ySZq'
+                     'Dk5sYJtv0NY56Ti3SgB6BrO1iE7tdOBMmjM6BSNQDaRBscURw'
+                     'ZuQWNM2f2Leab4Kgf1wax5O9KrRJpD6Ym4jBH2xTHtgzxLfUF'
+                     'kEihyVEpLes0Nf2e-w0efOq5Ayqmo_KfmlTqP1PK37U9CaIub'
+                     'yqKYOSFAbclQ4rEkiZOM38--iJbd6syJ6W0nnEUvgRaQichZK'
+                     '3mN3Gdo46C-WUY21MPOy_6qz4WGu6qCAEjBePmt_-3dOpPKQR'
+                     '0CGCKTtCP8psga3M6W9WUgaCpgYnDS-YQdEnD3VG575J-1Cmd'
+                     'cShKc-Fo2F-FWpybcP98hMaFg2sQfgjgFNg')
+
+        assert app._decode_jwt('salesforce', old_token, get_jwt_signing_pubkey) == ('', '')
+
     def test__authenticate(self, monkeypatch, get_headers, get_jwt):
         assert app._authenticate('salesforce', get_headers) == get_jwt
 

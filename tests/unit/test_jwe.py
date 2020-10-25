@@ -12,6 +12,8 @@ class TestJwe():
         else:
             assert False, 'Cannot detect certificate.'
 
+        assert jwe._get_key_consumer_cert('nonexistingtenant', 'jwe-kid-salesforce-serviceX') == ''
+
     def test__encrypt_cek_with_key_consumer_key(self):
         b64_cek_ciphertext = jwe._encrypt_cek_with_key_consumer_key(
             'salesforce', 'jwe-kid-salesforce-serviceX', b'randrom-cek')
@@ -22,6 +24,9 @@ class TestJwe():
             assert isinstance(decoded_ciphertext, bytes)
         except Exception as e:
             assert False, e
+
+        assert jwe._encrypt_cek_with_key_consumer_key(
+            'nonexistingtenant', 'jwe-kid-salesforce-serviceX', 'randrom-cek') == b''
 
     def test__encrypt_dek_with_cek(self, get_protected_headers):
         b64_dek_ciphertext, b64_tag = jwe._encrypt_dek_with_cek(

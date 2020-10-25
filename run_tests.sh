@@ -13,29 +13,38 @@ function help {
     echo -e "-h\tShow help."
     echo -e "-u\tRun unit tests."
     echo -e "-i\tRun integration tests."
+    echo -e "-a\tRun unit & integration tests."
     exit 0
 }
 
-function unittest {
-    echo 'Running tests & creating coverage report...'
-    python3 -m coverage run -m pytest -s -vv tests/unit/
+function runtests {
+    python3 -m coverage run -m pytest -s -vv $1
     python3 -m coverage report -m $(find hyok-wrapper/ -name "*.py")
     python3 -m coverage xml $(find hyok-wrapper/ -name "*.py")
+}
+
+function unittest {
+    echo 'Running unit tests & creating coverage report...'
+    runtests "tests/unit/"
 }
 
 function integrationtest {
-    echo 'Running tests & creating coverage report...'
-    python3 -m coverage run -m pytest -s -vv tests/integration/
-    python3 -m coverage report -m $(find hyok-wrapper/ -name "*.py")
-    python3 -m coverage xml $(find hyok-wrapper/ -name "*.py")
+    echo 'Running integration tests & creating coverage report...'
+    runtests "tests/integration/"
 }
 
-while getopts hui flag
+function alltests {
+    echo 'Running all tests & creating coverage report...'
+    runtests "tests/"
+}
+
+while getopts huia flag
 do
     case "${flag}" in
         h) help;;
         u) unittest;;
         i) integrationtest;;
+        a) alltests;;
         *) help;;
     esac
 done

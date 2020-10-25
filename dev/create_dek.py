@@ -23,14 +23,14 @@ print(f'🔑 Key (derived from password; pbkdf2; hex): {key.hex()}')
 print(f'🔑 IV (hex): {iv.hex()}')
 
 # encrypt
-cipher = AES.new(key, AES.MODE_CBC, iv=iv)
+cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
 cipher_text = cipher.encrypt(pad(plain_text, AES.block_size))
 b64_cipher_text = base64.b64encode(cipher_text)
 
 print(f'🔒 Encrypted data (base64): {b64_cipher_text.decode()}')
 
 # decrypt
-cipher = AES.new(key, AES.MODE_CBC, iv=iv)
+cipher = AES.new(key, AES.MODE_GCM, nonce=iv)
 cipher_text = base64.b64decode(b64_cipher_text)
 decrypted_data = unpad(cipher.decrypt(cipher_text), AES.block_size)
 print(f'🔓 Original data: {decrypted_data.decode()}')

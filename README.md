@@ -14,7 +14,7 @@ Currently supported integrations:
 ## Installation
 1. Fulfill prerequisites [[docs](docs/prerequisites.md)]
 2. Configure key consumer [[docs](docs/key_consumer_setup.md)]
-3. Configure `distributey`  [[docs](docs/distributey_.md)]
+3. Configure `distributey`  [[docs](docs/distributey.md)]
 4. Use `distributey` [[docs](docs/usage.md)]
 
 

@@ -1,5 +1,5 @@
 # Import Key to Salesforce
-> ⚠️⚠ This option is not recommended, because the private key needs to be unnecessarily transmitted over the internet.
+> ⚠️ This option is not recommended, because the private key needs to be unnecessarily transmitted over the internet.
 
 - Create own keypair (like `openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout dev/tmp/jwt.key -out dev/tmp/jwt.pem -subj "/C=No/ST=NoState/L=NoLocation/O=NoOrg/OU=NoOrgUnit/CN=NoCommonName/emailAddress=NoEmailAddress"`)
 - In case the certificate has been generated using another tool, make sure it is in PEM format. If not, convert it: `openssl x509 -in your-certificate.crt -out dev/tmp/jwt.pem -outform PEM`

@@ -2,20 +2,20 @@
   "DEV_MODE": false,
   "LOG_LEVEL": "info",
   "TENANT_CFG": {
-    "salesforce": {
+    "tenant": {
       "auth": {
         "jwt_algorithm": "RS256",
         "jwt_audience": "urn:distributey",
-        "jwt_issuer": "salesforce",
-        "jwt_subject": "cacheonlyservice",
+        "jwt_issuer": "issuer",
+        "jwt_subject": "subject",
         "jwt_validation_certs": {
-          "jwt_kid_salesforce_serviceX": "config/auth/jwt_salesforce_serviceX.pub"
+          "jwt-kid": "config/auth/tenant-jwt-kid.pubkey"
         }
       },
       "backend": {
-        "jwe-kid-salesforce-serviceX": {
-          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
-          "vault_path": "salesforce:latest"
+        "jwe-kid": {
+          "key_consumer_cert": "config/backend/tenant_servicename_key_consumer.crt",
+          "vault_path": "vault-path:latest"
         }
       }
     }

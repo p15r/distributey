@@ -5,18 +5,7 @@ policies = ["distributey-pki", "cacheonlyservice-transit"]
 
 auth_jwt_default_role                 = "distributey"
 auth_jwt_default_role_bound_audiences = ["urn:distributey"]
-auth_jwt_validation_pubkeys = [<<EOT
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqDlq7rqgsWuKCm0LJe9m
-VdX0By6g3YAeL/4mUkM4Z8+HeT1zInD2/TpW86CpNfo/KZjlVRFxLnjwUmYFJwo9
-3NHJPxPTkOX7IxFlqZPiAbnijnIlpCtT6Gw4QYlpok6vI5so2pBqvKo1Nc7NmQ+a
-cC2YB/fbiodWBogXwPR2b8OpLrP4tnWmYXP4Eu+q3iDE8kZo68vHjau1ux/JaYCr
-yImXn2A3jGkMDQkhrWK6T/zhnmJL27wMDyTdFRVEUiEumTyHpMeGg8ySpG8CiOYk
-qwdW9DdlEPakLSzq3MHRSrCmjoqSssjxc8oLNJTCHPWtqlWRokKW8hUWjiYLdxEJ
-VQIDAQAB
------END PUBLIC KEY-----
-EOT
-]
+auth_jwt_validation_pubkeys = [LIST_OF_CERTS]
 
 pki_path                      = "distributey"
 pki_root_cert_ttl             = 315360000 # 10 years

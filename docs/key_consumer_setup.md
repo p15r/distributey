@@ -2,7 +2,7 @@
 Currently, `distributey` only supports Salesforce as a key consumer.
 
 ## Specs
-- Salesforce `distributey` format specification: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)]
+- Salesforce HYOK format specification: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)]
 
 ## Prerequisites
 1. Get a developer account: [[docs](https://developer.salesforce.com/signup)]
@@ -25,7 +25,7 @@ Configure Salesforce to authenticate against `distributey` using a JWT-based tok
          - Use key size of `4096 bit`
          - Use `platform encryption`
      - Download the certificate and save it by its `Unique Name`. It must later be configured in `distributey` (`config/auth/`).
-     - Salesforce provides a certificate from which `distributey` only needs the public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pub`
+     - Salesforce provides a certificate from which `distributey` only needs its public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pub`
    - Import your own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
 2. To go `Named Credential` on Salesforce and create a `New Named Credential` as following:
    | Config name  | Value |

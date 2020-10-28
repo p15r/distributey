@@ -1,8 +1,13 @@
 import base64
 import json
+import app
 
 
 class TestIntegrationFlaskApp():
+    def test__get_dek_from_vault(self, get_jwt):
+        dek = app._get_dek_from_vault(get_jwt, 'salesforce', 'jwe-kid-salesforce-serviceX')
+        assert isinstance(dek, bytes)
+
     def test_get_wrapped_key(self, http_client, monkeypatch, get_jwt):
         kid = 'jwe-kid-salesforce-serviceX'
         nonce = 'randomstring'

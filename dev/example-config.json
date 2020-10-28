@@ -5,7 +5,7 @@
     "salesforce": {
       "auth": {
         "jwt_algorithm": "RS256",
-        "jwt_audience": "urn:hyok-wrapper",
+        "jwt_audience": "urn:distributey",
         "jwt_issuer": "salesforce",
         "jwt_subject": "cacheonlyservice",
         "jwt_validation_certs": {
@@ -14,12 +14,12 @@
       },
       "backend": {
         "jwe-kid-salesforce-serviceX": {
-          "key_consumer_cert": "config/backend/sfhyok_allservices_key_consumer.crt",
+          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
           "vault_path": "salesforce:latest"
         }
       }
     }
   },
-  "VAULT_JWT_DEFAULT_ROLE": "hyok",
+  "VAULT_JWT_DEFAULT_ROLE": "distributey",
   "VAULT_URL": "http://vault:8200"
 }

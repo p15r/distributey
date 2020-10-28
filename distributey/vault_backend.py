@@ -12,7 +12,7 @@ HVAC, and requests respectively, store the exported secret in memory as
 import base64
 import hvac
 import config
-from hyok_logging import logger
+from dy_logging import logger
 
 
 def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:

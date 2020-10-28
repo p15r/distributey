@@ -20,7 +20,7 @@ from typing import Tuple
 
 import vault_backend
 import config
-from hyok_logging import logger
+from dy_logging import logger
 
 
 def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:

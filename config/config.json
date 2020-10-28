@@ -5,7 +5,7 @@
     "tenant": {
       "auth": {
         "jwt_algorithm": "RS256",
-        "jwt_audience": "urn:hyok-wrapper",
+        "jwt_audience": "urn:distributey",
         "jwt_issuer": "issuer",
         "jwt_subject": "subject",
         "jwt_validation_certs": {
@@ -20,6 +20,6 @@
       }
     }
   },
-  "VAULT_JWT_DEFAULT_ROLE": "hyok",
+  "VAULT_JWT_DEFAULT_ROLE": "distributey",
   "VAULT_URL": "http://vault:8200"
 }

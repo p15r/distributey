@@ -16,20 +16,20 @@ services:
         published: 443
         protocol: tcp
     volumes:
-      - ./docker/nginx.conf:/etc/nginx/conf.d/hyok-wrapper.conf:ro
+      - ./docker/nginx.conf:/etc/nginx/conf.d/distributey.conf:ro
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
-      - hyok-wrapper
+      - distributey
       - vault-agent
 
-  hyok-wrapper:
-    image: pat/hyok-wrapper:0.1
-    container_name: hyok-wrapper
-    hostname: hyok-wrapper
+  distributey:
+    image: pat/distributey:0.1
+    container_name: distributey
+    hostname: distributey
     restart: always
     build:
       context: .
-      dockerfile: docker/hyok-wrapper-dockerfile
+      dockerfile: docker/distributey-dockerfile
     logging:
       driver: syslog
       options:

@@ -2,7 +2,7 @@
 
 set -euf -o pipefail
 
-echo '🛬 Stopping HYOK Wrapper...'
+echo '🛬 Stopping distributey...'
 cd docker
 docker-compose stop
 cd ..

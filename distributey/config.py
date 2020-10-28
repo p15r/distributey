@@ -4,10 +4,10 @@ import json
 import logging
 from typing import Any
 
-# hyok_logging.logger() would cause import loop
+# distributey_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
-CFG_PATH = '/opt/hyok-wrapper/config/config.json'
+CFG_PATH = '/opt/distributey/config/config.json'
 
 
 # TODO: be more specific than "Any" type hint.

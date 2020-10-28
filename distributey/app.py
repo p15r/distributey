@@ -10,12 +10,12 @@ from typing import Tuple
 
 import jwe
 import config
-from hyok_logging import logger
+from dy_logging import logger
 
 
 app = Flask(__name__)
 
-logger.info(f'🚀 HYOK Wrapper is starting (pid {getpid()})...')
+logger.info(f'🚀 distributey is starting (pid {getpid()})...')
 
 # URL-based API versioning
 base_path = '/'

@@ -2,5 +2,5 @@
 
 set -euf -o pipefail
 
-docker cp hyok-wrapper hyok-wrapper:/opt/
-docker exec -u root hyok-wrapper chown -R hyok:hyok /opt/hyok-wrapper
+docker cp distributey distributey:/opt/
+docker exec -u root distributey chown -R distributey:distributey /opt/distributey

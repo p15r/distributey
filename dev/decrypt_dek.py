@@ -11,7 +11,7 @@ cek = bytes.fromhex('hex-formatted-string')
 aad = b'base64-formated-string'
 # if dek is retrieved from JWE token:
 # encrypted_dek = base64.urlsafe_b64decode('hex-formatted-string')
-# if dek is retrieved from HYOK-Wrapper log:
+# if dek is retrieved from distributey log:
 encrypted_dek = bytes.fromhex('hex-formatted-string')
 tag = bytes.fromhex('hex-formatted-string')
 

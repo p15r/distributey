@@ -18,7 +18,7 @@ class TestUnitConfig():
 
     def test_get_key_consumer_cert_by_tenant_and_kid(self):
         cfg = config.get_key_consumer_cert_by_tenant_and_kid(self.tenant, self.jwe_kid)
-        assert cfg == 'config/backend/sfhyok_allservices_key_consumer.crt'
+        assert cfg == 'config/backend/distributey_allservices_key_consumer.crt'
 
         assert config.get_key_consumer_cert_by_tenant_and_kid('nonexistingtenant', self.jwe_kid) == ''
 
@@ -36,7 +36,7 @@ class TestUnitConfig():
 
     def test_get_jwt_audience_by_tenant(self):
         cfg = config.get_jwt_audience_by_tenant(self.tenant)
-        assert cfg == 'urn:hyok-wrapper'
+        assert cfg == 'urn:distributey'
 
         assert config.get_jwt_audience_by_tenant('nonexistingtenant') == ''
 

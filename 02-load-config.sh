@@ -6,21 +6,21 @@ set -euf -o pipefail
 timestamp=$(date +%Y-%m-%d_%H:%M:%S)
 
 echo "🔧 Create \"config/\" directory if it does not exist.."
-docker exec hyok-wrapper sh -c "[ ! -d /opt/hyok-wrapper/config/ ] && mkdir -p /opt/hyok-wrapper/config/init || echo \"(Config directory already exists)\""
+docker exec distributey sh -c "[ ! -d /opt/distributey/config/ ] && mkdir -p /opt/distributey/config/init || echo \"(Config directory already exists)\""
 
 echo "💾 Create backup of current config.."
-docker exec hyok-wrapper sh -c "mkdir /opt/hyok-wrapper/config-$timestamp && cp -r /opt/hyok-wrapper/config/* /opt/hyok-wrapper/config-$timestamp"
+docker exec distributey sh -c "mkdir /opt/distributey/config-$timestamp && cp -r /opt/distributey/config/* /opt/distributey/config-$timestamp"
 
 echo "🗑️ Delete current config.."
-docker exec -u root hyok-wrapper sh -c "rm -rf /opt/hyok-wrapper/config/*"
+docker exec -u root distributey sh -c "rm -rf /opt/distributey/config/*"
 
 echo "💾 Copy new config.."
-docker cp config/ hyok-wrapper:/opt/hyok-wrapper/
+docker cp config/ distributey:/opt/distributey/
 
 echo "🔧 Set file permissions.."
-docker exec -u root hyok-wrapper chown -R hyok:hyok /opt/hyok-wrapper/config
+docker exec -u root distributey chown -R distributey:distributey /opt/distributey/config
 
 # gunicorn reloads only if a python file changes..
-touch hyok-wrapper/app.py
-docker cp hyok-wrapper/app.py hyok-wrapper:/opt/hyok-wrapper/app.py
-docker exec -u root hyok-wrapper chown -R hyok:hyok /opt/hyok-wrapper/app.py
+touch distributey/app.py
+docker cp distributey/app.py distributey:/opt/distributey/app.py
+docker exec -u root distributey chown -R distributey:distributey /opt/distributey/app.py

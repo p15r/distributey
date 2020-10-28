@@ -9,7 +9,7 @@ with open('dev/tmp/jwt.key') as f:
 payload = {
     'sub': 'cacheonlyservice',
     'iss': 'salesforce',
-    'aud': 'urn:hyok-wrapper',
+    'aud': 'urn:distributey',
     'iat': datetime.datetime.utcnow(),
     'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration_time)
 }

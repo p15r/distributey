@@ -23,4 +23,4 @@ cp dev/tmp/jwt.pub config/auth/jwt_salesforce_serviceX.pub
 echo 'Copying self-signed certs for API...'
 cp dev/tmp/nginx.{key,crt} docker/certs/
 echo 'Copying key consumer key...'
-cp dev/tmp/key_consumer_key.crt config/backend/sfhyok_allservices_key_consumer.crt
+cp dev/tmp/key_consumer_key.crt config/backend/distributey_allservices_key_consumer.crt

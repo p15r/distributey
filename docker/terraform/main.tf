@@ -54,7 +54,7 @@ resource "vault_mount" "transit" {
   type = "transit"
 }
 
-resource "vault_transit_secret_backend_key" "hyok" {
+resource "vault_transit_secret_backend_key" "distributey" {
   backend    = vault_mount.transit.path
   name       = var.transit_key_name
   exportable = var.transit_exportable
@@ -80,15 +80,15 @@ resource "vault_auth_backend" "approle" {
   type = "approle"
 }
 
-resource "vault_approle_auth_backend_role" "hyok" {
+resource "vault_approle_auth_backend_role" "distributey" {
   backend        = vault_auth_backend.approle.path
   role_name      = var.approle_role_name
-  token_policies = ["hyok-pki"]
+  token_policies = ["distributey-pki"]
 }
 
 resource "vault_approle_auth_backend_role_secret_id" "secretid" {
   backend   = vault_auth_backend.approle.path
-  role_name = vault_approle_auth_backend_role.hyok.role_name
+  role_name = vault_approle_auth_backend_role.distributey.role_name
 }
 
 
@@ -97,11 +97,11 @@ resource "vault_approle_auth_backend_role_secret_id" "secretid" {
 resource "null_resource" "update_appid" {
   triggers = {
     # when the AppRole role changes
-    key_id = vault_approle_auth_backend_role.hyok.id
+    key_id = vault_approle_auth_backend_role.distributey.id
   }
   provisioner "local-exec" {
     # Write the new roleid
-    command = "echo '${vault_approle_auth_backend_role.hyok.role_id}' > /approle/roleid"
+    command = "echo '${vault_approle_auth_backend_role.distributey.role_id}' > /approle/roleid"
   }
 }
 

@@ -18,30 +18,8 @@ import base64
 import json
 from typing import Tuple
 
-import vault_backend
 import config
 from dy_logging import logger
-
-
-def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
-    if not (vault_path := config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)):
-        # kid not found in config,
-        # assume kid and vault path are the same
-        # and fetch latest version of secret
-        vault_path = jwe_kid + ':latest'
-
-    logger.debug(f'Fetching AES key for: {vault_path}')
-
-    vault_key, key_version = vault_path.split(':')
-
-    if not (dek := vault_backend.get_dynamic_secret(vault_key, key_version, jwt_token)):
-        logger.error(f'Cannot retrieve key "{vault_path}".')
-        return b''
-
-    if config.get_config_by_key('DEV_MODE'):
-        logger.debug(f'Retrieved key from Vault: {dek.hex()} (hex)')
-
-    return dek
 
 
 def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
@@ -151,12 +129,8 @@ def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
     return b64_protected_header
 
 
-def get_wrapped_key_as_jwe(jwt_token: str, tenant: str, jwe_kid: str, nonce: str = '') -> str:
+def get_wrapped_key_as_jwe(dek: bytes, tenant: str, jwe_kid: str, nonce: str = '') -> str:
     logger.info(f'Creating JWE token for request with kid "{jwe_kid}"...')
-
-    if not (dek := _get_dek_from_vault(jwt_token, tenant, jwe_kid)):
-        logger.error(f'Cannot get dek for tenant "{tenant}" with JWE kid "{jwe_kid}".')
-        return ''
 
     # Generate a 256 bit AES content encryption key.
     # 32 bytes * 8 = 256 bit -> AES256

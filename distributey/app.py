@@ -11,6 +11,7 @@ from typing import Tuple
 import jwe
 import config
 from dy_logging import logger
+import vault_backend
 
 
 app = Flask(__name__)
@@ -147,6 +148,27 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
         return ''
 
 
+def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
+    if not (vault_path := config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)):
+        # kid not found in config,
+        # assume kid and vault path are the same
+        # and fetch latest version of secret
+        vault_path = jwe_kid + ':latest'
+
+    logger.debug(f'Fetching AES key for: {vault_path}')
+
+    vault_key, key_version = vault_path.split(':')
+
+    if not (dek := vault_backend.get_dynamic_secret(vault_key, key_version, jwt_token)):
+        logger.error(f'Cannot retrieve key "{vault_path}".')
+        return b''
+
+    if config.get_config_by_key('DEV_MODE'):
+        logger.debug(f'Retrieved key from Vault: {dek.hex()} (hex)')
+
+    return dek
+
+
 @app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
 def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):
     """
@@ -168,11 +190,15 @@ def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):
 
     logger.info(f'Processing request (path: "{request.path}", args: "{request.args.to_dict()}"...')
 
-    json_jwe_token = jwe.get_wrapped_key_as_jwe(
-        token,
-        str(escape(tenant)),
-        str(escape(jwe_kid)),
-        str(escape(request.args.get('requestId', ''))))
+    tenant = str(escape(tenant))
+    jwe_kid = str(escape(jwe_kid))
+    nonce = str(escape(request.args.get('requestId', '')))
+
+    dek = _get_dek_from_vault(token, tenant, jwe_kid)
+
+    json_jwe_token = jwe.get_wrapped_key_as_jwe(dek, tenant, jwe_kid, nonce)
+
+    del dek
 
     if not json_jwe_token:
         return 'Oops, internal error.', 500

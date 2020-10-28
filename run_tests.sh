@@ -4,9 +4,9 @@ set -euf -o pipefail
 
 # check if var exists using expansion
 if [[ ${PYTHONPATH:+1} ]]; then
-    export PYTHONPATH=${PYTHONPATH}:"hyok-wrapper"/
+    export PYTHONPATH=${PYTHONPATH}:"distributey"/
 else
-    export PYTHONPATH="hyok-wrapper"/
+    export PYTHONPATH="distributey"/
 fi
 
 function help {
@@ -19,8 +19,8 @@ function help {
 
 function runtests {
     python3 -m coverage run -m pytest -s -vv $1
-    python3 -m coverage report -m $(find hyok-wrapper/ -name "*.py")
-    python3 -m coverage xml $(find hyok-wrapper/ -name "*.py")
+    python3 -m coverage report -m $(find distributey/ -name "*.py")
+    python3 -m coverage xml $(find distributey/ -name "*.py")
 }
 
 function unittest {

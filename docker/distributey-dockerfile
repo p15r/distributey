@@ -22,11 +22,11 @@ FROM alpine:3.12
 
 LABEL maintainer="pat@p15r.net"
 
-ARG UNAME=hyok
+ARG UNAME=distributey
 ARG UID=1337
-ARG GNAME=hyok
+ARG GNAME=distributey
 ARG GID=1337
-ARG ROOT=/opt/hyok-wrapper
+ARG ROOT=/opt/distributey
 
 ENV LANG=C.UTF-8
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -41,12 +41,12 @@ RUN addgroup -g ${GID} -S ${GNAME} && adduser -u ${UID} -G ${GNAME} -S -H ${UNAM
 COPY --from=build-image /opt/venv /opt/venv
 RUN apk add --no-cache python3>=3.8
 
-COPY --chown=${UNAME}:${GNAME} hyok-wrapper ${ROOT}
+COPY --chown=${UNAME}:${GNAME} distributey ${ROOT}
 COPY --chown=${UNAME}:${GNAME} docker/entrypoint.sh ${ROOT}/entrypoint.sh
 
 EXPOSE 5000
 
 USER ${UID}
 
-WORKDIR /opt/hyok-wrapper
-CMD ["/opt/hyok-wrapper/entrypoint.sh"]
+WORKDIR /opt/distributey
+CMD ["/opt/distributey/entrypoint.sh"]

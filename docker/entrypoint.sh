@@ -6,5 +6,5 @@ gunicorn --workers 5 \
     --bind 0.0.0.0:5000 \
     --access-logfile - \
     --error-logfile - \
-    --reload --reload-extra-file /opt/hyok-wrapper \
+    --reload --reload-extra-file /opt/distributey \
     wsgi:app

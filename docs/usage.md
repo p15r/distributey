@@ -15,13 +15,13 @@
 
 ## Debugging
 - Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
-- Check if container `hyok-wrapper`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`
-- Check logs: `docker logs -f hyok-wrapper`
+- Check if container `distributey`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`
+- Check logs: `docker logs -f distributey`
 - Enable debug logs
-  - Set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json`
+  - Set `LOG_LEVEL` to `debug` in `distributey/config/config.json`
   - Load new config: `./02-load-config.sh`
 - Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
-  - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `HYOK-Wrapper/config/config.json`
+  - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `distributey/config/config.json`
   - Load new config: `./02-load-config.sh`
 
 ## Decrypt JWE
@@ -30,6 +30,6 @@ An example JWE to decrypt:
 eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNlIiwgImp0aSI6ICIzNzQ4OTFiNjg2MmZhNGVjY2RmMzNiYTg5MDBjOWQ2ZSJ9.cNwudQ5B3yJTRsztSbxtKFzZetL_tPOR_343Y8ZU96jO6cgUPAozrraYN9JhOk8tSM-FP7grG-HwlW0aVKPDfcy1GnePOUGCOE48u9gKzkEDXbrVX4QZbDdR9YFdba-UBk6k7fhzLc_FY_O18UzqaqaJhg-SPcDYnE6CBdl-lgqVO7VUf5guE9Jf8ORWwJvNr9n8jC2WaQ2XPhc5hvFCGJHfxDOswWCiQWOFHZuUXDrNp-evFQPm-VglvO-Lem5zvbAKquoYpWdN7uRu1be9_AUJaCNNCtVGaouXw0UUNgt_E54Z7BYgl8bky0fKs0z9shIvya4cTuFvTQv4TuQtGig7d5F0sVXu5EHtdrpVAHtrxf38Fk_NCHvKzJ2uPHYINSincG-TnAOTVsZNz_atv3GJEYfi9XoSF0XeKxZVM0DHJJM34AJpx6mFi5OQckNizqNmSLgYT0K3b0ajUtAmgOeLpWw9nqZqeQaP0Q1YkdX9h_7gtN_OHrbpRYip9nG8h3d17kX1SZpGxMlDb_fxhIufKhGC9BT47zFvNgnFNRENlJXifXVOG5OsoTue8xeZvXmGOaIe3lHGf67R3nYM_zD-VSU8C8pVo9KrVEu-xw8k581mO-OiN82WcHrjkxc77-5cJCtqp3m0w6cbLVwukBfLxiiJw0Pn5srEUpzvgDE=.dpZl1EF4YNayGWht.zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=.27vOkMxjnnhHN_Cp9xsveQ==¨
 ```
 
-1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` in `HYOK-Wrapper/config/config.json` to log secrets.
+1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` in `distributey/config/config.json` to log secrets.
 2. Extract encrypted `dek` from JWE token by getting the second last dot-separated string: `zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=`
 3. Configure and run `dev/decrypt_dek.py` to decrypt the `dek` (data encryption key; the requested key by the key consumer).

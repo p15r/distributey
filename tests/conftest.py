@@ -32,7 +32,7 @@ def get_protected_headers():
 def get_headers():
     return Headers([
         ('X-Real-Ip', '172.20.0.1'),
-        ('Host', 'up-hyok-wrapper'),
+        ('Host', 'up-distributey'),
         ('Connection', 'close'),
         ('User-Agent', 'curl/7.68.0'),
         ('Accept', '*/*'),

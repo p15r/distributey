@@ -2,24 +2,24 @@
   "DEV_MODE": false,
   "LOG_LEVEL": "info",
   "TENANT_CFG": {
-    "tenant": {
+    "salesforce": {
       "auth": {
         "jwt_algorithm": "RS256",
-        "jwt_audience": "urn:hyok-wrapper",
-        "jwt_issuer": "issuer",
-        "jwt_subject": "subject",
+        "jwt_audience": "urn:distributey",
+        "jwt_issuer": "salesforce",
+        "jwt_subject": "cacheonlyservice",
         "jwt_validation_certs": {
-          "jwt-kid": "config/auth/tenant-jwt-kid.pubkey"
+          "jwt_kid_salesforce_serviceX": "config/auth/jwt_salesforce_serviceX.pub"
         }
       },
       "backend": {
-        "jwe-kid": {
-          "key_consumer_cert": "config/backend/tenant_servicename_key_consumer.crt",
-          "vault_path": "vault-path:latest"
+        "jwe-kid-salesforce-serviceX": {
+          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
+          "vault_path": "salesforce:latest"
         }
       }
     }
   },
-  "VAULT_JWT_DEFAULT_ROLE": "hyok",
+  "VAULT_JWT_DEFAULT_ROLE": "distributey",
   "VAULT_URL": "http://vault:8200"
 }

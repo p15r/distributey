@@ -30,7 +30,7 @@ class __RequestFormatter(logging.Formatter):
 __stream_handler = logging.StreamHandler(stream=sys.stderr)
 __stream_handler.setFormatter(
     __RequestFormatter(
-        '[%(asctime)s] HYOK {%(pathname)s:%(lineno)d} %(levelname)s - '
+        '[%(asctime)s] distributey {%(pathname)s:%(lineno)d} %(levelname)s - '
         'tenant: %(tenant)s, origin: %(x_real_ip)s, ua: %(user_agent)s - %(message)s'))
 
 logger = logging.getLogger()

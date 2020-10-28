@@ -1,8 +1,8 @@
 # Key Consumer Setup
-Currently, HYOK Wrapper only supports Salesforce as a key consumer.
+Currently, `distributey` only supports Salesforce as a key consumer.
 
 ## Specs
-- Salesforce HYOK format specification: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)]
+- Salesforce `distributey` format specification: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)]
 
 ## Prerequisites
 1. Get a developer account: [[docs](https://developer.salesforce.com/signup)]
@@ -12,7 +12,7 @@ Currently, HYOK Wrapper only supports Salesforce as a key consumer.
 
 ## Step-by-step
 ### Key Consumer Authentication
-Configure Salesforce to authenticate against `HYOK Wrapper` using a JWT-based token.
+Configure Salesforce to authenticate against `distributey` using a JWT-based token.
 
 1. Create pub/priv keypair for `JWT` token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
    - Create key in Salesforce (**Recommended**)
@@ -24,42 +24,42 @@ Configure Salesforce to authenticate against `HYOK Wrapper` using a JWT-based to
          - Mark key as `not exportable`
          - Use key size of `4096 bit`
          - Use `platform encryption`
-     - Download the certificate and save it by its `Unique Name`. It must later be configured in `HYOK wrapper` (`config/auth/`).
-     - Salesforce provides a certificate from which `HYOK-Wrapper` only needs the public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pub`
+     - Download the certificate and save it by its `Unique Name`. It must later be configured in `distributey` (`config/auth/`).
+     - Salesforce provides a certificate from which `distributey` only needs the public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pub`
    - Import your own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
 2. To go `Named Credential` on Salesforce and create a `New Named Credential` as following:
    | Config name  | Value |
    | ------------- | ------------- |
-   | `Label` & `Name` | Choose appropriate name (e.g. `hyok-wrapper at example.com`). |
-   | `URL` | publicly reachable URL of HYOK wrapper. Expected scheme: `https://domainname/apiversion/tenant`. For example `https://hyok-wrapper.example.com/v1/salesforce/`. |
+   | `Label` & `Name` | Choose appropriate name (e.g. `distributey at example.com`). |
+   | `URL` | publicly reachable URL of `distributey`. Expected scheme: `https://domainname/apiversion/tenant`. For example `https://distributey.example.com/v1/salesforce/`. |
    | `Certificate` | Leave this setting empty. |
    | `Identity type` | Select `Named principal`. |
    | `Authentication protocol` |Select `JWT`. |
    | `Issuer` | Choose appropriate name (e.g. `salesforce`). |
    | `Named Principal Subject` | This is the JWT subject, configure it accordingly. It must also be configured in `config/config.json`. For example `cacheonlyservice`. |
-   | `Audiences` | Set `urn:hyok-wrapper`|
+   | `Audiences` | Set `urn:distributey`|
    | `Token Valid for` | Set short time perion. E.g. `10 Seconds`. |
    | `JWT Signing Certificate` | Select the previously created certificate (`jwt_kid_salesforce_serviceX`) |
    | `Generate Authorization Header` | Check box to activate. |
-3. Configure HYOK (a.k.a Cache-only key connection) [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]:
+3. Configure `distributey` (a.k.a Cache-only key connection) [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]:
    - Create key wrapping certificate
      - Go to `Security Controls` -> `Certificate and Key Management` and click on `Create Self-Signed Certificate`.
-     - Set `Label`/`Unique Name` to something meaningful. For example `hyok-key-consumer_cert`. Key can be marked as not exportable.
+     - Set `Label`/`Unique Name` to something meaningful. For example `distributey-key-consumer_cert`. Key can be marked as not exportable.
    - Configure cache-only key service
      - Go to `Security Controls` -> `Platform Encryption` -> `Key Management` and click on `Generate Tenant Secret` if none exists.
        - ⚠️ Depending on your organization's service contracts, this action might lock the import of any further certificates, including `Bring Your Own Key`, for 4h to 24h.
      - Go to `Security Controls` -> `Platform Encryption` -> `Advanced Settings` and enable `Allow Cache-Only Keys with BYOK` & `Enable Replay Detection for Cache-Only Keys`.
      - Go to `Security Controls` -> `Platform Encryption` -> `Key Management` and click on `Bring Your Own Key`.
-     - Select key consumer certificate (`hyok-key-consumer_cert`)
+     - Select key consumer certificate (`distributey-key-consumer_cert`)
      - Select `Use a Cache-Only Key`
      - Set `Unique Key Identifier` to something meaningful. For example `jwe-kid-salesforce-serviceX`.
-     - Select `Named Credential` that was previously created (`hyok-wrapper at example.com`)
+     - Select `Named Credential` that was previously created (`distributey at example.com`)
 
 ## Example Request from Key Consumer
 HTTP request header with JWT token from Salesforce:
    ```
    X-Real-Ip: 85.222.150.8
-   Host: up-hyok-wrapper
+   Host: up-distributey
    Connection: close
    Authorization: Bearer eyJraWQiOiJqd3RjZXJ0IiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJpc3MiOiJpc3N1ZXItbXlDQSIsInN1YiI6InN1YmplY3Qtc2FsZXNmb3JjZSIsImF1ZCI6InVybjogc2FsZXNmb3JjZSIsIm5iZiI6MTU5ODIxMzI5OSwiaWF0IjoxNTk4MjEzMjk5LCJleHAiOjE1OTgyMTM1OTl9.iEyt5mqXvWKvQ3d-eLcIhVb53oEIie9ecXYSB_y5zumPA9tHD5PMWArikskSz30-T5d2NQ0WFHXSWHRd3BWMvwph75gRXCwojGoXdoBT20mmF2r8zkgy3bbNx-1kjCHU7ErV2eJO0tRORvQ-5JjSosTpJw7kw3LlHVHLRvK9PPxwvfAWwaAO3flPvN08LLImQU2M-2No_5MgNpun4zxCC0J7F9cTNZXVbmX5lGsBdBBnrFJgyNjFpsFzaBZAJhEtXvUwokriPQQ6msuWRTJzutQr1oKljJUg7QpMbiBPYJJcPFSG-nnlhWAFThENcUD4SESfhvavaNdV_UEYMX6rmKCFi-6b8F2-1xBQQyH4sYlUWb1PoDMSllT5V4IhES0JnsR81cFK6wkbheMao2ZdTzlVTgoHRosdNq2c87DjPtTpiKDeROITdF2T34Z3nPH-pYw0OttF1z6dm9I96MB5lj36V2k_40AEdaSHqsGk4_43TOtmDYnYFNikx_dQHDz2y4ty6sIqiNv1hs34w0LbYMFkgdqNsbeJ4iH1rCaLI-VJwT-E1mhs-1ATLtuTq10BB5mvEK6LNUVuvttn36Mq4b6r01hy9BaKkitNsSbbXGFunLOKVNgf_BEtcvy7OkhMiXBQsEgFL6ladDn-N2R5K9ZlKOJFRbDNJOh9iec4yd0
    User-Agent: SFDC-Callout/49.0
@@ -80,7 +80,7 @@ HTTP request header with JWT token from Salesforce:
    {
      "iss": "salesforce",
      "sub": "cacheonlyservice",
-     "aud": "urn:hyok-wrapper",
+     "aud": "urn:distributey",
      "nbf": 1598213299,
      "iat": 1598213299,
      "exp": 1598213599

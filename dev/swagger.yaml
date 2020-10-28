@@ -1,13 +1,13 @@
 swagger: '2.0'
 info:
-    title: hyok-wrapper
-    description: API of the HYOK Wrapper.
+    title: distributey
+    description: API of the distributey.
     contact:
         name: Author
         url: 'link'
         email: author@example.com
     version: '0.1'
-host: hyok-wrapper.example.com
+host: distributey.example.com
 basePath: /v1
 schemes:
     - https
@@ -28,7 +28,7 @@ paths:
                 '401':
                     description: If JWT token signature cannot be verified.
                 '500':
-                    description: If HYOK Wrapper crashes and responds with HTTP 500.
+                    description: If distributey crashes and responds with HTTP 500.
         parameters:
             -   name: resourceId
                 in: query

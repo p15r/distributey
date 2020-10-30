@@ -214,3 +214,20 @@ def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):
         content_type='application/json; charset=utf-8')
 
     return resp
+
+
+@app.route(path_prefix + '/healthz', methods=['GET'])
+def get_healthz():
+    """
+    This healthz implementation adheres to:
+        https://tools.ietf.org/html/draft-inadarei-api-health-check-04
+    """
+
+    if not config.get_config_by_key('LOG_LEVEL'):
+        response = '{"status": "fail", "output": "Config not loaded"}'
+        status = 500
+    else:
+        response = '{"status": "pass"}'
+        status = 200
+
+    return Response(response=response, status=status, content_type='application/health+json; charset=utf-8')

@@ -1,6 +1,7 @@
 import json
 import base64
 import app
+import config
 
 
 class TestUnitFlaskApp():
@@ -96,3 +97,16 @@ class TestUnitFlaskApp():
         assert response.status_code == 401
 
         # further coverage requires Vault, thus covered w/ integration tests
+
+    def test_get_healthz(self, http_client, monkeypatch):
+        endpoint = '/v1/healthz'
+        headers = {'X_REAL_IP': '127.0.0.1'}
+
+        response = http_client.get(endpoint, headers=headers)
+        assert response.status_code == 200
+
+        # test w/o available config file
+        monkeypatch.setattr(config, 'CFG_PATH', 'config/NONEXISTINGCONFIG.json')
+
+        response = http_client.get(endpoint, headers=headers)
+        assert response.status_code == 500

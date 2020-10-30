@@ -224,12 +224,10 @@ def get_healthz():
     """
 
     if not config.get_config_by_key('LOG_LEVEL'):
-        return Response(
-            response='{"status": "fail", "output": "Config not loaded"}',
-            status=500,
-            content_type='application/health+json; charset=utf-8')
+        response = '{"status": "fail", "output": "Config not loaded"}'
+        status = 500
     else:
-        return Response(
-            response='{"status": "pass"}',
-            status=200,
-            content_type='application/health+json; charset=utf-8')
+        response = '{"status": "pass"}'
+        status = 200
+
+    return Response(response=response, status=status, content_type='application/health+json; charset=utf-8')

@@ -21,5 +21,6 @@
     }
   },
   "VAULT_JWT_DEFAULT_ROLE": "distributey",
-  "VAULT_URL": "http://vault:8200"
+  "VAULT_URL": "http://vault:8200",
+  "VAULT_CACERT": ""
 }

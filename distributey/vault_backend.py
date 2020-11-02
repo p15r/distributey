@@ -32,7 +32,10 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
     if config.get_config_by_key('DEV_MODE'):
         logger.debug(f'Vault client token returned: {vault_token}')
 
-    client = hvac.Client(url=vault_url, token=vault_token)
+    if (vault_ca_cert := config.get_config_by_key('VAULT_CACERT')):
+        client = hvac.Client(url=vault_url, token=vault_token, verify=vault_ca_cert)
+    else:
+        client = hvac.Client(url=vault_url, token=vault_token)
 
     if not client.sys.is_initialized():
         logger.error(f'Vault at "{vault_url}" has not been initialized.')

@@ -20,7 +20,7 @@ services:
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
       - distributey
-      - vault-agent
+      - vault-agent # Comment for production.
 
   distributey:
     image: pat/distributey:0.1

@@ -20,10 +20,6 @@ Configure Salesforce to authenticate against `distributey` using a JWT-based tok
      - Configure the following settings:
        - `Label`: a representative name for the key
        - `Unique Name`: this is the `KID` of the `JWT` token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
-       - Configure certificate properties [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)]
-         - Mark key as `not exportable`
-         - Use key size of `4096 bit`
-         - Use `platform encryption`
      - Download the certificate and save it by its `Unique Name`. It must later be configured in `distributey` (`config/auth/`).
      - Salesforce provides a certificate from which `distributey` only needs its public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pub`
    - Import your own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
@@ -44,7 +40,11 @@ Configure Salesforce to authenticate against `distributey` using a JWT-based tok
 3. Configure `distributey` (a.k.a Cache-only key connection) [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_callout.htm&type=5)]:
    - Create key wrapping certificate
      - Go to `Security Controls` -> `Certificate and Key Management` and click on `Create Self-Signed Certificate`.
-     - Set `Label`/`Unique Name` to something meaningful. For example `distributey-key-consumer_cert`. Key can be marked as not exportable.
+     - Set `Label`/`Unique Name` to something meaningful. For example `distributey-key-consumer_cert`.
+     - Configure certificate properties [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_generate_cert.htm&type=5)]
+       - Mark key as `not exportable`
+       - Use key size of `4096 bit`
+       - Use `platform encryption`
    - Configure cache-only key service
      - Go to `Security Controls` -> `Platform Encryption` -> `Key Management` and click on `Generate Tenant Secret` if none exists.
        - ⚠️ Depending on your organization's service contracts, this action might lock the import of any further certificates, including `Bring Your Own Key`, for 4h to 24h.

@@ -1,10 +1,10 @@
 swagger: '2.0'
 info:
     title: distributey
-    description: API of the distributey.
+    description: API of distributey.
     contact:
-        name: Author
-        url: 'link'
+        name: author
+        url: 'https://example.com/readme'
         email: author@example.com
     version: '0.1'
 host: distributey.example.com
@@ -45,6 +45,23 @@ paths:
                 description: The JWE kid (key id)
                 required: true
                 type: string
+    /healthz:
+        get:
+            summary: Get health status
+            responses:
+                '200':
+                    description: Service is healthy.
+                    examples:
+                        application/json:
+                            status: pass
+                '500':
+                    description: Service is unhealthy.
+                    examples:
+                        application/json:
+                            status: fail
+                            output: Config not loaded
+            security:
+                - {}
 securityDefinitions:
     Bearer:
         type: apiKey

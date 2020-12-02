@@ -16,7 +16,9 @@
 ## Debugging
 - Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
 - Check if container `distributey`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`
-- Check logs: `docker logs -f distributey`
+- Check logs: 
+  - `distributey`: `journalctl -f -t dy-distributey`
+  - `nginx`: `journalctl -f -t dy-nginx`
 - Enable debug logs
   - Set `LOG_LEVEL` to `debug` in `distributey/config/config.json`
   - Load new config: `./02-load-config.sh`

@@ -22,7 +22,7 @@ In order for `distributey` to operate in offline environments, make sure to conf
 
 - `mkdir ./tmpdir && cd ./tmpdir/`
 - `cp distributey/docker/terraform/main.tf .`
-- `terraform providers mirror tf-cache`
+- `terraform providers mirror -platform=linux_amd64 tf-cache`
 - `zip -r tf-cache.zip tf-cache/`
 - Upload `tf-cache.zip` to mirror (for example, a webserver) and remember its URL
 - In `01-start.sh`, configure the variable `tf_provider_url_mirror_zip` accordingly

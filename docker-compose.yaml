@@ -10,7 +10,7 @@ services:
     logging:
       driver: syslog
       options:
-        tag: "{{.Name}}/{{.ID}}"
+        tag: "dy-{{.Name}}"
     ports:
       - target: 8443
         published: 443
@@ -33,7 +33,7 @@ services:
     logging:
       driver: syslog
       options:
-        tag: "{{.Name}}/{{.ID}}"
+        tag: "dy-{{.Name}}"
     depends_on: # Comment for production.
       - vault   # Comment for production.
 

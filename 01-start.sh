@@ -17,7 +17,7 @@ else
     if [ -z ${tf_provider_url_mirror_zip+x} ]; then
         echo 'ℹ️  Attempting to download providers from internet...';
 
-        cd docker/terraform && terraform providers mirror tf-cache && cd ../../
+        cd docker/terraform && terraform providers mirror -platform=linux_amd64 tf-cache && cd ../../
     else
         echo "ℹ️  Fetching terraform providers from '$tf_provider_url_mirror_zip'...";
         terraform_zip='tf-cache.zip'

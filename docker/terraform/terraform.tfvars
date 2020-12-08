@@ -1,5 +1,5 @@
 # salesforce tenant
-policies = ["salesforce"]
+policies = ["salesforce", "monitoring"]
 
 auth_jwt_default_role                 = "distributey"
 auth_jwt_default_role_bound_audiences = ["urn:distributey"]

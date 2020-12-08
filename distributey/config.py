@@ -91,7 +91,7 @@ def get_jwt_validation_cert_by_tenant_and_kid(tenant: str, jwt_kid: str) -> str:
 
 def get_vault_default_role_by_tenant(tenant: str) -> str:
     try:
-        return get_config_by_key('TENANT_CFG')[tenant]['vault__default_role']
+        return get_config_by_key('TENANT_CFG')[tenant]['vault_default_role']
     except KeyError as e:
         logger.error(
             f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.vault_default_role')

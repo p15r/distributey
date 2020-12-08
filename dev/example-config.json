@@ -19,7 +19,8 @@
         }
       },
       "vault_auth_jwt_path": "jwt-monitoring",
-      "vault_default_role": "monitoring"
+      "vault_default_role": "monitoring",
+      "vault_transit_path": "transit-monitoring"
     },
     "salesforce": {
       "auth": {
@@ -38,7 +39,8 @@
         }
       },
       "vault_auth_jwt_path": "jwt",
-      "vault_default_role": "salesforce"
+      "vault_default_role": "salesforce",
+      "vault_transit_path": "transit"
     }
   },
   "VAULT_CACERT": "",

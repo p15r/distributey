@@ -107,3 +107,10 @@ def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
         return ''
 
 
+def get_vault_transit_path_by_tenant(tenant: str) -> str:
+    try:
+        return get_config_by_key('TENANT_CFG')[tenant]['vault_transit_path']
+    except KeyError as e:
+        logger.error(
+            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.vault_transit_path')
+        return ''

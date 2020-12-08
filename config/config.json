@@ -20,7 +20,7 @@
       },
       "vault_auth_jwt_path": "jwt",
       "vault_default_role": "distributey",
-      "vault_transit_path": "transit-monitoring"
+      "vault_transit_path": "transit"
     }
   },
   "VAULT_CACERT": "",

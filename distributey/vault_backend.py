@@ -17,6 +17,7 @@ from dy_logging import logger
 
 def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) -> bytes:
     vault_url = config.get_config_by_key('VAULT_URL')
+    vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
 
     if vault_ca_cert := config.get_config_by_key('VAULT_CACERT'):
         client = hvac.Client(url=vault_url, verify=vault_ca_cert)
@@ -27,7 +28,8 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) 
 
     response = client.auth.jwt.jwt_login(
         role=config.get_vault_default_role_by_tenant(tenant),
-        jwt=jwt_token)
+        jwt=jwt_token,
+        path=vault_auth_jwt_path)
 
     logger.debug(f'Vault login response: {response}')
 

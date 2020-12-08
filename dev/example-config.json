@@ -2,6 +2,25 @@
   "DEV_MODE": false,
   "LOG_LEVEL": "info",
   "TENANT_CFG": {
+    "monitoring": {
+      "auth": {
+        "jwt_algorithm": "RS256",
+        "jwt_audience": "urn:distributey",
+        "jwt_issuer": "monitoring",
+        "jwt_subject": "monitoring",
+        "jwt_validation_certs": {
+          "jwt_kid_monitoring": "config/auth/jwt_salesforce_serviceX.pub"
+        }
+      },
+      "backend": {
+        "jwe-kid-monitoring": {
+          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
+          "vault_path": "monitoring:latest"
+        }
+      },
+      "vault_auth_jwt_path": "jwt-monitoring",
+      "vault_default_role": "monitoring"
+    },
     "salesforce": {
       "auth": {
         "jwt_algorithm": "RS256",
@@ -18,7 +37,8 @@
           "vault_path": "salesforce:latest"
         }
       },
-      "vault_default_role": "distributey"
+      "vault_auth_jwt_path": "jwt",
+      "vault_default_role": "salesforce"
     }
   },
   "VAULT_CACERT": "",

@@ -13,6 +13,7 @@ resource "vault_jwt_auth_backend" "jwt" {
   jwt_validation_pubkeys = var.auth_jwt_validation_pubkeys
   default_role           = var.auth_jwt_default_role
 }
+
 resource "vault_jwt_auth_backend_role" "role" {
   backend         = vault_jwt_auth_backend.jwt.path
   role_name       = var.auth_jwt_default_role

@@ -17,10 +17,10 @@
           "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
           "vault_path": "salesforce:latest"
         }
-      }
+      },
+      "vault_default_role": "distributey"
     }
   },
-  "VAULT_JWT_DEFAULT_ROLE": "distributey",
-  "VAULT_URL": "http://vault:8200",
-  "VAULT_CACERT": ""
+  "VAULT_CACERT": "",
+  "VAULT_URL": "http://vault:8200"
 }

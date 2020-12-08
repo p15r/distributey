@@ -18,6 +18,7 @@
           "vault_path": "vault-path:latest"
         }
       },
+      "vault_auth_jwt_path": "jwt",
       "vault_default_role": "distributey"
     }
   },

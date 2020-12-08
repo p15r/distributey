@@ -33,7 +33,7 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) 
 
     logger.debug(f'Vault login response: {response}')
 
-    # hier noch ein check: client.is_authenticated()?
+    # TODO: hier noch ein check: client.is_authenticated()?
 
     vault_token = response['auth']['client_token']
 

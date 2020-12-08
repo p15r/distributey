@@ -57,3 +57,9 @@ class TestUnitConfig():
         assert cfg == 'config/auth/jwt_salesforce_serviceX.pub'
 
         assert config.get_jwt_validation_cert_by_tenant_and_kid('nonexistingtenant', self.jwt_kid) == ''
+
+    def test_get_vault_default_role_by_tenant(self):
+        cfg = config.get_vault_default_role_by_tenant(self.tenant)
+        assert cfg == 'distributey'
+
+        assert config.get_vault_default_role_by_tenant('nonexistingtenant') == ''

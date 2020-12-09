@@ -68,12 +68,12 @@ class TestUnitConfig():
         cfg = config.get_vault_auth_jwt_path_by_tenant(self.tenant)
         assert cfg == 'jwt'
 
-        assert config.get_vault_default_role_by_tenant('nonexistingtenant') == ''
+        assert config.get_vault_auth_jwt_path_by_tenant('nonexistingtenant') == ''
 
     def test_get_vault_transit_path_by_tenant(self):
         cfg = config.get_vault_transit_path_by_tenant(self.tenant)
         assert cfg == 'transit'
 
-        assert config.get_vault_default_role_by_tenant('nonexistingtenant') == ''
+        assert config.get_vault_transit_path_by_tenant('nonexistingtenant') == ''
 
 

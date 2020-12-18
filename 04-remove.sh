@@ -9,3 +9,4 @@ cd ..
 
 echo '🧹 Removing locally cached files..'
 rm -r docker/terraform/tf-cache
+rm docker/terraform/.terraform.lock.hcl

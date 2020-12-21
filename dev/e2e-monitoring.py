@@ -182,11 +182,18 @@ def verify_protected_header(protected_header):
 def unserialize_jwe(jwe):
     trace_enter(inspect.currentframe())
 
-    b64_protected_header = jwe.split('.')[0]
-    b64_cek_cipher = jwe.split('.')[1]
-    b64_iv = jwe.split('.')[2]
-    b64_dek_cipher = jwe.split('.')[3]
-    b64_auth_tag = jwe.split('.')[4]
+    split_jwe = jwe.split('.')
+
+    if not len(split_jwe) == 5:
+        logger.error(f'Failed to split jwe into 5 segments: {split_jwe}')
+        trace_exit(inspect.currentframe(), '')
+        return ()
+
+    b64_protected_header = split_jwe[0]
+    b64_cek_cipher = split_jwe[1]
+    b64_iv = split_jwe[2]
+    b64_dek_cipher = split_jwe[3]
+    b64_auth_tag = split_jwe[4]
 
     str_protected_header = base64.urlsafe_b64decode(b64_protected_header)
     protected_header = json.loads(str_protected_header)
@@ -208,8 +215,15 @@ def decode_jwe(jwe_token: str) -> str:
     jwe_kid = jwe_token.get('kid', '')
     jwe = jwe_token.get('jwe', '')
 
-    protected_header, cek_cipher, iv, dek_cipher, auth_tag = \
+    jwe_tuple = \
         unserialize_jwe(jwe)
+
+    if not jwe_tuple:
+        logger.error(f'Failed to unserialize jwe. Got "{jwe_tuple}".')
+        trace_exit(inspect.currentframe(), '')
+        return ''
+
+    protected_header, cek_cipher, iv, dek_cipher, auth_tag = jwe_tuple
 
     jwe_kid = protected_header.get('kid', '')
     if jwe_kid != CFG_JWE_KID:
@@ -221,6 +235,8 @@ def decode_jwe(jwe_token: str) -> str:
         return ''
 
     if not verify_protected_header(protected_header):
+        logger.error(
+            f'Failed to verify protected header "{protected_header}".')
         trace_exit(inspect.currentframe(), '')
         return ''
 

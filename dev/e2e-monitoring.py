@@ -49,6 +49,8 @@ from Cryptodome.PublicKey import RSA
 CFG_DY_ENDPOINT = 'https://localhost:443'
 CFG_DY_CA_CERT = 'dev/tmp/nginx.crt'    # "None" if http
 CFG_JWE_KID = 'jwe-kid-monitoring'
+CFG_JWE_ALG = 'RSA-OAEP'
+CFG_JWE_ENC = 'A256GCM'
 CFG_EXPECTED_SECRET = 'uo1gpZcIhqUjL/cOWNqVf+xo9FWubaZ3dhRuSZLZSMY='
 CFG_KEY_CONSUMER_PRIVKEY = 'dev/tmp/key_consumer_key.key'
 CFG_JWT_SIGNING_PRIVKEY = 'dev/tmp/jwt.key'
@@ -122,7 +124,8 @@ def request_jwe() -> str:
     r = requests.get(
         f'{CFG_DY_ENDPOINT}{dy_api_path}',
         headers={'Authorization': auth_header},
-        verify=CFG_DY_CA_CERT)
+        verify=CFG_DY_CA_CERT,
+        params={'requestId': jwe_nonce})
 
     ret = r.json()
 
@@ -169,14 +172,24 @@ def decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag):
 def verify_protected_header(protected_header):
     trace_enter(inspect.currentframe())
 
-    jwe_alg = protected_header['alg']   # RSA-OAEP
-    jwe_enc = protected_header['enc']   # A256GCM
-    # check other header attribs as well
+    map = {
+        'alg': CFG_JWE_ALG,
+        'enc': CFG_JWE_ENC,
+        'kid': CFG_JWE_KID,
+        'jti': jwe_nonce
+    }
 
-    ret = True
+    for key, value in map.items():
+        received_field = protected_header.get(key, '')
+        if received_field != value:
+            logger.error(
+                f'Incorrect protected header field "{key}",'
+                f' Got "{received_field}", expected "{value}".')
+            trace_exit(inspect.currentframe(), False)
+            return False
 
-    trace_exit(inspect.currentframe(), ret)
-    return ret
+    trace_exit(inspect.currentframe(), True)
+    return True
 
 
 def unserialize_jwe(jwe):
@@ -209,7 +222,7 @@ def unserialize_jwe(jwe):
     return ret
 
 
-def decode_jwe(jwe_token: str) -> str:
+def decode_jwe(jwe_token: dict) -> str:
     trace_enter(inspect.currentframe())
 
     jwe_kid = jwe_token.get('kid', '')

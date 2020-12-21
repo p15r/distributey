@@ -39,6 +39,7 @@ import logging
 import jwt
 import json
 import requests
+import sys
 
 from Cryptodome.Cipher import PKCS1_OAEP, AES
 from Cryptodome.Hash import SHA1
@@ -49,7 +50,7 @@ from Cryptodome.PublicKey import RSA
 CFG_DY_ENDPOINT = 'https://localhost:443'
 CFG_DY_CA_CERT = 'dev/tmp/nginx.crt'    # "None" if http
 CFG_JWE_KID = 'jwe-kid-monitoring'
-CFG_EXPECTED_SECRET = 'v41tvGuri+VnQwXDWlsELj4AkL5TWV1WZDgvuoHt6gM='
+CFG_EXPECTED_SECRET = 'uo1gpZcIhqUjL/cOWNqVf+xo9FWubaZ3dhRuSZLZSMY='
 CFG_KEY_CONSUMER_PRIVKEY = 'dev/tmp/key_consumer_key.key'
 CFG_JWT_SIGNING_PRIVKEY = 'dev/tmp/jwt.key'
 CFG_JWT_EXPIRATION_TIME = 300     # ms
@@ -59,7 +60,7 @@ CFG_JWT_KID = 'jwt_kid_monitoring'
 jwe_nonce = 'a-randrom-nonce'
 dy_api_path = f'/v1/monitoring/{CFG_JWE_KID}?requestID={jwe_nonce}'
 
-logFormatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 consoleHandler = logging.StreamHandler()    # log to stderr
 consoleHandler.setFormatter(logFormatter)
 
@@ -68,8 +69,26 @@ logger.addHandler(consoleHandler)
 logger.setLevel(logging.DEBUG)
 
 
+def trace_enter(current_frame):
+    func_name = current_frame.f_code.co_name
+    func_args = current_frame.f_code.co_varnames
+    file_name = current_frame.f_code.co_filename
+    line_no = current_frame.f_code.co_firstlineno
+
+    logger.debug(
+        f'({file_name}:{line_no}) Entering "{func_name}" args: {func_args}')
+
+
+def trace_exit(current_frame, ret):
+    func_name = current_frame.f_code.co_name
+    file_name = current_frame.f_code.co_filename
+    line_no = current_frame.f_code.co_firstlineno
+
+    logger.debug(f'({file_name}:{line_no}) Exiting "{func_name}" ret: {ret}')
+
+
 def create_auth_header() -> str:
-    logger.debug(f'Entering method "{inspect.currentframe().f_code.co_name}".')
+    trace_enter(inspect.currentframe())
 
     with open(CFG_JWT_SIGNING_PRIVKEY, 'rb') as f:
         private_key = f.read()
@@ -89,16 +108,15 @@ def create_auth_header() -> str:
         payload, private_key, algorithm='RS256',
         headers={'kid': CFG_JWT_KID}).decode('utf-8')
 
-    auth_header = f'Bearer {token}'
+    ret = f'Bearer {token}'
 
-    logger.debug(
-        f'Exiting method "{inspect.currentframe().f_code.co_name}".'
-        f' Return value: "{auth_header}" ({type(auth_header)})')
-    return auth_header
+    trace_exit(inspect.currentframe(), ret)
+
+    return ret
 
 
 def request_jwe() -> str:
-    logger.debug(f'Entering method "{inspect.currentframe().f_code.co_name}".')
+    trace_enter(inspect.currentframe())
 
     auth_header = create_auth_header()
 
@@ -107,17 +125,14 @@ def request_jwe() -> str:
         headers={'Authorization': auth_header},
         verify=CFG_DY_CA_CERT)
 
-    r = r.json()
+    ret = r.json()
 
-    logger.debug(
-        f'Exiting method "{inspect.currentframe().f_code.co_name}".'
-        f' Return value: "{r}" ({type(r)})')
-    return r
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def decrypt_cek(cek_cipher):
-    logger.debug(f'Entering method "{inspect.currentframe().f_code.co_name}".'
-                 f' Param: cek_cipher="{cek_cipher}" ({type(cek_cipher)}).')
+    trace_enter(inspect.currentframe())
 
     with open(CFG_KEY_CONSUMER_PRIVKEY, 'rb') as f:
         rsa_privkey = f.read()
@@ -126,23 +141,14 @@ def decrypt_cek(cek_cipher):
 
     # bcs protected header is RSA-OAEP
     cipher_rsa = PKCS1_OAEP.new(private_key, hashAlgo=SHA1)
-    cek = cipher_rsa.decrypt(cek_cipher)
+    ret = cipher_rsa.decrypt(cek_cipher)
 
-
-    logger.debug(
-        f'Exiting method "{inspect.currentframe().f_code.co_name}".'
-        f' Return value: "{cek}" ({type(cek)})')
-    return cek
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag):
-    logger.debug(f'Entering method "{inspect.currentframe().f_code.co_name}".'
-                 f' Param: cek="{cek}" ({type(cek)}).'
-                 f' Param: protected_header="{protected_header}"'
-                 f' ({type(protected_header)}).'
-                 f' Param: dek_cipher="{dek_cipher}" ({type(dek_cipher)}).'
-                 f' Param: iv="{iv}" ({type(iv)}).'
-                 f' Param: auth_tag="{auth_tag}" ({type(auth_tag)}).')
+    trace_enter(inspect.currentframe())
 
     aes_cipher = AES.new(cek, AES.MODE_GCM, nonce=iv, mac_len=16)
 
@@ -155,29 +161,27 @@ def decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag):
     dek = aes_cipher.decrypt_and_verify(dek_cipher, auth_tag)
 
     bytes_dek = base64.b64encode(dek)
-    dek = bytes_dek.decode()
+    ret = bytes_dek.decode()
 
-    logger.debug(
-        f'Exiting method "{inspect.currentframe().f_code.co_name}".'
-        f' Return value: "{dek}" ({type(dek)})')
-    return dek
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def verify_protected_header(protected_header):
-    logger.debug(f'Entering method "{inspect.currentframe().f_code.co_name}".'
-                 f' Param: protected_header="{protected_header}"'
-                 f' ({type(protected_header)}).')
+    trace_enter(inspect.currentframe())
 
     jwe_alg = protected_header['alg']   # RSA-OAEP
     jwe_enc = protected_header['enc']   # A256GCM
     # check other header attribs as well
 
-    return True
+    ret = True
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def decode_jwe(jwe_token: str) -> str:
-    logger.debug(f'Entering method "{inspect.currentframe().f_code.co_name}".'
-                 f' Param: jwe_token="{jwe_token}" ({type(jwe_token)}).')
+    trace_enter(inspect.currentframe())
 
     jwe_kid = jwe_token.get('kid', '')
     jwe = jwe_token.get('jwe', '')
@@ -207,17 +211,14 @@ def decode_jwe(jwe_token: str) -> str:
 
     cek = decrypt_cek(cek_cipher)
 
-    dek = decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag)
+    ret = decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag)
 
-    logger.debug(
-        f'Exiting method "{inspect.currentframe().f_code.co_name}".'
-        f' Return value: "{dek}" ({type(dek)})')
-    return dek
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def compare(dek: str):
-    logger.debug(f'Entering method "{inspect.currentframe().f_code.co_name}".'
-                 f' Param: dek="{dek}" ({type(dek)}).')
+    trace_enter(inspect.currentframe())
 
     ret = None
 
@@ -228,16 +229,16 @@ def compare(dek: str):
         logger.info('FATAL. Retrieved secret does not match.')
         ret = False
 
-    logger.debug(
-        f'Exiting method "{inspect.currentframe().f_code.co_name}".'
-        f' Return value: "{ret}" ({type(ret)})')
-
+    trace_exit(inspect.currentframe(), ret)
     return ret
 
 
 if __name__ == '__main__':
     jwe = request_jwe()
     dek = decode_jwe(jwe)
-    compare(dek)
+    ret = compare(dek)
 
-    # sys.exit(1) if compare fails
+    if ret:
+        sys.exit(0)
+    else:
+        sys.exit(1)

@@ -3,7 +3,7 @@
 """
 This is a standalone script to monitor distributey with an end to end test.
 The end to end test retrieves a transit encryption key from distributey and
-compares it against an expected key configured below.
+verify_retrieved_deks it against an expected key configured below.
 
 Explain that this script is a key consumer.
 
@@ -44,7 +44,6 @@ import sys
 from Cryptodome.Cipher import PKCS1_OAEP, AES
 from Cryptodome.Hash import SHA1
 from Cryptodome.PublicKey import RSA
-
 
 # <USER CONFIG>
 CFG_DY_ENDPOINT = 'https://localhost:443'
@@ -156,12 +155,12 @@ def decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag):
     b64_protected_header = base64.b64encode(str_protected_header.encode())
     ascii_b64_protected_header = \
         b64_protected_header.decode().encode('ascii', errors='strict')
-    print(ascii_b64_protected_header)
+
     aes_cipher.update(ascii_b64_protected_header)
     dek = aes_cipher.decrypt_and_verify(dek_cipher, auth_tag)
 
-    bytes_dek = base64.b64encode(dek)
-    ret = bytes_dek.decode()
+    b64_dek = base64.b64encode(dek)
+    ret = b64_dek.decode()
 
     trace_exit(inspect.currentframe(), ret)
     return ret
@@ -180,11 +179,8 @@ def verify_protected_header(protected_header):
     return ret
 
 
-def decode_jwe(jwe_token: str) -> str:
+def unserialize_jwe(jwe):
     trace_enter(inspect.currentframe())
-
-    jwe_kid = jwe_token.get('kid', '')
-    jwe = jwe_token.get('jwe', '')
 
     b64_protected_header = jwe.split('.')[0]
     b64_cek_cipher = jwe.split('.')[1]
@@ -194,30 +190,59 @@ def decode_jwe(jwe_token: str) -> str:
 
     str_protected_header = base64.urlsafe_b64decode(b64_protected_header)
     protected_header = json.loads(str_protected_header)
+
     cek_cipher = base64.urlsafe_b64decode(b64_cek_cipher)
     iv = base64.urlsafe_b64decode(b64_iv)
     dek_cipher = base64.urlsafe_b64decode(b64_dek_cipher)
     auth_tag = base64.urlsafe_b64decode(b64_auth_tag)
 
-    jwe_kid = protected_header.get('kid', '')
-    if jwe_kid == 'jwe-kid-monitoring':
-        print(f'jwe kid matches: {jwe_kid}')
-    else:
-        print(f'jwe kid does not match: {jwe_kid}')
-        return ''
-
-    if not verify_protected_header(protected_header):
-        return ''
-
-    cek = decrypt_cek(cek_cipher)
-
-    ret = decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag)
+    ret = (protected_header, cek_cipher, iv, dek_cipher, auth_tag)
 
     trace_exit(inspect.currentframe(), ret)
     return ret
 
 
-def compare(dek: str):
+def decode_jwe(jwe_token: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    jwe_kid = jwe_token.get('kid', '')
+    jwe = jwe_token.get('jwe', '')
+
+    protected_header, cek_cipher, iv, dek_cipher, auth_tag = \
+        unserialize_jwe(jwe)
+
+    jwe_kid = protected_header.get('kid', '')
+    if jwe_kid != CFG_JWE_KID:
+        logger.error(
+            f'Retrieved jwe kid "{jwe_kid}" does not match'
+            f' with configured kid "{CFG_JWE_KID}".')
+
+        trace_exit(inspect.currentframe(), '')
+        return ''
+
+    if not verify_protected_header(protected_header):
+        trace_exit(inspect.currentframe(), '')
+        return ''
+
+    cek = decrypt_cek(cek_cipher)
+
+    if not cek:
+        logger.error('Failed to decrypt dek.')
+        trace_exit(inspect.currentframe(), '')
+        return ''
+
+    ret = decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag)
+
+    if not ret:
+        logger.error('Failed to decrypt dek.')
+        trace_exit(inspect.currentframe(), ret)
+        return ''
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def verify_retrieved_dek(dek: str):
     trace_enter(inspect.currentframe())
 
     ret = None
@@ -235,10 +260,23 @@ def compare(dek: str):
 
 if __name__ == '__main__':
     jwe = request_jwe()
-    dek = decode_jwe(jwe)
-    ret = compare(dek)
 
-    if ret:
-        sys.exit(0)
-    else:
+    if not jwe:
+        logger.error('Failed to request jwe.')
         sys.exit(1)
+
+    dek = decode_jwe(jwe)
+
+    if not dek:
+        logger.error('Failed to decode jwe.')
+        sys.exit(1)
+
+    ret = verify_retrieved_dek(dek)
+
+    if not ret:
+        logger.error(
+            'Failed to verify expected secret with retrieved '
+            ' secret.')
+        sys.exit(1)
+
+    sys.exit(0)

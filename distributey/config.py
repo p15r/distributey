@@ -4,7 +4,7 @@ import json
 import logging
 from typing import Any
 
-# distributey_logging.logger() would cause import loop
+# dy_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
 CFG_PATH = '/opt/distributey/config/config.json'

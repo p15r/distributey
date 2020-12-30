@@ -159,7 +159,7 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
 
     vault_key, key_version = vault_path.split(':')
 
-    if not (dek := vault_backend.get_dynamic_secret(vault_key, key_version, jwt_token)):
+    if not (dek := vault_backend.get_dynamic_secret(tenant, vault_key, key_version, jwt_token)):
         logger.error(f'Cannot retrieve key "{vault_path}".')
         return b''
 

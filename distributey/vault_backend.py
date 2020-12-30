@@ -15,8 +15,10 @@ import config
 from dy_logging import logger
 
 
-def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
+def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) -> bytes:
     vault_url = config.get_config_by_key('VAULT_URL')
+    vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
+    vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
 
     if vault_ca_cert := config.get_config_by_key('VAULT_CACERT'):
         client = hvac.Client(url=vault_url, verify=vault_ca_cert)
@@ -26,12 +28,13 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
     logger.debug(f'Attempting to authenticate against Vault using JWT: {jwt_token}')
 
     response = client.auth.jwt.jwt_login(
-        role=config.get_config_by_key('VAULT_JWT_DEFAULT_ROLE'),
-        jwt=jwt_token)
+        role=config.get_vault_default_role_by_tenant(tenant),
+        jwt=jwt_token,
+        path=vault_auth_jwt_path)
 
     logger.debug(f'Vault login response: {response}')
 
-    # hier noch ein check: client.is_authenticated()?
+    # TODO: hier noch ein check: client.is_authenticated()?
 
     vault_token = response['auth']['client_token']
 
@@ -48,14 +51,14 @@ def get_dynamic_secret(key: str, key_version: str, jwt_token: str) -> bytes:
         return b''
 
     # fetch most recent key version of key
-    response = client.secrets.transit.read_key(name=key)
+    response = client.secrets.transit.read_key(name=key, mount_point=vault_transit_path)
 
     if key_version == 'latest':
         key_version = response['data']['latest_version']
 
     # fetch key
     response = client.secrets.transit.export_key(
-        name=key, key_type='encryption-key', version=key_version)
+        name=key, key_type='encryption-key', version=key_version, mount_point=vault_transit_path)
 
     b64_key = response['data']['keys'][str(key_version)]
 

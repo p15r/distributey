@@ -1,32 +1,57 @@
 #!/usr/bin/env python3
 
 """
-This is a standalone script to monitor distributey with an end to end test.
-The end to end test retrieves a transit encryption key from distributey and
-verify_retrieved_deks it against an expected key configured below.
+This is a standalone script to monitor distributey with an end-to-end test.
+This test retrieves a transit encryption key from distributey and
+verifies it against an expected key configured below.
 
-Explain that this script is a key consumer.
+From distributey's perspective, this script is a key consumer and must be
+configured accordingly. You can find an example config for a "monitoring"
+tenant in dev/example-config.json.
 
-Attention: the key used for monitoring must not be used for any other purpose.
+Note: the transit encryption key used for monitoring must not be used for any
+other purposes.
 
+-----
 SETUP
-- Configure all variables below starting w/ CFG_.
-  If unsure, leave default value.
-- Describe how to generate key consumer key, etc.
+-----
 
-Retrieve monitoring secret from Vault:
+0. Install dependencies of this script:
+    - Create requirements.txt with the following content:
+      pycryptodomex==3.9.8
+      pyjwt[crypto]==1.7.1
+      requests==2.24.0
+
+    - Create virtual environment:
+      python3 -m venv venv
+
+    - Activate virtual environment:
+      source venv/bin/activate
+
+    - Install dependencies:
+      python3 -m pip install -r requirements.txt
+
+
+1. Retrieve monitoring tenant transit encryption key in Vault:
     curl --header "X-Vault-Token: root" \
     http://vault/v1/transit-monitoring/export/encryption-key/monitoring/1 \
     | jq '.data.keys[]'
 
-Dependencies (requirements.txt):
-pycryptodomex==3.9.8
-pyjwt[crypto]==1.7.1
-requests==2.24.0
+2. Configure all variables below starting with "CFG_".
+   If unsure, keep the default value.
 
-Create virtual environment: python3 -m venv /path/to/venv
-Activate virtual environment: source /path/to/venv/bin/activate
-Install dependencies: python3 -m pip install -r requirements.txt
+   - CFG_DY_ENDPOINT: URL of distributey
+   - CFG_DY_CA_CERT: HTTPS public cert of distributey
+   - CFG_EXPECTED_SECRET: monitoring transit encryption key stored in Vault
+   - CFG_KEY_CONSUMER_PRIVKEY: Key used to decrypt CEK. See dev/dev_setup.sh.
+   - CFG_JWT_SIGNING_PRIVKEY: Key used to sign JWT. See dev/dev_setup.sh.
+
+3. Run end-to-end test:
+   python3 dev/e2e-monitoring.py
+
+   If the test is successful, you should see an output similar to:
+
+   "2020-12-30 09:32:37,739 [INFO] OK. Retrieved secret matches."
 
 TODO
 - check nonce in answer
@@ -51,7 +76,7 @@ CFG_DY_CA_CERT = 'dev/tmp/nginx.crt'    # "None" if http
 CFG_JWE_KID = 'jwe-kid-monitoring'
 CFG_JWE_ALG = 'RSA-OAEP'
 CFG_JWE_ENC = 'A256GCM'
-CFG_EXPECTED_SECRET = 'uo1gpZcIhqUjL/cOWNqVf+xo9FWubaZ3dhRuSZLZSMY='
+CFG_EXPECTED_SECRET = 'monitoring-transit-key-from-vault'
 CFG_KEY_CONSUMER_PRIVKEY = 'dev/tmp/key_consumer_key.key'
 CFG_JWT_SIGNING_PRIVKEY = 'dev/tmp/jwt.key'
 CFG_JWT_EXPIRATION_TIME = 300     # ms

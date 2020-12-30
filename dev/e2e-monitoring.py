@@ -9,7 +9,7 @@ From distributey's perspective, this script is a key consumer and must be
 configured accordingly. You can find an example config for a "monitoring"
 tenant in dev/example-config.json.
 
-Note: the transit encryption key used for monitoring must not be used for any
+Note: the transit encryption key for monitoring must not be used for any
 other purposes.
 
 -----
@@ -17,32 +17,31 @@ SETUP
 -----
 
 0. Install dependencies of this script:
-    - Create requirements.txt with the following content:
-      pycryptodomex==3.9.8
-      pyjwt[crypto]==1.7.1
-      requests==2.24.0
+   - Create requirements.txt with the following content:
+     pycryptodomex==3.9.8
+     pyjwt[crypto]==1.7.1
+     requests==2.24.0
 
-    - Create virtual environment:
-      python3 -m venv venv
+   - Create virtual environment:
+     python3 -m venv venv
 
-    - Activate virtual environment:
-      source venv/bin/activate
+   - Activate virtual environment:
+     source venv/bin/activate
 
-    - Install dependencies:
-      python3 -m pip install -r requirements.txt
-
+   - Install dependencies:
+     python3 -m pip install -r requirements.txt
 
 1. Retrieve monitoring tenant transit encryption key in Vault:
-    curl --header "X-Vault-Token: root" \
-    http://vault/v1/transit-monitoring/export/encryption-key/monitoring/1 \
-    | jq '.data.keys[]'
+   curl --header "X-Vault-Token: root" \
+   http://vault/v1/transit-monitoring/export/encryption-key/monitoring/1 \
+   | jq '.data.keys[]'
 
 2. Configure all variables below starting with "CFG_".
    If unsure, keep the default value.
 
-   - CFG_DY_ENDPOINT: URL of distributey
-   - CFG_DY_CA_CERT: HTTPS public cert of distributey
-   - CFG_EXPECTED_SECRET: monitoring transit encryption key stored in Vault
+   - CFG_DY_ENDPOINT: URL of distributey.
+   - CFG_DY_CA_CERT: HTTPS public cert of distributey.
+   - CFG_EXPECTED_SECRET: monitoring transit encryption key stored in Vault.
    - CFG_KEY_CONSUMER_PRIVKEY: Key used to decrypt CEK. See dev/dev_setup.sh.
    - CFG_JWT_SIGNING_PRIVKEY: Key used to sign JWT. See dev/dev_setup.sh.
 
@@ -52,9 +51,6 @@ SETUP
    If the test is successful, you should see an output similar to:
 
    "2020-12-30 09:32:37,739 [INFO] OK. Retrieved secret matches."
-
-TODO
-- check nonce in answer
 """
 
 import base64
@@ -65,6 +61,8 @@ import jwt
 import json
 import requests
 import sys
+import types
+from typing import Any, Optional
 
 from Cryptodome.Cipher import PKCS1_OAEP, AES
 from Cryptodome.Hash import SHA1
@@ -76,15 +74,15 @@ CFG_DY_CA_CERT = 'dev/tmp/nginx.crt'    # "None" if http
 CFG_JWE_KID = 'jwe-kid-monitoring'
 CFG_JWE_ALG = 'RSA-OAEP'
 CFG_JWE_ENC = 'A256GCM'
-CFG_EXPECTED_SECRET = 'monitoring-transit-key-from-vault'
+CFG_EXPECTED_SECRET = 'monitoring-transit-encryption-key-from-vault'
 CFG_KEY_CONSUMER_PRIVKEY = 'dev/tmp/key_consumer_key.key'
 CFG_JWT_SIGNING_PRIVKEY = 'dev/tmp/jwt.key'
 CFG_JWT_EXPIRATION_TIME = 300     # ms
 CFG_JWT_KID = 'jwt_kid_monitoring'
 # </USER CONFIG>
 
-jwe_nonce = 'a-randrom-nonce'
-dy_api_path = f'/v1/monitoring/{CFG_JWE_KID}?requestID={jwe_nonce}'
+jwe_nonce = 'a-very-randrom-nonce'
+dy_api_path = f'/v1/monitoring/{CFG_JWE_KID}'
 
 logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 consoleHandler = logging.StreamHandler()    # log to stderr
@@ -92,23 +90,33 @@ consoleHandler.setFormatter(logFormatter)
 
 logger = logging.getLogger()
 logger.addHandler(consoleHandler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
-def trace_enter(current_frame):
-    func_name = current_frame.f_code.co_name
-    func_args = current_frame.f_code.co_varnames
-    file_name = current_frame.f_code.co_filename
-    line_no = current_frame.f_code.co_firstlineno
+def __trace(current_frame: Optional[types.FrameType]) -> tuple:
+    if isinstance(current_frame, types.FrameType):
+        func_name = current_frame.f_code.co_name
+        func_args = inspect.getargvalues(current_frame)
+        file_name = current_frame.f_code.co_filename
+        line_no = current_frame.f_code.co_firstlineno
+    else:
+        # inspect.currentframe() might return None,
+        # in case of "exotic" python runtime
+        logger.error(f'Failed to inspect frame: "{current_frame}".')
+        return ('error', 'error', 'error', 'error')
+
+    return func_name, func_args, file_name, line_no
+
+
+def trace_enter(current_frame: Optional[types.FrameType]) -> None:
+    func_name, func_args, file_name, line_no = __trace(current_frame)
 
     logger.debug(
         f'({file_name}:{line_no}) Entering "{func_name}" args: {func_args}')
 
 
-def trace_exit(current_frame, ret):
-    func_name = current_frame.f_code.co_name
-    file_name = current_frame.f_code.co_filename
-    line_no = current_frame.f_code.co_firstlineno
+def trace_exit(current_frame: Optional[types.FrameType], ret: Any) -> None:
+    func_name, func_args, file_name, line_no = __trace(current_frame)
 
     logger.debug(f'({file_name}:{line_no}) Exiting "{func_name}" ret: {ret}')
 
@@ -141,7 +149,7 @@ def create_auth_header() -> str:
     return ret
 
 
-def request_jwe() -> str:
+def request_jwe() -> dict:
     trace_enter(inspect.currentframe())
 
     auth_header = create_auth_header()
@@ -158,7 +166,7 @@ def request_jwe() -> str:
     return ret
 
 
-def decrypt_cek(cek_cipher):
+def decrypt_cek(cek_cipher: bytes) -> bytes:
     trace_enter(inspect.currentframe())
 
     with open(CFG_KEY_CONSUMER_PRIVKEY, 'rb') as f:
@@ -166,7 +174,7 @@ def decrypt_cek(cek_cipher):
 
     private_key = RSA.import_key(rsa_privkey)
 
-    # bcs protected header is RSA-OAEP
+    # bcs protected header defines RSA-OAEP
     cipher_rsa = PKCS1_OAEP.new(private_key, hashAlgo=SHA1)
     ret = cipher_rsa.decrypt(cek_cipher)
 
@@ -174,7 +182,9 @@ def decrypt_cek(cek_cipher):
     return ret
 
 
-def decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag):
+def decrypt_dek(
+        cek: bytes, protected_header: dict, dek_cipher: bytes, iv: bytes,
+        auth_tag: bytes) -> str:
     trace_enter(inspect.currentframe())
 
     aes_cipher = AES.new(cek, AES.MODE_GCM, nonce=iv, mac_len=16)
@@ -194,7 +204,7 @@ def decrypt_dek(cek, protected_header, dek_cipher, iv, auth_tag):
     return ret
 
 
-def verify_protected_header(protected_header):
+def verify_protected_header(protected_header: dict) -> bool:
     trace_enter(inspect.currentframe())
 
     map = {
@@ -217,7 +227,7 @@ def verify_protected_header(protected_header):
     return True
 
 
-def unserialize_jwe(jwe):
+def unserialize_jwe(jwe: str) -> tuple:
     trace_enter(inspect.currentframe())
 
     split_jwe = jwe.split('.')
@@ -296,7 +306,7 @@ def decode_jwe(jwe_token: dict) -> str:
     return ret
 
 
-def verify_retrieved_dek(dek: str):
+def verify_retrieved_dek(dek: str) -> bool:
     trace_enter(inspect.currentframe())
 
     ret = None
@@ -305,7 +315,7 @@ def verify_retrieved_dek(dek: str):
         logger.info('OK. Retrieved secret matches.')
         ret = True
     else:
-        logger.info('FATAL. Retrieved secret does not match.')
+        logger.error('FATAL. Retrieved secret does not match.')
         ret = False
 
     trace_exit(inspect.currentframe(), ret)
@@ -328,9 +338,6 @@ if __name__ == '__main__':
     ret = verify_retrieved_dek(dek)
 
     if not ret:
-        logger.error(
-            'Failed to verify expected secret with retrieved '
-            ' secret.')
         sys.exit(1)
 
     sys.exit(0)

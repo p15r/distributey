@@ -57,8 +57,8 @@ import base64
 import datetime
 import inspect
 import logging
-import jwt
 import json
+import jwt
 import requests
 import sys
 import types
@@ -96,6 +96,7 @@ logger.setLevel(logging.INFO)
 def __trace(current_frame: Optional[types.FrameType]) -> tuple:
     if isinstance(current_frame, types.FrameType):
         func_name = current_frame.f_code.co_name
+        # getargvalues is deprecated, use inspect.signature() instead
         func_args = inspect.getargvalues(current_frame)
         file_name = current_frame.f_code.co_filename
         line_no = current_frame.f_code.co_firstlineno
@@ -207,14 +208,14 @@ def decrypt_dek(
 def verify_protected_header(protected_header: dict) -> bool:
     trace_enter(inspect.currentframe())
 
-    map = {
+    protected_header_map = {
         'alg': CFG_JWE_ALG,
         'enc': CFG_JWE_ENC,
         'kid': CFG_JWE_KID,
         'jti': jwe_nonce
     }
 
-    for key, value in map.items():
+    for key, value in protected_header_map.items():
         received_field = protected_header.get(key, '')
         if received_field != value:
             logger.error(
@@ -335,9 +336,9 @@ if __name__ == '__main__':
         logger.error('Failed to decode jwe.')
         sys.exit(1)
 
-    ret = verify_retrieved_dek(dek)
+    compare = verify_retrieved_dek(dek)
 
-    if not ret:
+    if not compare:
         sys.exit(1)
 
     sys.exit(0)

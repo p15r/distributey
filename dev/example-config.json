@@ -1,6 +1,13 @@
 {
   "DEV_MODE": false,
   "LOG_LEVEL": "info",
+  "SPLUNK_ENABLED": false,
+  "SPLUNK_HOST": "splunk_forwarder_url",
+  "SPLUNK_PORT": "8088",
+  "SPLUNK_PROTOCOL": "http",
+  "SPLUNK_VERIFY": true,
+  "SPLUNK_TOKEN": "a-valid-token",
+  "SPLUNK_INDEX": "index",
   "TENANT_CFG": {
     "monitoring": {
       "auth": {

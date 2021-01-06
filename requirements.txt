@@ -3,3 +3,4 @@ Flask==1.1.2
 gunicorn==20.0.4
 hvac==0.10.5
 pyjwt[crypto]==1.7.1
+splunk-handler==2.2.2

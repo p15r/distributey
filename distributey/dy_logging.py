@@ -5,6 +5,7 @@ import config
 
 
 log_level = config.get_config_by_key('LOG_LEVEL')
+splunk_enabled = config.get_config_by_key('SPLUNK_ENABLED')
 
 if log_level == 'debug':
     loglvl = logging.DEBUG
@@ -36,3 +37,16 @@ __stream_handler.setFormatter(
 logger = logging.getLogger()
 logger.setLevel(loglvl)
 logger.addHandler(__stream_handler)
+
+if splunk_enabled:
+    from splunk_handler import SplunkHandler
+
+    __splunk = SplunkHandler(
+        host=config.get_config_by_key('SPLUNK_HOST'),
+        port=config.get_config_by_key('SPLUNK_PORT'),
+        protocol=config.get_config_by_key('SPLUNK_PROTOCOL'),
+        verify=config.get_config_by_key('SPLUNK_VERIFY'),
+        token=config.get_config_by_key('SPLUNK_TOKEN'),
+        index=config.get_config_by_key('SPLUNK_INDEX'))
+
+    logger.addHandler(__splunk)

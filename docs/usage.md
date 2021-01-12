@@ -18,6 +18,10 @@
   curl -k --no-progress-meter https://localhost/v1/monitoring/jwe-kid-monitoring?requestId=nonce -H "Authorization: $(python3 dev/create_jwt.py -m)" | jq
   ```
 
+## Splunk
+
+If Splunk logging has been enabled in `config/config.json`, use the following Splunk search to discover `distributey` logs: `index=<INDEXNAME> host="distributey"`.
+
 ## Debugging
 - Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
 - Check if container `distributey`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`

@@ -2,8 +2,6 @@
 
 set -euf -o pipefail
 
-# TODO: generate nginx, key consumer key & jwt in a loop..
-
 tls_cfg_path="dev/tls"
 tmp_path="dev/tmp"
 ca_passphrase="foobar"

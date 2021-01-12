@@ -20,7 +20,6 @@ services:
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
       - distributey
-      - vault-agent # Comment for production.
 
   distributey:
     image: pat/distributey:0.1
@@ -73,29 +72,5 @@ services:
       - CHECKPOINT_DISABLE=true               # prevent tf from checking for updates
     volumes:
       - ./docker/terraform:/terraform
-      - approle:/approle          # write approle secret id to volume shared with vault-agent
     depends_on:
       - vault
-
-  vault-agent:
-    image: vault:1.5.3
-    container_name: vault-agent
-    hostname: vault-agent
-    build:
-      context: docker/vault-agent/
-      dockerfile: Dockerfile
-    cap_add:
-      - IPC_LOCK
-    command: ["agent", "-config", "/vault/config/vault-agent.hcl"]
-    volumes:
-      - ./docker/vault-agent/config:/vault/config
-      - approle:/approle
-    depends_on:
-    - terraform
-
-volumes:
-  # Shared mount between vault-agent and terraform
-  # to provision AppRole authentication credentials.
-  # Terraform on Docker is the Trusted Orchestrator:
-  # https://learn.hashicorp.com/tutorials/vault/secure-introduction
-  approle:

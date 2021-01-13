@@ -6,6 +6,8 @@ docker/terraform/.terraform/
 docker/terraform/tf-cache/
 config/auth/
 config/backend/
+config/mtls_auth.crt
+config/mtls_auth.key
 dev/tmp/
 dev/key_consumer_cert.crt
 .coverage

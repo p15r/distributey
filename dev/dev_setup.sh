@@ -81,5 +81,7 @@ echo 'Copying JWT public key...'
 cp $tmp_path/jwt.pub config/auth/jwt_salesforce_serviceX.pub
 echo 'Copying self-signed certs for API...'
 cp $tmp_path/nginx.{key,crt} docker/certs/
-echo 'Copying key consumer key...'
+echo 'Copying key consumer cert & key...'
 cp $tmp_path/key_consumer_key.crt config/backend/distributey_allservices_key_consumer.crt
+echo 'Copying mTLS auth cert & key...'
+cp $tmp_path/mtls_auth.crt $tmp_path/mtls_auth.key config/

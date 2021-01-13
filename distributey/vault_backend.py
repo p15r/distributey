@@ -20,10 +20,15 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) 
     vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
     vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
 
+    vault_mtls_client_cert = config.get_config_by_key('VAULT_MTLS_CLIENT_CERT')
+    vault_mtls_client_key = config.get_config_by_key('VAULT_MTLS_CLIENT_KEY')
+
+    mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
+
     if vault_ca_cert := config.get_config_by_key('VAULT_CACERT'):
-        client = hvac.Client(url=vault_url, verify=vault_ca_cert)
+        client = hvac.Client(cert=mtls_auth, url=vault_url, verify=vault_ca_cert)
     else:
-        client = hvac.Client(url=vault_url)
+        client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
 
     logger.debug(f'Attempting to authenticate against Vault using JWT: {jwt_token}')
 

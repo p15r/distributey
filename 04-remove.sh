@@ -14,5 +14,5 @@ echo '🧹 Removing locally cached files..'
 echo '🔓 Resetting ownership of Vault config bind mount'
 sudo chown -R $USER: ./docker/vault
 
-echo '🔥 Remove old Vault TLS files from dev setup'
+echo '🧹 Remove old Vault TLS files from dev setup'
 rm docker/vault/{myCA.crt,vault_combined.pem,vault.key}

@@ -82,7 +82,7 @@ echo "🔑 Generate Vault cert csr..."
 openssl req -passin pass:$cert_passphrase -new -sha512 -key $tmp_path/vault.key -config $tls_cfg_path/request.cfg -out $tmp_path/vault.csr
 
 echo "🔑 Generate Vault cert..."
-openssl x509 -passin pass:$ca_passphrase -req -in $tmp_path/vault.csr -CA $tmp_path/myCA.crt -CAkey $tmp_path/myCA.key -CAcreateserial -out $tmp_path/vault.crt -days 3650 -sha512 -extfile $tls_cfg_path/request.cfg -extensions 'v3_req'
+openssl x509 -passin pass:$ca_passphrase -req -in $tmp_path/vault.csr -CA $tmp_path/myCA.crt -CAkey $tmp_path/myCA.key -CAcreateserial -out $tmp_path/vault.crt -days 3650 -sha512 -extfile $tls_cfg_path/request.cfg -extensions 'v3_req_vault'
 
 echo "  Concatenate Vault cert with CA file"
 echo " The primary certificate should appear first in the combined file."

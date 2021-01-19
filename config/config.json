@@ -30,7 +30,7 @@
       "vault_transit_path": "transit"
     }
   },
-  "VAULT_CACERT": "",
+  "VAULT_CACERT": "config/myCA.crt",
   "VAULT_MTLS_CLIENT_CERT": "config/mtls_auth.crt",
   "VAULT_MTLS_CLIENT_KEY": "config/mtls_auth.key",
   "VAULT_URL": "http://vault:8200"

@@ -8,8 +8,8 @@ docker-compose down
 cd ..
 
 echo '🧹 Removing locally cached files..'
-rm -r docker/terraform/tf-cache
-rm docker/terraform/.terraform.lock.hcl
+[ -d docker/terraform/tf-cache ] && rm -r docker/terraform/tf-cache
+[ -f docker/terraform/.terraform.lock.hcl ] && rm docker/terraform/.terraform.lock.hcl
 
 echo '🔓 Resetting ownership of Vault config bind mount'
 sudo chown -R $USER: ./docker/vault

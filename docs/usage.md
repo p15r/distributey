@@ -25,7 +25,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
 ## Debugging
 - Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
 - Check if container `distributey`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`
-- Check logs: 
+- Check logs:
   - `distributey`: `journalctl -f -t dy-distributey`
   - `nginx`: `journalctl -f -t dy-nginx`
 - Enable debug logs
@@ -34,6 +34,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
 - Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
   - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `distributey/config/config.json`
   - Load new config: `./02-load-config.sh`
+- To switch from HTTPS (mTLS) to HTTP between Vault and `distributey`, configure `"VAULT_URL": "http://vault:8200"` in `config/config.json`.
 
 ## Decrypt JWE
 An example JWE to decrypt:

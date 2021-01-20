@@ -5,8 +5,14 @@ from flask import Response
 import json
 import jwt
 from werkzeug.datastructures import EnvironHeaders
+import base64
 from os import getpid
-from typing import Tuple
+from typing import Tuple, Dict
+from webargs import fields, validate
+from webargs.flaskparser import use_args
+from webargs import ValidationError
+from webargs.flaskparser import parser
+from flask import abort
 
 import jwe
 import config
@@ -28,6 +34,81 @@ app.logger.info(f'🚀 distributey is starting (pid {getpid()})...')
 base_path = '/'
 api_versioning_path = 'v1/'
 path_prefix = base_path + api_versioning_path
+
+
+# webargs error handler
+@parser.error_handler
+def handle_request_parsing_error(
+    validation_error, request, schema, error_status_code=None,
+        error_headers=None):
+
+    app.logger.error(
+        f'Input validation failed with error "{validation_error}" '
+        f'on request "{request.url}".')
+
+    resp = Response(
+        response=str(validation_error),
+        status=422,
+        content_type='application/json; ; charset=utf-8')
+
+    abort(resp)
+
+
+# webargs validator
+def jwt_validator(jwt):
+    # TODO: log before raising!
+    # validate like https://auth0.com/blog/developing-restful-apis-with-python-and-flask/#securing-python-apis
+
+    parts = jwt.split()
+
+    if parts[0].lower() != 'bearer':
+        raise ValidationError(
+            'Authorization header must start with "Bearer"', status_code=422)
+    elif len(parts) == 1:
+        raise ValidationError('Token not found', status_code=422)
+    elif len(parts) > 2:
+        raise ValidationError(
+            'Authorization header must be "Bearer" token', status_code=422)
+
+    token = parts[1]
+
+    token = token.split('.')
+
+    if len(token) != 3:
+        raise ValidationError(
+            'JWT token must be of format "header.payload.signature"',
+            status_code=422)
+
+    header = token[0]
+    payload = token[1]
+    signature = token[2]
+
+    try:
+        header = base64.b64decode(header)
+        header = json.loads(header)
+    except Exception as exc:
+        raise ValidationError(
+            'JWT header must be base64 encoded json.', status_code=422)
+
+    if ('typ' not in header) or ('alg' not in header) or ('kid' not in header):
+        raise ValidationError(
+            'JWT header must include "typ", "alg" and "kid".', status_code=422)
+
+    # fix padding required by python base64 module: + b'==='
+    payload = payload + '==='
+
+    try:
+        payload = base64.b64decode(payload).decode()
+    except Exception as exc:
+        raise ValidationError(
+            'JWT payload must be base64 encoded json.', status_code=422)
+
+    if ('sub' not in payload) or ('iss' not in payload) or \
+            ('aud' not in payload):
+        raise ValidationError(
+            'JWT payload must  include "sub", "iss", "aud".', status_code=422)
+
+    # validate "signature"?
 
 
 def _get_kid_from_jwt(token: str) -> str:
@@ -175,16 +256,47 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
     return dek
 
 
+# input validation
+view_args = {
+    'tenant': fields.Str(
+        required=True,
+        validate=validate.Length(min=1, max=50)),
+    'jwe_kid': fields.Str(
+        required=True,
+        validate=validate.Length(min=1, max=50))
+}
+
+query_args = {
+    'requestId': fields.Str(
+        required=False,
+        validate=validate.Length(min=1, max=80))
+}
+
+header_args = {
+    'jwt': fields.Str(
+        data_key='Authorization',
+        required=True,
+        validate=jwt_validator)
+}
+
+# TODO: validate X-Real-IP, user_agent, path
+
+
 @app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
-def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):
+@use_args(view_args, location='view_args')  # view_args: part of request.path
+@use_args(query_args, location='query')
+@use_args(header_args, location='headers')
+def get_wrapped_key(req_args: Dict, *args, **kwargs):
     """
     tenant: Tenant (key consumer) that makes a request. E.g. Salesforce. Mandatory.
     jwe_kid: kid provided by Salesforce. Mandatory.
     nonce: Nonce (?requestId=x) provided by Salesforce (to prevent replay attacks). Optional.
     """
 
-    if not (token := _authenticate(tenant, request.headers)):
-        if not (jwt_audience := config.get_jwt_audience_by_tenant(tenant)):
+    # now here, work with webargs instead of tenant, jwe_kid or request.XXX
+
+    if not (token := _authenticate(req_args['tenant'], request.headers)):
+        if not (jwt_audience := config.get_jwt_audience_by_tenant(req_args['tenant'])):
             jwt_audience = 'unknown'
 
         # WWW-Authenticate header according to: https://tools.ietf.org/html/rfc6750#section-3
@@ -196,8 +308,9 @@ def get_wrapped_key(tenant: str = '', jwe_kid: str = ''):
 
     app.logger.info(f'Processing request (path: "{request.path}", args: "{request.args.to_dict()}"...')
 
-    tenant = str(escape(tenant))
-    jwe_kid = str(escape(jwe_kid))
+    # TODO: should I do that on webargs instead?
+    tenant = str(escape(req_args['tenant']))
+    jwe_kid = str(escape(req_args['jwe_kid']))
     nonce = str(escape(request.args.get('requestId', '')))
 
     dek = _get_dek_from_vault(token, tenant, jwe_kid)

@@ -111,6 +111,15 @@ def jwt_validator(jwt):
     # validate "signature"?
 
 
+def __http_error(status_code: int, msg: str) -> None:
+    resp = Response(
+        response=msg,
+        status=status_code,
+        content_type='application/json; charset=utf-8')
+
+    abort(resp)
+
+
 def _get_kid_from_jwt(token: str) -> str:
     try:
         protected_header_unverified = jwt.get_unverified_header(token)
@@ -149,10 +158,12 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     """
 
     if not (aud := config.get_jwt_audience_by_tenant(tenant)):
-        raise ValueError(f'Cannot get JWT audience for tenant "{tenant}" from config.')
+        app.logger.error(f'Cannot get JWT audience for tenant "{tenant}" from config.')
+        __http_error(500, '{"error": "internal error"}')
 
     if not (algos := config.get_jwt_algorithm_by_tenant(tenant)):
-        raise ValueError(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
+        app.logger.error(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
+        __http_error(500, '{"error": "internal error"}')
 
     try:
         # 10s leeway as clock skew margin
@@ -204,8 +215,10 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     app.logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
 
     if not (validation_cert := config.get_jwt_validation_cert_by_tenant_and_kid(tenant, jwt_kid)):
-        raise ValueError(
+        app.logger.error(
                 f'No validation certificate exists in config.json to verify signature for JWTs with kid "{jwt_kid}".')
+
+        __http_error(500, '{"error": "internal error"}')
 
     app.logger.debug(f'Attempting to validate JWT signature using cert "{validation_cert}".')
 
@@ -220,10 +233,12 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     token_sub, token_iss = _decode_jwt(tenant, token, cert)
 
     if not (cfg_sub := config.get_jwt_subject_by_tenant(tenant)):
-        raise ValueError(f'Cannot get JWT subject for tenant "{tenant}" from config.')
+        app.logger.error(f'Cannot get JWT subject for tenant "{tenant}" from config.')
+        __http_error(500, '{"error": "internal error"}')
 
     if not (cfg_iss := config.get_jwt_issuer_by_tenant(tenant)):
-        raise ValueError(f'Cannot get JWT issuer for tenant "{tenant}" from config.')
+        app.logger.error(f'Cannot get JWT issuer for tenant "{tenant}" from config.')
+        __http_error(500, '{"error": "internal error"}')
 
     if (token_sub == cfg_sub) and (token_iss == cfg_iss):
         app.logger.info(
@@ -280,6 +295,7 @@ header_args = {
 }
 
 # TODO: validate X-Real-IP, user_agent, path
+# TODO: write tests for check input validation
 
 
 @app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])

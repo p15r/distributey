@@ -89,12 +89,12 @@ class TestUnitFlaskApp():
 
         # access API w/o Authorization header
         response = http_client.get(endpoint, headers=headers)
-        assert response.status_code == 401
+        assert response.status_code == 422
 
         # access API w/ wrong tenant
         endpoint_nonexisting_tenant = '/v1/nontexistingtenant/jwe-kid-salesforce-serviceX?resourceId=randomstring'
         response = http_client.get(endpoint_nonexisting_tenant, headers=headers)
-        assert response.status_code == 401
+        assert response.status_code == 422
 
         # further coverage requires Vault, thus covered w/ integration tests
 

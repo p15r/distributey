@@ -15,4 +15,6 @@ echo '🔓 Resetting ownership of Vault config bind mount'
 sudo chown -R $USER: ./docker/vault
 
 echo '🧹 Remove old Vault TLS files from dev setup'
-rm docker/vault/{myCA.crt,vault_combined.pem,vault.key}
+[ -f docker/vault/myCA.crt ] && sudo rm docker/vault/myCA.crt
+[ -f docker/vault/vault_combined.pem ] && sudo rm docker/vault/vault_combined.pem
+[ -f docker/vault/vault.key ] && sudo rm docker/vault/vault.key

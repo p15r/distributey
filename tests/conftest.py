@@ -13,6 +13,18 @@ def get_jwt():
     return dev.create_jwt.token
 
 
+@pytest.fixture(name='get_endpoint_url')
+def get_endpoint_url():
+    return ('/v1/salesforce/jwe-kid-salesforce-serviceX'
+            '?resourceId=randomstring')
+
+
+@pytest.fixture(name='get_endpoint_url_nonexistingtenant')
+def get_endpoint_url_nonexistingtenant():
+    return ('/v1/nontexistingtenant/jwe-kid-salesforce-serviceX'
+            '?resourceId=randomstring')
+
+
 @pytest.fixture(name='get_jwt')
 def get_jwt_fixture():
     return get_jwt()

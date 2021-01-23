@@ -188,9 +188,9 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
 
 
 @app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
-@use_args(input_validation.view_args, location='view_args')  # view_args: part of request.path
-@use_args(input_validation.query_args, location='query')
-@use_args(input_validation.header_args, location='headers')
+@use_args(input_validation._view_args, location='view_args')  # view_args: part of request.path
+@use_args(input_validation._query_args, location='query')
+@use_args(input_validation._header_args, location='headers')
 def get_wrapped_key(
         view_args: Dict, query_args: Dict, header_args: Dict, *args, **kwargs):
     """
@@ -203,7 +203,7 @@ def get_wrapped_key(
         if not (jwt_audience := config.get_jwt_audience_by_tenant(view_args['tenant'])):
             jwt_audience = 'unknown'
 
-        error_msg = (f'Unauthorized request fem {header_args["x-real-ip"]} '
+        error_msg = (f'Unauthorized request from {header_args["x-real-ip"]} '
                      f'({header_args["user-agent"]}).')
 
         # WWW-Authenticate header according to: https://tools.ietf.org/html/rfc6750#section-3
@@ -215,7 +215,6 @@ def get_wrapped_key(
             content_type='application/json; charset=utf-8',
             headers={'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'})
 
-    # TODO: should I do that on webargs instead?
     tenant = str(escape(view_args['tenant']))
     jwe_kid = str(escape(view_args['jwe_kid']))
     nonce = str(escape(query_args['requestId']))

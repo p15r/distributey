@@ -188,9 +188,9 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
 
 
 @app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
-@use_args(input_validation._view_args, location='view_args')  # view_args: part of request.path
-@use_args(input_validation._query_args, location='query')
-@use_args(input_validation._header_args, location='headers')
+@use_args(input_validation._VIEW_ARGS, location='view_args')  # view_args: part of request.path
+@use_args(input_validation._QUERY_ARGS, location='query')
+@use_args(input_validation._HEADER_ARGS, location='headers')
 def get_wrapped_key(
         view_args: Dict, query_args: Dict, header_args: Dict, *args, **kwargs):
     """

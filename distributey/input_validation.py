@@ -1,26 +1,34 @@
+"""Input validation for distributey API."""
+
 import base64
+import json
+from typing import Mapping
 from flask import abort
 from webargs import ValidationError
 from webargs.flaskparser import parser
 from flask import Response
-import json
+from marshmallow.exceptions import ValidationError as typeValidationError
+from marshmallow.base import SchemaABC
 from webargs import fields, validate
+import werkzeug
 
 from dy_logging import logger
 
-# TODO: type hinting
 
 # webargs error handler
 @parser.error_handler
 def __handle_request_parsing_error(
-    validation_error, request, schema, error_status_code=None,
-        error_headers=None):
+        validation_error: typeValidationError,
+        request: werkzeug.local.LocalProxy,
+        schema: SchemaABC,
+        error_status_code: int = None,
+        error_headers: Mapping[str, str] = None) -> None:
 
     input_data = validation_error.__dict__['data']
 
     logger.error(
-        f'Input validation failed with error "{validation_error}". '
-        f'Input: "{input_data}".')
+        'Input validation failed with error "%s". '
+        'Input: "%s".', validation_error, input_data)
 
     resp = Response(
         response=json.dumps(validation_error.__dict__['messages']),
@@ -80,11 +88,13 @@ def __jwt_validator(jwt: str) -> None:
         err_msg = 'Authorization header must start with "Bearer"'
         logger.error(err_msg)
         raise ValidationError(err_msg, status_code=422)
-    elif len(parts) == 1:
+
+    if len(parts) == 1:
         err_msg = 'Token not found'
         logger.error(err_msg)
         raise ValidationError(err_msg, status_code=422)
-    elif len(parts) > 2:
+
+    if len(parts) > 2:
         err_msg = 'Authorization header must be "Bearer token".'
         logger.error(err_msg)
         raise ValidationError(err_msg, status_code=422)
@@ -108,7 +118,7 @@ def __jwt_validator(jwt: str) -> None:
         header = base64.b64decode(b64_header).decode()
         header = json.loads(header)
     except Exception as exc:
-        err_msg = 'JWT header must be base64 encoded json.'
+        err_msg = f'JWT header must be base64 encoded json: {exc}.'
         logger.error(err_msg)
         raise ValidationError(err_msg, status_code=422)
 
@@ -124,7 +134,7 @@ def __jwt_validator(jwt: str) -> None:
         payload = base64.b64decode(payload).decode()
         payload = json.loads(payload)
     except Exception as exc:
-        err_msg = 'JWT payload must be base64 encoded json.'
+        err_msg = f'JWT payload must be base64 encoded json: {exc}.'
         logger.error(err_msg)
         raise ValidationError(err_msg, status_code=422)
 
@@ -136,7 +146,7 @@ def __jwt_validator(jwt: str) -> None:
 
 
 # input validation
-_view_args = {
+_VIEW_ARGS = {
     'tenant': fields.Str(
         required=True,
         validate=validate.Length(min=1, max=50)),
@@ -145,13 +155,13 @@ _view_args = {
         validate=validate.Length(min=1, max=50))
 }
 
-_query_args = {
+_QUERY_ARGS = {
     'requestId': fields.Str(
         required=False,
         validate=validate.Length(min=1, max=80))
 }
 
-_header_args = {
+_HEADER_ARGS = {
     'jwt': fields.Str(
         data_key='Authorization',
         required=True,

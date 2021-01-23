@@ -24,9 +24,29 @@ def handle_request_parsing_error(
     resp = Response(
         response=json.dumps(validation_error.__dict__['messages']),
         status=422,
-        content_type='application/json; ; charset=utf-8')
+        content_type='application/json; charset=utf-8')
 
     abort(resp)
+
+
+def __user_agent_validator(user_agent: str) -> None:
+    """
+    User agent specs: https://developer.mozilla.org/en-US/docs/Web/
+        HTTP/Headers/User-Agent
+
+    Enforce a minimum pattern of "uname/version".
+    """
+
+    if len(user_agent) > 150:
+        raise ValidationError(
+            'User agent contains more than 150 characters.', status_code=422)
+
+    parts = user_agent.split('/')
+
+    if (len(parts) < 2) or (len(parts[0]) < 1) or (len(parts[1]) < 1):
+        raise ValidationError(
+            'User agent pattern does not match "name/version"',
+            status_code=422)
 
 
 def __x_real_ip_validator(x_real_ip: str) -> None:
@@ -89,14 +109,11 @@ def jwt_validator(jwt: str) -> None:
         raise ValidationError(
             'JWT header must be base64 encoded json.', status_code=422)
 
-    print(header)
-    print(type(header))
-
     if ('typ' not in header) or ('alg' not in header) or ('kid' not in header):
         raise ValidationError(
             'JWT header must include "typ", "alg" and "kid".', status_code=422)
 
-    # fix padding required by python base64 module: + b'==='
+    # fix padding required by python base64 module: + '==='
     payload = payload + '==='
 
     try:
@@ -138,5 +155,9 @@ header_args = {
     'x-real-ip': fields.Str(
         data_key='X-Real-Ip',
         required=True,
-        validate=__x_real_ip_validator)
+        validate=__x_real_ip_validator),
+    'user-agent': fields.Str(
+        data_key='user-agent',
+        required=True,
+        validate=__user_agent_validator)
 }

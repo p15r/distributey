@@ -1,10 +1,8 @@
 from markupsafe import escape
-from flask import request
 from flask import Flask
 from flask import Response
 import json
 import jwt
-from werkzeug.datastructures import EnvironHeaders
 from os import getpid
 from typing import Tuple, Dict
 from webargs.flaskparser import use_args
@@ -53,14 +51,7 @@ def _get_kid_from_jwt(token: str) -> str:
     return protected_header_unverified.get('kid', '')
 
 
-def _get_jwt_from_header(header: EnvironHeaders) -> str:
-    try:
-        token = header['Authorization']
-    except KeyError:
-        app.logger.error('Request is missing "Authorization" header.')
-        app.logger.debug(f'Malformed header: {header}')
-        return ''
-
+def _get_jwt_from_header(token: str) -> str:
     if not token.startswith('Bearer'):
         app.logger.error('Cannot fetch Bearer token from Authorization header.')
         app.logger.debug(f'Malformed token w/o Bearer: {token}')
@@ -114,7 +105,7 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     return payload.get('sub', ''), payload.get('iss', '')
 
 
-def _authenticate(tenant: str, header: EnvironHeaders) -> str:
+def _authenticate(tenant: str, auth_header: str) -> str:
     """
     Authentication requires a bearer token in JWT format.
 
@@ -124,9 +115,9 @@ def _authenticate(tenant: str, header: EnvironHeaders) -> str:
     which requires to authenticate here as well.
     """
 
-    if not (token := _get_jwt_from_header(header)):
+    if not (token := _get_jwt_from_header(auth_header)):
         app.logger.error('Cannot get JWT from request.')
-        app.logger.debug(f'Request header: {header}')
+        app.logger.debug(f'Request header: {auth_header}')
         return ''
 
     if not (jwt_kid := _get_kid_from_jwt(token)):
@@ -193,7 +184,6 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
     return dek
 
 
-# TODO: validate: user_agent, path
 # TODO: write tests for check input validation
 
 
@@ -201,32 +191,34 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
 @use_args(input_validation.view_args, location='view_args')  # view_args: part of request.path
 @use_args(input_validation.query_args, location='query')
 @use_args(input_validation.header_args, location='headers')
-def get_wrapped_key(req_args: Dict, *args, **kwargs):
+def get_wrapped_key(
+        view_args: Dict, query_args: Dict, header_args: Dict, *args, **kwargs):
     """
     tenant: Tenant (key consumer) that makes a request. E.g. Salesforce. Mandatory.
     jwe_kid: kid provided by Salesforce. Mandatory.
     nonce: Nonce (?requestId=x) provided by Salesforce (to prevent replay attacks). Optional.
     """
 
-    # now here, work with webargs instead of tenant, jwe_kid or request.XXX
-
-    if not (token := _authenticate(req_args['tenant'], request.headers)):
-        if not (jwt_audience := config.get_jwt_audience_by_tenant(req_args['tenant'])):
+    if not (token := _authenticate(view_args['tenant'], header_args['jwt'])):
+        if not (jwt_audience := config.get_jwt_audience_by_tenant(view_args['tenant'])):
             jwt_audience = 'unknown'
+
+        error_msg = (f'Unauthorized request fem {header_args["x-real-ip"]} '
+                     f'({header_args["user-agent"]}).')
 
         # WWW-Authenticate header according to: https://tools.ietf.org/html/rfc6750#section-3
         return Response(
-            response=f'Unauthorized request from {request.headers["X-Real-Ip"]}, ({request.user_agent}).',
+            response=json.dumps({
+                'error': 401,
+                'error_message': error_msg}),
             status=401,
-            content_type='text/html; charset=utf-8',
+            content_type='application/json; charset=utf-8',
             headers={'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'})
 
-    app.logger.info(f'Processing request (path: "{request.path}", args: "{request.args.to_dict()}"...')
-
     # TODO: should I do that on webargs instead?
-    tenant = str(escape(req_args['tenant']))
-    jwe_kid = str(escape(req_args['jwe_kid']))
-    nonce = str(escape(request.args.get('requestId', '')))
+    tenant = str(escape(view_args['tenant']))
+    jwe_kid = str(escape(view_args['jwe_kid']))
+    nonce = str(escape(query_args['requestId']))
 
     dek = _get_dek_from_vault(token, tenant, jwe_kid)
 

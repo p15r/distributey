@@ -115,6 +115,9 @@ def __jwt_validator(jwt: str) -> None:
     # signature = token_parts[2]
 
     try:
+        # fix padding required by python base64 module: + '==='
+        b64_header = b64_header + '==='
+
         header = base64.b64decode(b64_header).decode()
         header = json.loads(header)
     except Exception as exc:

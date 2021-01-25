@@ -120,3 +120,76 @@ class TestUnitFlaskApp():
 
         response = http_client.get(endpoint, headers=headers)
         assert response.status_code == 500
+
+    def test___user_agent_validator(
+            self, http_client, get_endpoint_url, get_headers):
+        """
+        Issues invalid HTTP request and validates response.
+        This test also covers "__handle_request_parsing_error()".
+        """
+
+        # set invalid UA to trigger error
+        headers = get_headers
+        headers['User-Agent'] = 'NoValueAfterSlash/'
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'user-agent':
+              ['User agent pattern does not match "name/version"']}}
+        assert response.mimetype == 'application/json'
+        assert response.charset == 'utf-8'
+
+    def test___x_real_ip_validator(
+            self, http_client, get_endpoint_url, get_headers):
+        headers = get_headers
+        headers['X-Real-Ip'] = '1'
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'X-Real-Ip':
+              ['X-Real-Ip must be between 7 and 15 characters long.']}}
+
+        headers['X-Real-Ip'] = '012345678'
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'X-Real-Ip':
+              ['X-Real-Ip format does not match: '
+               'digits.digits.digits.digits.']}}
+
+        headers['X-Real-Ip'] = '127.0.0.1111'
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'X-Real-Ip':
+              ['X-Real-Ip format does not match: x.x.x.x-xxx.xxx.xxx.xxx']}}
+
+    def test___jwt_validator(
+            self, http_client, get_endpoint_url, get_headers):
+        headers = get_headers
+
+        # test with a valid jwt
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 200
+        assert response.json['kid'] == 'jwe-kid-salesforce-serviceX'
+        assert isinstance(response.json['jwe'], str)
+
+        # test with various invalid jwts..
+
+        print(f'###### {response}')
+        print(f'###### {response.status_code}')
+        print(f'###### {response.json}')
+
+        assert response is False

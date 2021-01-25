@@ -184,9 +184,6 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
     return dek
 
 
-# TODO: write tests for check input validation
-
-
 @app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
 @use_args(input_validation._VIEW_ARGS, location='view_args')  # view_args: part of request.path
 @use_args(input_validation._QUERY_ARGS, location='query')

@@ -4,7 +4,7 @@ import json
 import logging
 from typing import Any
 import inspect
-from trace import trace_enter, trace_exit
+from dy_trace import trace_enter, trace_exit
 
 # dy_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)

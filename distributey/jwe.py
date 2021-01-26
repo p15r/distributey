@@ -14,13 +14,13 @@ import base64
 import json
 import inspect
 from typing import Tuple
-from trace import trace_enter, trace_exit
 from Cryptodome.Hash import SHA1
 from Cryptodome.Random import get_random_bytes
 from Cryptodome.Cipher import PKCS1_OAEP
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Cipher import AES
 from dy_logging import logger
+from dy_trace import trace_enter, trace_exit
 import config
 
 

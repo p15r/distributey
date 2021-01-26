@@ -4,7 +4,6 @@ import base64
 import json
 from typing import Mapping
 import inspect
-from trace import trace_enter, trace_exit
 from flask import abort
 from flask import Response
 from webargs import ValidationError
@@ -14,6 +13,7 @@ from marshmallow.exceptions import ValidationError as typeValidationError
 from marshmallow.base import SchemaABC
 import werkzeug
 from dy_logging import logger
+from dy_trace import trace_enter, trace_exit
 
 
 # webargs error handler

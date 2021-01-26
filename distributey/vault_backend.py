@@ -15,9 +15,9 @@ HVAC, and requests respectively, store the exported secret in memory as
 
 import base64
 import inspect
-from trace import trace_enter, trace_exit
 import hvac
 from dy_logging import logger
+from dy_trace import trace_enter, trace_exit
 import config
 
 

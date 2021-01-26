@@ -4,12 +4,12 @@ import json
 from os import getpid
 from typing import Tuple, Dict
 import inspect
-from trace import trace_enter, trace_exit
 from webargs.flaskparser import use_args
 from markupsafe import escape
 from flask import Flask
 from flask import Response
 from flask import abort
+from dy_trace import trace_enter, trace_exit
 import jwt
 import jwe
 import vault_backend

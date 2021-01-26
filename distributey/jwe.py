@@ -17,32 +17,40 @@ from Cryptodome.Cipher import AES
 import base64
 import json
 from typing import Tuple
+import inspect
 
 import config
 from dy_logging import logger
+from trace import trace_enter, trace_exit
 
 
 def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
+    trace_enter(inspect.currentframe())
     # key consumer cert: certificate from key consumer to wrap cek.
 
     if not (key_consumer_cert_path := config.get_key_consumer_cert_by_tenant_and_kid(tenant, jwe_kid)):
         logger.error(
             f'Cannot find key consumer certificate for "{tenant}/{jwe_kid}". Configure it in config/config.json.')
+        trace_exit(inspect.currentframe(), '')
         return ''
 
     try:
         cert = open(key_consumer_cert_path).read().strip()
     except Exception as e:
         logger.error(f'Cannot read key consumer certificate at "{key_consumer_cert_path}": {e}.')
+        trace_exit(inspect.currentframe(), '')
         return ''
 
+    trace_exit(inspect.currentframe(), cert)
     return cert
 
 
 def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str, cek: bytes) -> bytes:
+    trace_enter(inspect.currentframe())
     # Encrypt cek with public key from key consumer using RSAES-OAEP (BASE64URL(JWE Encrypted CEK Key))
     if not (key_consumer_cert := _get_key_consumer_cert(tenant, jwe_kid)):
         logger.error(f'Cannot get key consumer certificate for tenant "{tenant}" with JWE kid "{jwe_kid}".')
+        trace_exit(inspect.currentframe(), b'')
         return b''
 
     rsa_cert = RSA.importKey(key_consumer_cert)
@@ -50,10 +58,12 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str, cek: bytes) ->
     cek_ciphertext = cek_cipher.encrypt(cek)
     b64_cek_ciphertext = base64.urlsafe_b64encode(cek_ciphertext)
 
+    trace_exit(inspect.currentframe(), b64_cek_ciphertext)
     return b64_cek_ciphertext
 
 
 def _encrypt_dek_with_cek(cek: bytes, iv: bytes, dek: bytes, ascii_b64_protected_header: bytes) -> Tuple[bytes, bytes]:
+    trace_enter(inspect.currentframe())
     """
     Wrap dek with cek:
     - Perform authenticated encryption on dek with the AES GCM algorithm.
@@ -84,6 +94,7 @@ def _encrypt_dek_with_cek(cek: bytes, iv: bytes, dek: bytes, ascii_b64_protected
         logger.debug(
             f'Encrypted dek: "{encrypted_dek.hex()}" (hex), tag :"{tag.hex()}" (hex).')
 
+    trace_exit(inspect.currentframe(), (b64_encrypted_dek, b64_tag))
     return b64_encrypted_dek, b64_tag
 
 
@@ -94,6 +105,7 @@ def _create_jwe_token_json(
         b64_iv: bytes,
         b64_encrypted_dek: bytes,
         b64_tag: bytes) -> str:
+    trace_enter(inspect.currentframe())
     # Create JWE token according to:
     # https://tools.ietf.org/html/rfc7516#section-3.3
     #
@@ -114,10 +126,12 @@ def _create_jwe_token_json(
 
     logger.debug(f'Created JWE token: {json_jwe_token}')
 
+    trace_exit(inspect.currentframe(), json_jwe_token)
     return json_jwe_token
 
 
 def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
+    trace_enter(inspect.currentframe())
     # Create JWE protected header (BASE64URL(UTF8(JWE Protected Header)))
     protected_header = {'alg': 'RSA-OAEP', 'enc': 'A256GCM', 'kid': jwe_kid}
 
@@ -126,10 +140,12 @@ def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
 
     b64_protected_header = base64.urlsafe_b64encode(json.dumps(protected_header).encode('utf-8'))
 
+    trace_exit(inspect.currentframe(), b64_protected_header)
     return b64_protected_header
 
 
 def get_wrapped_key_as_jwe(dek: bytes, tenant: str, jwe_kid: str, nonce: str = '') -> str:
+    trace_enter(inspect.currentframe())
     logger.info(f'Creating JWE token for request with kid "{jwe_kid}"...')
 
     # Generate a 256 bit AES content encryption key.
@@ -141,6 +157,7 @@ def get_wrapped_key_as_jwe(dek: bytes, tenant: str, jwe_kid: str, nonce: str = '
 
     if not (b64_cek_ciphertext := _encrypt_cek_with_key_consumer_key(tenant, jwe_kid, cek)):
         logger.error(f'Cannot encrypt content encryption key with key consumer key of {tenant}/{jwe_kid}.')
+        trace_exit(inspect.currentframe(), '')
         return ''
 
     # Generate an initialization vector (IV) for use as input to the data encryption key’s AES wrapping.
@@ -166,4 +183,5 @@ def get_wrapped_key_as_jwe(dek: bytes, tenant: str, jwe_kid: str, nonce: str = '
     del dek
     del cek
 
+    trace_exit(inspect.currentframe(), json_jwe_token)
     return json_jwe_token

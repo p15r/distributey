@@ -7,11 +7,13 @@ from os import getpid
 from typing import Tuple, Dict
 from webargs.flaskparser import use_args
 from flask import abort
+import inspect
 
 import jwe
 import config
 import vault_backend
 import input_validation
+from trace import trace_enter, trace_exit
 
 
 app = Flask(__name__)
@@ -32,15 +34,20 @@ path_prefix = base_path + api_versioning_path
 
 
 def __http_error(status_code: int, msg: str) -> None:
+    trace_enter(inspect.currentframe())
+
     resp = Response(
         response=msg,
         status=status_code,
         content_type='application/json; charset=utf-8')
 
+    trace_exit(inspect.currentframe(), resp)
     abort(resp)
 
 
 def _get_kid_from_jwt(token: str) -> str:
+    trace_enter(inspect.currentframe())
+
     try:
         protected_header_unverified = jwt.get_unverified_header(token)
     except jwt.DecodeError as e:
@@ -48,18 +55,23 @@ def _get_kid_from_jwt(token: str) -> str:
         app.logger.debug(f'JWT: {token}')
         return ''
 
-    return protected_header_unverified.get('kid', '')
+    ret = protected_header_unverified.get('kid', '')
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def _get_jwt_from_header(token: str) -> str:
+    trace_enter(inspect.currentframe())
+
     if not token.startswith('Bearer'):
         app.logger.error('Cannot fetch Bearer token from Authorization header.')
         app.logger.debug(f'Malformed token w/o Bearer: {token}')
         return ''
 
-    token = token.split('Bearer')[1].strip()
+    ret = token.split('Bearer')[1].strip()
 
-    return token
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
@@ -69,6 +81,7 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     - contain 'iss' & 'sub' claims
     - not have expired (leeway of 10s for clock skew is tolerated)
     """
+    trace_enter(inspect.currentframe())
 
     if not (aud := config.get_jwt_audience_by_tenant(tenant)):
         app.logger.error(f'Cannot get JWT audience for tenant "{tenant}" from config.')
@@ -94,15 +107,19 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     except jwt.InvalidSignatureError as e:
         app.logger.error(
             f'Unauthorized login attempt using invalid public key: {e}')
+        trace_exit(inspect.currentframe(), ('', ''))
         return '', ''
     except jwt.ExpiredSignatureError as e:
         app.logger.error(
             f'Cannot authorize request, because the JWT has expired: {e}')
+        trace_exit(inspect.currentframe(), ('', ''))
         return '', ''
 
     app.logger.debug(f'Successfully decoded JWT payload: {payload}')
 
-    return payload.get('sub', ''), payload.get('iss', '')
+    ret = payload.get('sub', ''), payload.get('iss', '')
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def _authenticate(tenant: str, auth_header: str) -> str:
@@ -114,15 +131,18 @@ def _authenticate(tenant: str, auth_header: str) -> str:
     However, it might be useful to implement a vault access token<->jwt cache,
     which requires to authenticate here as well.
     """
+    trace_enter(inspect.currentframe())
 
     if not (token := _get_jwt_from_header(auth_header)):
         app.logger.error('Cannot get JWT from request.')
         app.logger.debug(f'Request header: {auth_header}')
+        trace_exit(inspect.currentframe(), '')
         return ''
 
     if not (jwt_kid := _get_kid_from_jwt(token)):
         app.logger.error('Cannot get kid from JWT.')
         app.logger.debug(f'JWT: {token}')
+        trace_exit(inspect.currentframe(), '')
         return ''
 
     app.logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
@@ -156,14 +176,18 @@ def _authenticate(tenant: str, auth_header: str) -> str:
     if (token_sub == cfg_sub) and (token_iss == cfg_iss):
         app.logger.info(
             f'Successfully authenticated JWT (issuer: {token_iss}, subject: {token_sub}).')
+        trace_exit(inspect.currentframe(), token)
         return token
     else:
         app.logger.error(
             f'Cannot authorize JWT. Wrong issuer "{token_iss}" or subject "{token_sub}".')
+        trace_exit(inspect.currentframe(), '')
         return ''
 
 
 def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
+    trace_enter(inspect.currentframe())
+
     if not (vault_path := config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)):
         # kid not found in config,
         # assume kid and vault path are the same
@@ -176,11 +200,13 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
 
     if not (dek := vault_backend.get_dynamic_secret(tenant, vault_key, key_version, jwt_token)):
         app.logger.error(f'Cannot retrieve key "{vault_path}".')
+        trace_exit(inspect.currentframe(), b'')
         return b''
 
     if config.get_config_by_key('DEV_MODE'):
         app.logger.debug(f'Retrieved key from Vault: {dek.hex()} (hex)')
 
+    trace_exit(inspect.currentframe(), '<DEK>')
     return dek
 
 
@@ -195,6 +221,7 @@ def get_wrapped_key(
     jwe_kid: kid provided by Salesforce. Mandatory.
     nonce: Nonce (?requestId=x) provided by Salesforce (to prevent replay attacks). Optional.
     """
+    trace_enter(inspect.currentframe())
 
     if not (token := _authenticate(view_args['tenant'], header_args['jwt'])):
         if not (jwt_audience := config.get_jwt_audience_by_tenant(view_args['tenant'])):
@@ -203,14 +230,18 @@ def get_wrapped_key(
         error_msg = (f'Unauthorized request from {header_args["x-real-ip"]} '
                      f'({header_args["user-agent"]}).')
 
-        # WWW-Authenticate header according to: https://tools.ietf.org/html/rfc6750#section-3
-        return Response(
+        ret = Response(
             response=json.dumps({
                 'error': 401,
                 'error_message': error_msg}),
             status=401,
             content_type='application/json; charset=utf-8',
             headers={'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'})
+
+        trace_exit(inspect.currentframe(), ret)
+
+        # WWW-Authenticate header according to: https://tools.ietf.org/html/rfc6750#section-3
+        return ret
 
     if app.config['TESTING']:
         # FIXME: For some reason, query_args is empty if Flask is executed
@@ -231,19 +262,25 @@ def get_wrapped_key(
     del dek
 
     if not json_jwe_token:
-        return 'Oops, internal error.', 500
+        ret = Response(
+            response='Oops, internal error.',
+            status=500,
+            content_type='application/json; charset=utf-8')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     app.logger.info(
         f'JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent.',)
     app.logger.debug(
         f'JWE token: {json_jwe_token}',)
 
-    resp = Response(
+    ret = Response(
         response=json_jwe_token,
         status=200,
         content_type='application/json; charset=utf-8')
 
-    return resp
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 @app.route(path_prefix + '/healthz', methods=['GET'])
@@ -252,6 +289,7 @@ def get_healthz():
     This healthz implementation adheres to:
         https://tools.ietf.org/html/draft-inadarei-api-health-check-04
     """
+    trace_enter(inspect.currentframe())
 
     if not config.get_config_by_key('LOG_LEVEL'):
         response = '{"status": "fail", "output": "Config not loaded"}'
@@ -260,4 +298,9 @@ def get_healthz():
         response = '{"status": "pass"}'
         status = 200
 
-    return Response(response=response, status=status, content_type='application/health+json; charset=utf-8')
+    ret = Response(
+        response=response, status=status,
+        content_type='application/health+json; charset=utf-8')
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret

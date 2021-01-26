@@ -13,9 +13,14 @@ import base64
 import hvac
 import config
 from dy_logging import logger
+import inspect
+
+from trace import trace_enter, trace_exit
 
 
 def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) -> bytes:
+    trace_enter(inspect.currentframe())
+
     vault_url = config.get_config_by_key('VAULT_URL')
     vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
     vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
@@ -53,6 +58,7 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) 
 
     if not client.sys.is_initialized():
         logger.error(f'Vault at "{vault_url}" has not been initialized.')
+        trace_exit(inspect.currentframe(), b'')
         return b''
 
     # fetch most recent key version of key
@@ -67,4 +73,6 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str, jwt_token: str) 
 
     b64_key = response['data']['keys'][str(key_version)]
 
-    return base64.b64decode(b64_key)
+    ret = base64.b64decode(b64_key)
+    trace_exit(inspect.currentframe(), ret)
+    return ret

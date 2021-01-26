@@ -11,8 +11,10 @@ from marshmallow.exceptions import ValidationError as typeValidationError
 from marshmallow.base import SchemaABC
 from webargs import fields, validate
 import werkzeug
+import inspect
 
 from dy_logging import logger
+from trace import trace_enter, trace_exit
 
 
 # webargs error handler
@@ -23,6 +25,7 @@ def __handle_request_parsing_error(
         schema: SchemaABC,
         error_status_code: int = None,
         error_headers: Mapping[str, str] = None) -> None:
+    trace_enter(inspect.currentframe())
 
     input_data = validation_error.__dict__['data']
 
@@ -35,6 +38,7 @@ def __handle_request_parsing_error(
         status=422,
         content_type='application/json; charset=utf-8')
 
+    trace_exit(inspect.currentframe(), resp)
     abort(resp)
 
 
@@ -46,10 +50,12 @@ def __user_agent_validator(user_agent: str) -> None:
 
     Enforce a minimum pattern of "uname/version".
     """
+    trace_enter(inspect.currentframe())
 
     if len(user_agent) > 150:
         err_msg = 'User agent contains more than 150 characters.'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     parts = user_agent.split('/')
@@ -57,12 +63,16 @@ def __user_agent_validator(user_agent: str) -> None:
     if (len(parts) < 2) or (len(parts[0]) < 1) or (len(parts[1]) < 1):
         err_msg = 'User agent pattern does not match "name/version"'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
 
 def __x_real_ip_validator(x_real_ip: str) -> None:
+    trace_enter(inspect.currentframe())
     if not 6 < len(x_real_ip) < 16:
         err_msg = 'X-Real-Ip must be between 7 and 15 characters long.'
+        logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     parts = x_real_ip.split('.')
@@ -71,6 +81,7 @@ def __x_real_ip_validator(x_real_ip: str) -> None:
         err_msg = ('X-Real-Ip format does not match: '
                    'digits.digits.digits.digits.')
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     for part in parts:
@@ -78,25 +89,30 @@ def __x_real_ip_validator(x_real_ip: str) -> None:
             err_msg = ('X-Real-Ip format does not match: '
                        'x.x.x.x-xxx.xxx.xxx.xxx')
             logger.error(err_msg)
+            trace_exit(inspect.currentframe(), err_msg)
             raise ValidationError(err_msg, status_code=422)
 
 
 def __jwt_validator(jwt: str) -> None:
+    trace_enter(inspect.currentframe())
     parts = jwt.split()
 
     if parts[0].lower() != 'bearer':
         err_msg = 'Authorization header must start with "Bearer"'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     if len(parts) == 1:
         err_msg = 'Token not found'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     if len(parts) > 2:
         err_msg = 'Authorization header must be "Bearer token".'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     token = parts[1]
@@ -106,6 +122,7 @@ def __jwt_validator(jwt: str) -> None:
     if len(token_parts) != 3:
         err_msg = 'JWT token must match "header.payload.signature"'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     b64_header = token_parts[0]
@@ -123,11 +140,13 @@ def __jwt_validator(jwt: str) -> None:
     except Exception as exc:
         err_msg = f'JWT header must be base64 encoded json: {exc}.'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     if ('typ' not in header) or ('alg' not in header) or ('kid' not in header):
         err_msg = 'JWT header must include "typ", "alg" and "kid".'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     # fix padding required by python base64 module: + '==='
@@ -139,12 +158,14 @@ def __jwt_validator(jwt: str) -> None:
     except Exception as exc:
         err_msg = f'JWT payload must be base64 encoded json: {exc}.'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
     if ('sub' not in payload) or ('iss' not in payload) or \
             ('aud' not in payload):
         err_msg = 'JWT payload must include "sub", "iss" & "aud" claim.'
         logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
 

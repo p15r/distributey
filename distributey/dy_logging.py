@@ -1,3 +1,5 @@
+"""Provides formatted logging handler for distributey."""
+
 import logging
 import sys
 from flask import request, has_request_context
@@ -8,9 +10,9 @@ log_level = config.get_config_by_key('LOG_LEVEL')
 splunk_enabled = config.get_config_by_key('SPLUNK_ENABLED')
 
 if log_level == 'debug':
-    loglvl = logging.DEBUG
+    LOGLVL = logging.DEBUG
 else:
-    loglvl = logging.INFO
+    LOGLVL = logging.INFO
 
 
 class __RequestFormatter(logging.Formatter):
@@ -35,7 +37,7 @@ __stream_handler.setFormatter(
         'tenant: %(tenant)s, origin: %(x_real_ip)s, ua: %(user_agent)s - %(message)s'))
 
 logger = logging.getLogger()
-logger.setLevel(loglvl)
+logger.setLevel(LOGLVL)
 logger.addHandler(__stream_handler)
 
 if splunk_enabled:

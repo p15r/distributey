@@ -3,18 +3,17 @@
 import base64
 import json
 from typing import Mapping
+import inspect
+from trace import trace_enter, trace_exit
 from flask import abort
+from flask import Response
 from webargs import ValidationError
 from webargs.flaskparser import parser
-from flask import Response
+from webargs import fields, validate
 from marshmallow.exceptions import ValidationError as typeValidationError
 from marshmallow.base import SchemaABC
-from webargs import fields, validate
 import werkzeug
-import inspect
-
 from dy_logging import logger
-from trace import trace_enter, trace_exit
 
 
 # webargs error handler
@@ -25,6 +24,8 @@ def __handle_request_parsing_error(
         schema: SchemaABC,
         error_status_code: int = None,
         error_headers: Mapping[str, str] = None) -> None:
+    """Handles errors, or raised exceptions respectively."""
+
     trace_enter(inspect.currentframe())
 
     input_data = validation_error.__dict__['data']
@@ -45,6 +46,8 @@ def __handle_request_parsing_error(
 # various webargs validators
 def __user_agent_validator(user_agent: str) -> None:
     """
+    Validates the user agent header.
+
     User agent specs: https://developer.mozilla.org/en-US/docs/Web/
         HTTP/Headers/User-Agent
 
@@ -68,6 +71,8 @@ def __user_agent_validator(user_agent: str) -> None:
 
 
 def __x_real_ip_validator(x_real_ip: str) -> None:
+    """Validates the X-Real-IP header."""
+
     trace_enter(inspect.currentframe())
     if not 6 < len(x_real_ip) < 16:
         err_msg = 'X-Real-Ip must be between 7 and 15 characters long.'
@@ -94,6 +99,8 @@ def __x_real_ip_validator(x_real_ip: str) -> None:
 
 
 def __jwt_validator(jwt: str) -> None:
+    """Validates the Authorization header and the JWT."""
+
     trace_enter(inspect.currentframe())
     parts = jwt.split()
 
@@ -141,7 +148,7 @@ def __jwt_validator(jwt: str) -> None:
         err_msg = f'JWT header must be base64 encoded json: {exc}.'
         logger.error(err_msg)
         trace_exit(inspect.currentframe(), err_msg)
-        raise ValidationError(err_msg, status_code=422)
+        raise ValidationError(err_msg, status_code=422) from exc
 
     if ('typ' not in header) or ('alg' not in header) or ('kid' not in header):
         err_msg = 'JWT header must include "typ", "alg" and "kid".'
@@ -159,7 +166,7 @@ def __jwt_validator(jwt: str) -> None:
         err_msg = f'JWT payload must be base64 encoded json: {exc}.'
         logger.error(err_msg)
         trace_exit(inspect.currentframe(), err_msg)
-        raise ValidationError(err_msg, status_code=422)
+        raise ValidationError(err_msg, status_code=422) from exc
 
     if ('sub' not in payload) or ('iss' not in payload) or \
             ('aud' not in payload):

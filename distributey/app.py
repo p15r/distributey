@@ -1,19 +1,20 @@
+"""Contains the Flask app that serves distributey's API."""
+
+import json
+from os import getpid
+from typing import Tuple, Dict
+import inspect
+from trace import trace_enter, trace_exit
+from webargs.flaskparser import use_args
 from markupsafe import escape
 from flask import Flask
 from flask import Response
-import json
-import jwt
-from os import getpid
-from typing import Tuple, Dict
-from webargs.flaskparser import use_args
 from flask import abort
-import inspect
-
+import jwt
 import jwe
-import config
 import vault_backend
 import input_validation
-from trace import trace_enter, trace_exit
+import config
 
 
 app = Flask(__name__)
@@ -25,12 +26,12 @@ app.logger.handlers.clear()
 # thus this is not required and would add the handler twice:
 # app.logger.addHandler(dy_logging.__stream_handler)
 
-app.logger.info(f'🚀 distributey is starting (pid {getpid()})...')
+app.logger.info('🚀 distributey is starting (pid %d)...', getpid())
 
 # URL-based API versioning
-base_path = '/'
-api_versioning_path = 'v1/'
-path_prefix = base_path + api_versioning_path
+BASE_PATH = '/'
+API_VERSIONING_PATH = 'v1/'
+PATH_PREFIX = BASE_PATH + API_VERSIONING_PATH
 
 
 def __http_error(status_code: int, msg: str) -> None:
@@ -50,9 +51,9 @@ def _get_kid_from_jwt(token: str) -> str:
 
     try:
         protected_header_unverified = jwt.get_unverified_header(token)
-    except jwt.DecodeError as e:
-        app.logger.error(f'Cannot decode JWT in order to get kid: {e}')
-        app.logger.debug(f'JWT: {token}')
+    except jwt.DecodeError as exc:
+        app.logger.error('Cannot decode JWT in order to get kid: %s', exc)
+        app.logger.debug('JWT: %s', token)
         return ''
 
     ret = protected_header_unverified.get('kid', '')
@@ -64,8 +65,9 @@ def _get_jwt_from_header(token: str) -> str:
     trace_enter(inspect.currentframe())
 
     if not token.startswith('Bearer'):
-        app.logger.error('Cannot fetch Bearer token from Authorization header.')
-        app.logger.debug(f'Malformed token w/o Bearer: {token}')
+        app.logger.error('Cannot fetch Bearer token from Authorization '
+                         'header.')
+        app.logger.debug('Malformed token w/o Bearer: %s', token)
         return ''
 
     ret = token.split('Bearer')[1].strip()
@@ -84,11 +86,13 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     trace_enter(inspect.currentframe())
 
     if not (aud := config.get_jwt_audience_by_tenant(tenant)):
-        app.logger.error(f'Cannot get JWT audience for tenant "{tenant}" from config.')
+        app.logger.error('Cannot get JWT audience for tenant "%s" from '
+                         'config.', tenant)
         __http_error(500, '{"error": "internal error"}')
 
     if not (algos := config.get_jwt_algorithm_by_tenant(tenant)):
-        app.logger.error(f'Cannot get JWT algorithms for tenant "{tenant}" from config.')
+        app.logger.error('Cannot get JWT algorithms for tenant "%s" from '
+                         'config.', tenant)
         __http_error(500, '{"error": "internal error"}')
 
     try:
@@ -104,18 +108,18 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
                 'verify_exp': True
                 }
             )
-    except jwt.InvalidSignatureError as e:
-        app.logger.error(
-            f'Unauthorized login attempt using invalid public key: {e}')
+    except jwt.InvalidSignatureError as exc:
+        app.logger.error('Unauthorized login attempt using invalid public key:'
+                         '%s', exc)
         trace_exit(inspect.currentframe(), ('', ''))
         return '', ''
-    except jwt.ExpiredSignatureError as e:
-        app.logger.error(
-            f'Cannot authorize request, because the JWT has expired: {e}')
+    except jwt.ExpiredSignatureError as exc:
+        app.logger.error('Cannot authorize request, because the JWT has '
+                         'expired: %s', exc)
         trace_exit(inspect.currentframe(), ('', ''))
         return '', ''
 
-    app.logger.debug(f'Successfully decoded JWT payload: {payload}')
+    app.logger.debug('Successfully decoded JWT payload: %s', payload)
 
     ret = payload.get('sub', ''), payload.get('iss', '')
     trace_exit(inspect.currentframe(), ret)
@@ -135,25 +139,27 @@ def _authenticate(tenant: str, auth_header: str) -> str:
 
     if not (token := _get_jwt_from_header(auth_header)):
         app.logger.error('Cannot get JWT from request.')
-        app.logger.debug(f'Request header: {auth_header}')
+        app.logger.debug('Request header: %s', auth_header)
         trace_exit(inspect.currentframe(), '')
         return ''
 
     if not (jwt_kid := _get_kid_from_jwt(token)):
         app.logger.error('Cannot get kid from JWT.')
-        app.logger.debug(f'JWT: {token}')
+        app.logger.debug('JWT: %s', token)
         trace_exit(inspect.currentframe(), '')
         return ''
 
-    app.logger.info(f'Attempting to authenticate JWT with kid "{jwt_kid}"...')
+    app.logger.info('Attempting to authenticate JWT with kid "%s"...', jwt_kid)
 
-    if not (validation_cert := config.get_jwt_validation_cert_by_tenant_and_kid(tenant, jwt_kid)):
-        app.logger.error(
-                f'No validation certificate exists in config.json to verify signature for JWTs with kid "{jwt_kid}".')
+    if not (validation_cert :=
+            config.get_jwt_validation_cert_by_tenant_and_kid(tenant, jwt_kid)):
+        app.logger.error('No validation certificate exists in config.json to '
+                         'verify signature for JWTs with kid "%s".', jwt_kid)
 
         __http_error(500, '{"error": "internal error"}')
 
-    app.logger.debug(f'Attempting to validate JWT signature using cert "{validation_cert}".')
+    app.logger.debug('Attempting to validate JWT signature using cert "%s".',
+                     validation_cert)
 
     # pyjwt[crypto] requires cert to be in PEM format & only the public key.
     # TODO: Extract key from cert programmatically:
@@ -161,28 +167,30 @@ def _authenticate(tenant: str, auth_header: str) -> str:
     #           how-can-i-extract-a-public-private-key-from-a-x509-certificate
     cert = open(validation_cert).read()
 
-    app.logger.debug(f'Received JWT: {token}')
+    app.logger.debug('Received JWT: %s', token)
 
     token_sub, token_iss = _decode_jwt(tenant, token, cert)
 
     if not (cfg_sub := config.get_jwt_subject_by_tenant(tenant)):
-        app.logger.error(f'Cannot get JWT subject for tenant "{tenant}" from config.')
+        app.logger.error('Cannot get JWT subject for tenant "%s" from config.',
+                         tenant)
         __http_error(500, '{"error": "internal error"}')
 
     if not (cfg_iss := config.get_jwt_issuer_by_tenant(tenant)):
-        app.logger.error(f'Cannot get JWT issuer for tenant "{tenant}" from config.')
+        app.logger.error('Cannot get JWT issuer for tenant "%s" from config.',
+                         tenant)
         __http_error(500, '{"error": "internal error"}')
 
     if (token_sub == cfg_sub) and (token_iss == cfg_iss):
-        app.logger.info(
-            f'Successfully authenticated JWT (issuer: {token_iss}, subject: {token_sub}).')
+        app.logger.info('Successfully authenticated JWT issuer: %s, '
+                        'subject: %s).', token_iss, token_sub)
         trace_exit(inspect.currentframe(), token)
         return token
-    else:
-        app.logger.error(
-            f'Cannot authorize JWT. Wrong issuer "{token_iss}" or subject "{token_sub}".')
-        trace_exit(inspect.currentframe(), '')
-        return ''
+
+    app.logger.error('Cannot authorize JWT. Wrong issuer "%s" or '
+                     'subject "%s".', token_iss, token_sub)
+    trace_exit(inspect.currentframe(), '')
+    return ''
 
 
 def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
@@ -194,37 +202,43 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
         # and fetch latest version of secret
         vault_path = jwe_kid + ':latest'
 
-    app.logger.debug(f'Fetching AES key for: {vault_path}')
+    app.logger.debug('Fetching AES key for: %s', vault_path)
 
     vault_key, key_version = vault_path.split(':')
 
-    if not (dek := vault_backend.get_dynamic_secret(tenant, vault_key, key_version, jwt_token)):
-        app.logger.error(f'Cannot retrieve key "{vault_path}".')
+    if not (dek := vault_backend.get_dynamic_secret(
+            tenant, vault_key, key_version, jwt_token)):
+        app.logger.error('Cannot retrieve key "%s".', vault_path)
         trace_exit(inspect.currentframe(), b'')
         return b''
 
     if config.get_config_by_key('DEV_MODE'):
-        app.logger.debug(f'Retrieved key from Vault: {dek.hex()} (hex)')
+        app.logger.debug('Retrieved key from Vault: %s (hex)', dek.hex())
 
     trace_exit(inspect.currentframe(), '<DEK>')
     return dek
 
 
-@app.route(path_prefix + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
-@use_args(input_validation._VIEW_ARGS, location='view_args')  # view_args: part of request.path
+# view_args: part of request.path
+# **kwargs catches "tenant" & jwe_kid; disregard because not filtered
+@app.route(PATH_PREFIX + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
+@use_args(input_validation._VIEW_ARGS, location='view_args')
 @use_args(input_validation._QUERY_ARGS, location='query')
 @use_args(input_validation._HEADER_ARGS, location='headers')
-def get_wrapped_key(
-        view_args: Dict, query_args: Dict, header_args: Dict, *args, **kwargs):
+def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
+                    **kwargs):
     """
-    tenant: Tenant (key consumer) that makes a request. E.g. Salesforce. Mandatory.
-    jwe_kid: kid provided by Salesforce. Mandatory.
-    nonce: Nonce (?requestId=x) provided by Salesforce (to prevent replay attacks). Optional.
+    tenant:     Tenant (key consumer) that makes a request. E.g. Salesforce.
+                Mandatory.
+    jwe_kid:    kid provided by Salesforce. Mandatory.
+    nonce:      Nonce (?requestId=x) provided by Salesforce
+                (to prevent replay attacks). Optional.
     """
     trace_enter(inspect.currentframe())
 
     if not (token := _authenticate(view_args['tenant'], header_args['jwt'])):
-        if not (jwt_audience := config.get_jwt_audience_by_tenant(view_args['tenant'])):
+        if not (jwt_audience := config.get_jwt_audience_by_tenant(
+                view_args['tenant'])):
             jwt_audience = 'unknown'
 
         error_msg = (f'Unauthorized request from {header_args["x-real-ip"]} '
@@ -240,7 +254,8 @@ def get_wrapped_key(
 
         trace_exit(inspect.currentframe(), ret)
 
-        # WWW-Authenticate header according to: https://tools.ietf.org/html/rfc6750#section-3
+        # WWW-Authenticate header according to:
+        #   https://tools.ietf.org/html/rfc6750#section-3
         return ret
 
     if app.config['TESTING']:
@@ -269,10 +284,9 @@ def get_wrapped_key(
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    app.logger.info(
-        f'JWE token with kid "{json.loads(json_jwe_token)["kid"]}" sent.',)
-    app.logger.debug(
-        f'JWE token: {json_jwe_token}',)
+    app.logger.info('JWE token with kid "%s" sent.',
+                    json.loads(json_jwe_token)['kid'])
+    app.logger.debug('JWE token: %s', json_jwe_token)
 
     ret = Response(
         response=json_jwe_token,
@@ -283,7 +297,7 @@ def get_wrapped_key(
     return ret
 
 
-@app.route(path_prefix + '/healthz', methods=['GET'])
+@app.route(PATH_PREFIX + '/healthz', methods=['GET'])
 def get_healthz():
     """
     This healthz implementation adheres to:

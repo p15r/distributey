@@ -1,3 +1,5 @@
+"""Provides functionality to trace execution flow of distributey."""
+
 import os
 import inspect
 from typing import Optional, Any
@@ -18,20 +20,25 @@ def __trace(current_frame: Optional[FrameType]) -> tuple:
     else:
         # inspect.currentframe() might return None,
         # in case of "exotic" python runtime
-        logger.error(f'Failed to inspect frame: "{current_frame}".')
+        logger.error('Failed to inspect frame: "%s".', current_frame)
         return ('error', 'error', 'error', 'error')
 
     return func_name, func_args, file_name, line_no
 
 
 def trace_enter(current_frame: Optional[FrameType]) -> None:
+    """Traces execution flow when entering a function/method."""
+
     func_name, func_args, file_name, line_no = __trace(current_frame)
 
-    logger.info(
-        f'({file_name}:{line_no}) Entering "{func_name}" args: {func_args}')
+    logger.info('(%s:%s) Entering "%s" args: %s',
+                file_name, line_no, func_name, func_args)
 
 
 def trace_exit(current_frame: Optional[FrameType], ret: Any) -> None:
+    """Traces execution flow when exiting a function/method."""
+
     func_name, func_args, file_name, line_no = __trace(current_frame)
 
-    logger.info(f'({file_name}:{line_no}) Exiting "{func_name}" ret: {ret}')
+    logger.info('(%s:%s) Exiting "%s" ret: %s',
+                file_name, line_no, func_name, ret)

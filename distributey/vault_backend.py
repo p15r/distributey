@@ -70,8 +70,13 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
         return b''
 
     # fetch most recent key version of key
-    response = client.secrets.transit.read_key(name=key,
-                                               mount_point=vault_transit_path)
+    try:
+        response = client.secrets.transit.read_key(
+            name=key, mount_point=vault_transit_path)
+    except hvac.exceptions.Forbidden as exc:
+        logger.error('Insufficient permissions to access secret: %s', exc)
+        trace_exit(inspect.currentframe(), b'')
+        return b''
 
     if key_version == 'latest':
         key_version = response['data']['latest_version']

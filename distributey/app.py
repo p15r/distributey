@@ -272,6 +272,17 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
 
     dek = _get_dek_from_vault(token, tenant, jwe_kid)
 
+    if not dek:
+        err_msg = 'Failed to retrieve key material from Vault.'
+        app.logger.error(err_msg)
+        ret = Response(
+            response=json.dumps({'status': 'fail', 'output': err_msg}),
+            status=500,
+            content_type='application/json; charset=utf-8')
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
     json_jwe_token = jwe.get_wrapped_key_as_jwe(dek, tenant, jwe_kid, nonce)
 
     del dek

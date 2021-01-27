@@ -98,11 +98,11 @@ def __x_real_ip_validator(x_real_ip: str) -> None:
             raise ValidationError(err_msg, status_code=422)
 
 
-def __jwt_validator(jwt: str) -> None:
+def __jwt_validator(priv_jwt: str) -> None:
     """Validates the Authorization header and the JWT."""
 
     trace_enter(inspect.currentframe())
-    parts = jwt.split()
+    parts = priv_jwt.split()
 
     if parts[0].lower() != 'bearer':
         err_msg = 'Authorization header must start with "Bearer"'

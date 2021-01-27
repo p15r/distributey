@@ -46,14 +46,14 @@ def __http_error(status_code: int, msg: str) -> None:
     abort(resp)
 
 
-def _get_kid_from_jwt(token: str) -> str:
+def _get_kid_from_jwt(priv_token: str) -> str:
     trace_enter(inspect.currentframe())
 
     try:
-        protected_header_unverified = jwt.get_unverified_header(token)
+        protected_header_unverified = jwt.get_unverified_header(priv_token)
     except jwt.DecodeError as exc:
         app.logger.error('Cannot decode JWT in order to get kid: %s', exc)
-        app.logger.debug('JWT: %s', token)
+        app.logger.debug('JWT: %s', priv_token)
         return ''
 
     ret = protected_header_unverified.get('kid', '')
@@ -61,22 +61,22 @@ def _get_kid_from_jwt(token: str) -> str:
     return ret
 
 
-def _get_jwt_from_header(token: str) -> str:
+def _get_jwt_from_header(priv_token: str) -> str:
     trace_enter(inspect.currentframe())
 
-    if not token.startswith('Bearer'):
+    if not priv_token.startswith('Bearer'):
         app.logger.error('Cannot fetch Bearer token from Authorization '
                          'header.')
-        app.logger.debug('Malformed token w/o Bearer: %s', token)
+        app.logger.debug('Malformed token w/o Bearer: %s', priv_token)
         return ''
 
-    ret = token.split('Bearer')[1].strip()
+    ret = priv_token.split('Bearer')[1].strip()
 
     trace_exit(inspect.currentframe(), ret)
     return ret
 
 
-def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
+def _decode_jwt(tenant: str, priv_jwt_token: str, cert: str) -> Tuple[str, str]:
     """
     The jwt_token must..
     - have a valid signature,
@@ -98,7 +98,7 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     try:
         # 10s leeway as clock skew margin
         payload = jwt.decode(
-            jwt_token, cert,
+            priv_jwt_token, cert,
             leeway=10,
             audience=aud,
             algorithms=algos,
@@ -126,7 +126,7 @@ def _decode_jwt(tenant: str, jwt_token: str, cert: str) -> Tuple[str, str]:
     return ret
 
 
-def _authenticate(tenant: str, auth_header: str) -> str:
+def _authenticate(tenant: str, priv_auth_header: str) -> str:
     """
     Authentication requires a bearer token in JWT format.
 
@@ -137,9 +137,9 @@ def _authenticate(tenant: str, auth_header: str) -> str:
     """
     trace_enter(inspect.currentframe())
 
-    if not (token := _get_jwt_from_header(auth_header)):
+    if not (token := _get_jwt_from_header(priv_auth_header)):
         app.logger.error('Cannot get JWT from request.')
-        app.logger.debug('Request header: %s', auth_header)
+        app.logger.debug('Request header: %s', priv_auth_header)
         trace_exit(inspect.currentframe(), '')
         return ''
 
@@ -193,7 +193,8 @@ def _authenticate(tenant: str, auth_header: str) -> str:
     return ''
 
 
-def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
+def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
+                        jwe_kid: str) -> bytes:
     trace_enter(inspect.currentframe())
 
     if not (vault_path := config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)):
@@ -207,7 +208,7 @@ def _get_dek_from_vault(jwt_token: str, tenant: str, jwe_kid: str) -> bytes:
     vault_key, key_version = vault_path.split(':')
 
     if not (dek := vault_backend.get_dynamic_secret(
-            tenant, vault_key, key_version, jwt_token)):
+            tenant, vault_key, key_version, priv_jwt_token)):
         app.logger.error('Cannot retrieve key "%s".', vault_path)
         trace_exit(inspect.currentframe(), b'')
         return b''
@@ -283,7 +284,16 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    json_jwe_token = jwe.get_wrapped_key_as_jwe(dek, tenant, jwe_kid, nonce)
+    try:
+        json_jwe_token = jwe.get_wrapped_key_as_jwe(dek, tenant, jwe_kid, nonce)
+    except Exception as exc:
+        app.logger.error('Failed to create JWE: %s', exc)
+        ret = Response(
+            response='Oops, internal error.',
+            status=500,
+            content_type='application/json; charset=utf-8')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     del dek
 

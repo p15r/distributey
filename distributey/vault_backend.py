@@ -22,7 +22,7 @@ import config
 
 
 def get_dynamic_secret(tenant: str, key: str, key_version: str,
-                       jwt_token: str) -> bytes:
+                       priv_jwt_token: str) -> bytes:
     trace_enter(inspect.currentframe())
 
     vault_url = config.get_config_by_key('VAULT_URL')
@@ -41,11 +41,11 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
         client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
 
     logger.debug('Attempting to authenticate against Vault using JWT: %s',
-                 jwt_token)
+                 priv_jwt_token)
 
     response = client.auth.jwt.jwt_login(
         role=config.get_vault_default_role_by_tenant(tenant),
-        jwt=jwt_token,
+        jwt=priv_jwt_token,
         path=vault_auth_jwt_path)
 
     logger.debug('Vault login response: %s', response)

@@ -48,7 +48,8 @@ def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
     return cert
 
 
-def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str, cek: bytes) -> bytes:
+def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
+                                       priv_cek: bytes) -> bytes:
     trace_enter(inspect.currentframe())
 
     # Encrypt cek with public key from key consumer using RSAES-OAEP
@@ -61,7 +62,7 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str, cek: bytes) ->
 
     rsa_cert = RSA.importKey(key_consumer_cert)
     cek_cipher = PKCS1_OAEP.new(rsa_cert, hashAlgo=SHA1)
-    cek_ciphertext = cek_cipher.encrypt(cek)
+    cek_ciphertext = cek_cipher.encrypt(priv_cek)
     b64_cek_ciphertext = base64.urlsafe_b64encode(cek_ciphertext)
 
     trace_exit(inspect.currentframe(), b64_cek_ciphertext)
@@ -69,7 +70,7 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str, cek: bytes) ->
 
 
 def _encrypt_dek_with_cek(
-    cek: bytes,
+    priv_cek: bytes,
     initialization_vector: bytes,
     dek: bytes,
         ascii_b64_protected_header: bytes) -> Tuple[bytes, bytes]:
@@ -83,7 +84,7 @@ def _encrypt_dek_with_cek(
     trace_enter(inspect.currentframe())
 
     # mac_len=16 bytes: 128 bit authentication tag
-    dek_cipher = AES.new(cek, AES.MODE_GCM, nonce=initialization_vector,
+    dek_cipher = AES.new(priv_cek, AES.MODE_GCM, nonce=initialization_vector,
                          mac_len=16)
 
     # add additional authenticated data (aad)
@@ -132,8 +133,8 @@ def _create_jwe_token_json(
 
     trace_enter(inspect.currentframe())
 
-    jwe = b64_protected_header + b'.' + b64_cek_ciphertext + b'.' + b64_iv + \
-        b'.' + b64_encrypted_dek + b'.' + b64_tag
+    jwe = b64_protected_header + b'.' + b64_cek_ciphertext + b'.' + \
+        b64_iv + b'.' + b64_encrypted_dek + b'.' + b64_tag
 
     jwe_token = {
         'kid': jwe_kid,
@@ -164,7 +165,7 @@ def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
 
 
 def get_wrapped_key_as_jwe(
-        dek: bytes,
+        priv_dek: bytes,
         tenant: str,
         jwe_kid: str,
         nonce: str = '') -> str:
@@ -208,7 +209,7 @@ def get_wrapped_key_as_jwe(
         b64_protected_header.decode().encode('ascii', errors='strict')
 
     b64_encrypted_dek, b64_tag = \
-        _encrypt_dek_with_cek(cek, initialization_vector, dek,
+        _encrypt_dek_with_cek(cek, initialization_vector, priv_dek,
                               ascii_b64_protected_header)
 
     json_jwe_token = _create_jwe_token_json(
@@ -216,7 +217,7 @@ def get_wrapped_key_as_jwe(
         b64_encrypted_dek, b64_tag)
 
     # cleanup
-    del dek
+    del priv_dek
     del cek
 
     trace_exit(inspect.currentframe(), json_jwe_token)

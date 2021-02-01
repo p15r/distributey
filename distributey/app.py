@@ -237,7 +237,7 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
     """
     trace_enter(inspect.currentframe())
 
-    if not (token := _authenticate(view_args['tenant'], header_args['jwt'])):
+    if not (token := _authenticate(view_args['tenant'], header_args['priv_jwt'])):
         if not (jwt_audience := config.get_jwt_audience_by_tenant(
                 view_args['tenant'])):
             jwt_audience = 'unknown'

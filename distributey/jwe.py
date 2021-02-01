@@ -72,7 +72,7 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
 def _encrypt_dek_with_cek(
     priv_cek: bytes,
     initialization_vector: bytes,
-    dek: bytes,
+    priv_dek: bytes,
         ascii_b64_protected_header: bytes) -> Tuple[bytes, bytes]:
     """
     Wrap dek with cek:
@@ -94,7 +94,7 @@ def _encrypt_dek_with_cek(
     # from Cryptodome.Util.Padding import pad
     # encrypted_dek, tag = \
     #   dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
-    encrypted_dek, tag = dek_cipher.encrypt_and_digest(dek)
+    encrypted_dek, tag = dek_cipher.encrypt_and_digest(priv_dek)
 
     # Encode ciphertext as BASE64URL(Ciphertext)
     b64_encrypted_dek = base64.urlsafe_b64encode(encrypted_dek)

@@ -193,7 +193,7 @@ _QUERY_ARGS = {
 }
 
 _HEADER_ARGS = {
-    'jwt': fields.Str(
+    'priv_jwt': fields.Str(
         data_key='Authorization',
         required=True,
         validate=__jwt_validator),

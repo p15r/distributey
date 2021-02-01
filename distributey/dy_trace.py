@@ -3,14 +3,14 @@
 import os
 import inspect
 from inspect import ArgInfo
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 from types import FrameType
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def __extract_arguments(func_args: ArgInfo):
+def __extract_arguments(func_args: ArgInfo) -> Dict:
     all_args = list()
 
     args = func_args.args
@@ -33,17 +33,28 @@ def __extract_arguments(func_args: ArgInfo):
 
     arg_value = dict()
     for arg in all_args:
+        if arg not in func_args.locals:
+            # The value of an argument might not exist if the variable has
+            # been explicitely deleted.
+            arg_value[arg] = '<MISSING>'
+            continue
         if arg.startswith('priv_'):
             # camouflage
             arg_value[arg] = '******'
             continue
-        if arg in func_args.locals:
-            # TODO: deepcopy() required?
-            arg_value[arg] = func_args.locals[arg]
-        else:
-            # The value of an argument might not exist if the variable has
-            # ben explicitely deleted.
-            arg_value[arg] = '<MISSING>'
+
+        if isinstance(func_args.locals[arg], dict):
+            # arg is a dict, let's check for keys marked as private
+            keys = func_args.locals[arg].keys()
+            arg_value[arg] = dict()
+            for key in keys:
+                if key.startswith('priv_'):
+                    arg_value[arg][key] = '******'
+                else:
+                    arg_value[arg][key] = func_args.locals[arg][key]
+            continue
+
+        arg_value[arg] = func_args.locals[arg]
 
     return arg_value
 

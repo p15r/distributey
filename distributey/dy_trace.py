@@ -8,55 +8,66 @@ from types import FrameType
 import logging
 
 logger = logging.getLogger(__name__)
+CAMOUFLAGE_SIGN = '******'
 
 
-def __extract_arguments(func_args: ArgInfo) -> Dict:
-    all_args = list()
-
-    args = func_args.args
-    if args:
-        all_args.extend(args)
-
-    varargs = func_args.varargs
-    if varargs:
-        if isinstance(varargs, list):
-            all_args.extend(varargs)
-        else:
-            all_args.append(varargs)
-
-    keywords = func_args.keywords
-    if keywords:
-        if isinstance(keywords, list):
-            all_args.extend(keywords)
-        else:
-            all_args.append(keywords)
-
-    arg_value = dict()
-    for arg in all_args:
+def __camouflage(func_args, effective_args):
+    """
+    Takes dict of a function's arguments and censors sensitive
+    arguments by replacing their values with '******'.
+    """
+    arguments_and_values = dict()
+    for arg in effective_args:
         if arg not in func_args.locals:
             # The value of an argument might not exist if the variable has
-            # been explicitely deleted.
-            arg_value[arg] = '<MISSING>'
+            # been explicitely deleted within the function.
+            arguments_and_values[arg] = '<MISSING>'
             continue
         if arg.startswith('priv_'):
-            # camouflage
-            arg_value[arg] = '******'
+            arguments_and_values[arg] = CAMOUFLAGE_SIGN
             continue
 
         if isinstance(func_args.locals[arg], dict):
             # arg is a dict, let's check for keys marked as private
             keys = func_args.locals[arg].keys()
-            arg_value[arg] = dict()
+            arguments_and_values[arg] = dict()
             for key in keys:
                 if key.startswith('priv_'):
-                    arg_value[arg][key] = '******'
+                    arguments_and_values[arg][key] = CAMOUFLAGE_SIGN
                 else:
-                    arg_value[arg][key] = func_args.locals[arg][key]
+                    arguments_and_values[arg][key] = func_args.locals[arg][key]
             continue
 
-        arg_value[arg] = func_args.locals[arg]
+        arguments_and_values[arg] = func_args.locals[arg]
 
-    return arg_value
+    return arguments_and_values
+
+
+def __extract_arguments(func_args: ArgInfo) -> Dict:
+    """
+    Extracts a function's arguments and returns dict with
+    argument name as key and argument value as value.
+    """
+    effective_args = list()
+
+    if func_args.args:
+        effective_args.extend(func_args.args)
+
+    if func_args.varargs:
+        if isinstance(func_args.varargs, list):
+            effective_args.extend(func_args.varargs)
+        else:
+            effective_args.append(func_args.varargs)
+
+    if func_args.keywords:
+        if isinstance(func_args.keywords, list):
+            effective_args.extend(func_args.keywords)
+        else:
+            effective_args.append(func_args.keywords)
+
+    res = __camouflage(func_args, effective_args)
+
+    return res
 
 
 def __trace(current_frame: Optional[FrameType]) -> tuple:
@@ -73,9 +84,9 @@ def __trace(current_frame: Optional[FrameType]) -> tuple:
         logger.error('Failed to inspect frame: "%s".', current_frame)
         return ('error', 'error', 'error', 'error')
 
-    func_args = __extract_arguments(func_args)
+    filtered_func_args = __extract_arguments(func_args)
 
-    return func_name, func_args, file_name, line_no
+    return func_name, filtered_func_args, file_name, line_no
 
 
 def trace_enter(current_frame: Optional[FrameType]) -> None:

@@ -1,6 +1,7 @@
 """Contains the Flask app that serves distributey's API."""
 
 import json
+import os
 from os import getpid
 from typing import Tuple, Dict
 import inspect
@@ -9,6 +10,7 @@ from markupsafe import escape
 from flask import Flask
 from flask import Response
 from flask import abort
+from flask import session
 from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
 import jwt
 import jwe
@@ -18,6 +20,7 @@ import config
 
 
 app = Flask(__name__)
+app.secret_key = os.urandom(16)
 
 # Set up logging
 app.logger.handlers.clear()
@@ -70,7 +73,15 @@ def _get_jwt_from_header(priv_token: str) -> str:
         app.logger.debug('Malformed token w/o Bearer: %s', priv_token)
         return ''
 
-    ret = priv_token.split('Bearer')[1].strip()
+    parts = priv_token.split('Bearer')
+
+    if len(parts) != 2:
+        app.logger.error('Token format does not match "Bearer Token".')
+        ret = ''
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    ret = parts[1].strip()
 
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
     return ret
@@ -236,6 +247,9 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
                 (to prevent replay attacks). Optional.
     """
     trace_enter(inspect.currentframe())
+    session['view_args'] = view_args
+    session['query_args'] = query_args
+    session['header_args'] = header_args
 
     if not (token := _authenticate(view_args['tenant'], header_args['priv_jwt'])):
         if not (jwt_audience := config.get_jwt_audience_by_tenant(
@@ -323,6 +337,9 @@ def get_healthz():
     """
     This healthz implementation adheres to:
         https://tools.ietf.org/html/draft-inadarei-api-health-check-04
+
+    TODO: add user-agent & x-real-ip to input validation &
+          flask.session in order to log request properly.
     """
     trace_enter(inspect.currentframe())
 

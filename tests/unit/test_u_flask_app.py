@@ -2,7 +2,6 @@
 
 import json
 import base64
-import werkzeug
 import app
 import config
 import jwt
@@ -43,7 +42,7 @@ class TestUnitFlaskApp():
             app._decode_jwt(
                 'nonexistingtenant', get_jwt, get_jwt_signing_pubkey)
             assert False, 'Should fail if non existing tenant is given.'
-        except werkzeug.exceptions.HTTPException:
+        except KeyError:
             assert True, 'Failed as expected on non existing tenant.'
 
         # test w/ expired token

@@ -63,8 +63,13 @@ def __user_agent_validator(user_agent: str) -> None:
 
     parts = user_agent.split('/')
 
-    if (len(parts) < 2) or (len(parts[0]) < 1) or (len(parts[1]) < 1):
-        err_msg = 'User agent pattern does not match "name/version"'
+    err_msg = 'User agent pattern does not match "name/version"'
+    if len(parts) < 2:
+        logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
+        raise ValidationError(err_msg, status_code=422)
+
+    if (len(parts[0]) < 1) or (len(parts[1]) < 1):
         logger.error(err_msg)
         trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)

@@ -2,7 +2,7 @@
 
 import logging
 import sys
-from flask import request, has_request_context
+from flask import has_request_context, session
 import config
 
 
@@ -18,10 +18,15 @@ else:
 class __RequestFormatter(logging.Formatter):
     def format(self, record):
         if has_request_context():
-            # request.path.split() is safe, because URL is validated by Flask on entry.
-            record.tenant = request.path.split('/')[2]
-            record.x_real_ip = request.headers['X-Real-Ip']
-            record.user_agent = request.user_agent
+            try:
+                record.user_agent = session['header_args']['user-agent']
+                record.tenant = session['view_args']['tenant']
+                record.x_real_ip = session['header_args']['x-real-ip']
+            except KeyError:
+                # input validation failed
+                record.user_agent = 'N/A'
+                record.tenant = 'N/A'
+                record.x_real_ip = 'N/A'
         else:
             record.tenant = 'system'
             record.x_real_ip = 'localhost'

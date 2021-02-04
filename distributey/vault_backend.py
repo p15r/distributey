@@ -17,7 +17,7 @@ import base64
 import inspect
 import hvac
 from dy_logging import logger
-from dy_trace import trace_enter, trace_exit
+from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
 import config
 
 
@@ -89,5 +89,5 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
     b64_key = response['data']['keys'][str(key_version)]
 
     ret = base64.b64decode(b64_key)
-    trace_exit(inspect.currentframe(), ret)
+    trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
     return ret

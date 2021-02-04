@@ -9,7 +9,7 @@ from markupsafe import escape
 from flask import Flask
 from flask import Response
 from flask import abort
-from dy_trace import trace_enter, trace_exit
+from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
 import jwt
 import jwe
 import vault_backend
@@ -72,7 +72,7 @@ def _get_jwt_from_header(priv_token: str) -> str:
 
     ret = priv_token.split('Bearer')[1].strip()
 
-    trace_exit(inspect.currentframe(), ret)
+    trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
     return ret
 
 
@@ -184,7 +184,7 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
     if (token_sub == cfg_sub) and (token_iss == cfg_iss):
         app.logger.info('Successfully authenticated JWT issuer: %s, '
                         'subject: %s).', token_iss, token_sub)
-        trace_exit(inspect.currentframe(), token)
+        trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
         return token
 
     app.logger.error('Cannot authorize JWT. Wrong issuer "%s" or '
@@ -216,7 +216,7 @@ def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
     if config.get_config_by_key('DEV_MODE'):
         app.logger.debug('Retrieved key from Vault: %s (hex)', dek.hex())
 
-    trace_exit(inspect.currentframe(), '<DEK>')
+    trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
     return dek
 
 

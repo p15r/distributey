@@ -224,7 +224,7 @@ def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
         trace_exit(inspect.currentframe(), b'')
         return b''
 
-    if config.get_config_by_key('DEV_MODE'):
+    if config.get_config_by_keypath('DEV_MODE'):
         app.logger.debug('Retrieved key from Vault: %s (hex)', dek.hex())
 
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
@@ -343,7 +343,7 @@ def get_healthz():
     """
     trace_enter(inspect.currentframe())
 
-    if not config.get_config_by_key('LOG_LEVEL'):
+    if not config.get_config_by_keypath('LOG_LEVEL'):
         response = '{"status": "fail", "output": "Config not loaded"}'
         status = 500
     else:

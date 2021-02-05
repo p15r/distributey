@@ -6,8 +6,8 @@ from flask import has_request_context, session
 import config
 
 
-log_level = config.get_config_by_key('LOG_LEVEL')
-splunk_enabled = config.get_config_by_key('SPLUNK_ENABLED')
+log_level = config.get_config_by_keypath('LOG_LEVEL')
+splunk_enabled = config.get_config_by_keypath('SPLUNK_ENABLED')
 
 if log_level == 'debug':
     LOGLVL = logging.DEBUG
@@ -49,11 +49,11 @@ if splunk_enabled:
     from splunk_handler import SplunkHandler
 
     __splunk = SplunkHandler(
-        host=config.get_config_by_key('SPLUNK_HOST'),
-        port=config.get_config_by_key('SPLUNK_PORT'),
-        protocol=config.get_config_by_key('SPLUNK_PROTOCOL'),
-        verify=config.get_config_by_key('SPLUNK_VERIFY'),
-        token=config.get_config_by_key('SPLUNK_TOKEN'),
-        index=config.get_config_by_key('SPLUNK_INDEX'))
+        host=config.get_config_by_keypath('SPLUNK_HOST'),
+        port=config.get_config_by_keypath('SPLUNK_PORT'),
+        protocol=config.get_config_by_keypath('SPLUNK_PROTOCOL'),
+        verify=config.get_config_by_keypath('SPLUNK_VERIFY'),
+        token=config.get_config_by_keypath('SPLUNK_TOKEN'),
+        index=config.get_config_by_keypath('SPLUNK_INDEX'))
 
     logger.addHandler(__splunk)

@@ -102,7 +102,7 @@ def _encrypt_dek_with_cek(
     # Encode Authentication Tag as BASE64URL(Authentication Tag).
     b64_tag = base64.urlsafe_b64encode(tag)
 
-    if config.get_config_by_key('DEV_MODE'):
+    if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Additional authenticated data (aad): '
                      '%s', ascii_b64_protected_header.decode())
         logger.debug('Encrypted dek: "{encrypted_dek.hex()}" (hex), '
@@ -179,7 +179,7 @@ def get_wrapped_key_as_jwe(
     # 32 bytes * 8 = 256 bit -> AES256
     cek = get_random_bytes(32)
 
-    if config.get_config_by_key('DEV_MODE'):
+    if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Generated cek (BYOK AES key): %s (hex)', cek.hex())
 
     if not (b64_cek_ciphertext :=
@@ -197,7 +197,7 @@ def get_wrapped_key_as_jwe(
     initialization_vector = get_random_bytes(12)
     b64_iv = base64.urlsafe_b64encode(initialization_vector)
 
-    if config.get_config_by_key('DEV_MODE'):
+    if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Generated IV/Nonce "%s" '
                      '(base64 encoded, bytes).', b64_iv.decode())
 

@@ -25,16 +25,16 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
                        priv_jwt_token: str) -> bytes:
     trace_enter(inspect.currentframe())
 
-    vault_url = config.get_config_by_key('VAULT_URL')
+    vault_url = config.get_config_by_keypath('VAULT_URL')
     vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
     vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
 
-    vault_mtls_client_cert = config.get_config_by_key('VAULT_MTLS_CLIENT_CERT')
-    vault_mtls_client_key = config.get_config_by_key('VAULT_MTLS_CLIENT_KEY')
+    vault_mtls_client_cert = config.get_config_by_keypath('VAULT_MTLS_CLIENT_CERT')
+    vault_mtls_client_key = config.get_config_by_keypath('VAULT_MTLS_CLIENT_KEY')
 
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
 
-    if vault_ca_cert := config.get_config_by_key('VAULT_CACERT'):
+    if vault_ca_cert := config.get_config_by_keypath('VAULT_CACERT'):
         client = hvac.Client(cert=mtls_auth, url=vault_url,
                              verify=vault_ca_cert)
     else:
@@ -60,10 +60,10 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
         trace_exit(inspect.currentframe(), b'')
         return b''
 
-    if config.get_config_by_key('DEV_MODE'):
+    if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Vault client token returned: %s', vault_token)
 
-    if vault_ca_cert := config.get_config_by_key('VAULT_CACERT'):
+    if vault_ca_cert := config.get_config_by_keypath('VAULT_CACERT'):
         client = hvac.Client(cert=mtls_auth, url=vault_url, token=vault_token,
                              verify=vault_ca_cert)
     else:

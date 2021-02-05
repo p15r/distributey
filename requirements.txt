@@ -5,3 +5,4 @@ hvac==0.10.5
 pyjwt[crypto]==1.7.1
 splunk-handler==2.2.2
 webargs==7.0.1
+glom==20.11.0

@@ -77,8 +77,8 @@ def _get_jwt_from_header(priv_token: str) -> str:
     return ret
 
 
-def _decode_jwt(tenant: str, priv_jwt_token: str,
-                cert: str) -> Tuple[str, str]:
+def _decode_jwt(tenant: str, priv_jwt_token: str, cert: str) \
+        -> Tuple[str, str]:
     """
     The jwt_token must..
     - have a valid signature,
@@ -116,8 +116,13 @@ def _decode_jwt(tenant: str, priv_jwt_token: str,
         trace_exit(inspect.currentframe(), ('', ''))
         return '', ''
     except jwt.ExpiredSignatureError as exc:
-        app.logger.error('Cannot authorize request, because the JWT has '
-                         'expired: %s', exc)
+        app.logger.error('Unauthorized login attempt using an expired JWT: '
+                         '%s', exc)
+        trace_exit(inspect.currentframe(), ('', ''))
+        return '', ''
+    except jwt.InvalidAudienceError as exc:
+        app.logger.error('Unauthorized login attempt using invalid audience '
+                         'claim: %s', exc)
         trace_exit(inspect.currentframe(), ('', ''))
         return '', ''
 

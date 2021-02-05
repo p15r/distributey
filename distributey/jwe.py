@@ -50,7 +50,7 @@ def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
 
 
 def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
-                                       priv_cek: bytes) -> bytes:
+                                       priv_cek: bytearray) -> bytes:
     trace_enter(inspect.currentframe())
 
     # Encrypt cek with public key from key consumer using RSAES-OAEP
@@ -70,11 +70,10 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
     return b64_cek_ciphertext
 
 
-def _encrypt_dek_with_cek(
-        priv_cek: bytes,
-        initialization_vector: bytes,
-        priv_dek: bytes,
-        ascii_b64_protected_header: bytes) -> Tuple[bytes, bytes]:
+def _encrypt_dek_with_cek(priv_cek: bytearray, initialization_vector: bytes,
+                          priv_dek: bytearray,
+                          ascii_b64_protected_header: bytes) \
+        -> Tuple[bytes, bytes]:
     """
     Wrap dek with cek:
     - Perform authenticated encryption on dek with the AES GCM algorithm.
@@ -98,6 +97,9 @@ def _encrypt_dek_with_cek(
         #   dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
         encrypted_dek, tag = dek_cipher.encrypt_and_digest(priv_dek)
 
+        del priv_dek[:]
+        del priv_cek[:]
+
         # Encode ciphertext as BASE64URL(Ciphertext)
         b64_encrypted_dek = base64.urlsafe_b64encode(encrypted_dek)
 
@@ -112,8 +114,8 @@ def _encrypt_dek_with_cek(
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Additional authenticated data (aad): '
                      '%s', ascii_b64_protected_header.decode())
-        logger.debug('Encrypted dek: "{encrypted_dek.hex()}" (hex), '
-                     'tag :"%s" (hex).', tag.hex())
+        logger.debug('Encrypted dek: "%s" (hex), '
+                     'tag :"%s" (hex).', encrypted_dek.hex(), tag.hex())
 
     trace_exit(inspect.currentframe(), (b64_encrypted_dek, b64_tag))
     return b64_encrypted_dek, b64_tag
@@ -179,11 +181,8 @@ def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
     return b64_protected_header
 
 
-def get_wrapped_key_as_jwe(
-        priv_dek: bytes,
-        tenant: str,
-        jwe_kid: str,
-        nonce: str = '') -> str:
+def get_wrapped_key_as_jwe(priv_dek: bytearray, tenant: str, jwe_kid: str,
+                           nonce: str = '') -> str:
     """Creates JWE."""
 
     trace_enter(inspect.currentframe())
@@ -193,7 +192,7 @@ def get_wrapped_key_as_jwe(
     try:
         # Generate a 256 bit AES content encryption key.
         # 32 bytes * 8 = 256 bit -> AES256
-        cek = get_random_bytes(32)
+        cek = bytearray(get_random_bytes(32))
     except Exception as exc:
         ret = ''
         logger.error('Failed to get random bytes: %s', exc)
@@ -266,10 +265,6 @@ def get_wrapped_key_as_jwe(
         logger.error('Failed to get JWE token.')
         trace_exit(inspect.currentframe(), ret)
         return ret
-
-    # cleanup
-    del priv_dek
-    del cek
 
     trace_exit(inspect.currentframe(), json_jwe_token)
     return json_jwe_token

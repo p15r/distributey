@@ -204,7 +204,7 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
 
 
 def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
-                        jwe_kid: str) -> bytes:
+                        jwe_kid: str) -> bytearray:
     trace_enter(inspect.currentframe())
 
     if not (vault_path := config.get_vault_path_by_tenant_and_kid(
@@ -220,9 +220,10 @@ def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
 
     if not (dek := vault_backend.get_dynamic_secret(
             tenant, vault_key, key_version, priv_jwt_token)):
+        ret = bytearray()
         app.logger.error('Cannot retrieve key "%s".', vault_path)
-        trace_exit(inspect.currentframe(), b'')
-        return b''
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if config.get_config_by_keypath('DEV_MODE'):
         app.logger.debug('Retrieved key from Vault: %s (hex)', dek.hex())
@@ -309,8 +310,6 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
             content_type='application/json; charset=utf-8')
         trace_exit(inspect.currentframe(), ret)
         return ret
-
-    del dek
 
     if not json_jwe_token:
         ret = Response(

@@ -1,5 +1,5 @@
 """
-Interacts with Vault.
+Retrieves dynamic secret from Vault.
 
 Security Note:
 
@@ -89,7 +89,7 @@ def __authenticate_vault_client(client: hvac.Client, tenant: str,
 
 
 def get_dynamic_secret(tenant: str, key: str, key_version: str,
-                       priv_jwt_token: str) -> bytes:
+                       priv_jwt_token: str) -> bytearray:
     """Fetches dynamic secret from Vault."""
 
     trace_enter(inspect.currentframe())
@@ -98,40 +98,43 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
 
     client = __get_vault_client()
     if not client:
-        ret = b''
+        ret = bytearray()
         logger.error('Failed to get Vault client.')
         trace_exit(inspect.currentframe(), ret)
         return ret
 
     client = __authenticate_vault_client(client, tenant, priv_jwt_token)
     if not client:
-        ret = b''
+        ret = bytearray()
         logger.error('Failed to authenticate against Vault.')
         trace_exit(inspect.currentframe(), ret)
         return ret
 
     if not client.sys.is_initialized():
+        ret = bytearray()
         logger.error('Vault at "%s" has not been initialized.', VAULT_URL)
-        trace_exit(inspect.currentframe(), b'')
-        return b''
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     # fetch most recent key version of key
     try:
         response = client.secrets.transit.read_key(
             name=key, mount_point=vault_transit_path)
     except hvac.exceptions.Forbidden as exc:
+        ret = bytearray()
         logger.error('Insufficient permissions to access secret: %s', exc)
-        trace_exit(inspect.currentframe(), b'')
-        return b''
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if key_version == 'latest':
         try:
             key_version = response['data']['latest_version']
         except KeyError as exc:
+            ret = bytearray()
             logger.error('Failed to access key version in Vault key read '
                          'response: %s', exc)
-            trace_exit(inspect.currentframe(), b'')
-            return b''
+            trace_exit(inspect.currentframe(), ret)
+            return ret
 
     # fetch key
     try:
@@ -139,18 +142,22 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
             name=key, key_type='encryption-key', version=key_version,
             mount_point=vault_transit_path)
     except Exception as exc:
+        ret = bytearray()
         logger.error('Failed to export key: %s ', exc)
-        trace_exit(inspect.currentframe(), b'')
-        return b''
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     try:
-        b64_key = response['data']['keys'][str(key_version)]
+        bytearray_b64_key = bytearray(
+            response['data']['keys'][str(key_version)].encode())
     except KeyError as exc:
+        ret = bytearray()
         logger.error('Failed to access key in Vault export response: %s',
                      exc)
-        trace_exit(inspect.currentframe(), b'')
-        return b''
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
-    ret = base64.b64decode(b64_key)
+    bytearray_key = bytearray(base64.b64decode(bytearray_b64_key))
+    del bytearray_b64_key[:]
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
-    return ret
+    return bytearray_key

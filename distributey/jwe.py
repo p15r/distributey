@@ -31,8 +31,8 @@ def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
     if not (key_consumer_cert_path :=
             config.get_key_consumer_cert_by_tenant_and_kid(tenant, jwe_kid)):
         logger.error('Cannot find key consumer certificate for '
-                     '"%s/%s". '
-                     'Configure it in config/config.json.', tenant, jwe_kid)
+                     '"%s/%s". Configure it in config/config.json.',
+                     tenant, jwe_kid)
         trace_exit(inspect.currentframe(), '')
         return ''
 
@@ -70,9 +70,9 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
 
 
 def _encrypt_dek_with_cek(
-    priv_cek: bytes,
-    initialization_vector: bytes,
-    priv_dek: bytes,
+        priv_cek: bytes,
+        initialization_vector: bytes,
+        priv_dek: bytes,
         ascii_b64_protected_header: bytes) -> Tuple[bytes, bytes]:
     """
     Wrap dek with cek:
@@ -87,20 +87,26 @@ def _encrypt_dek_with_cek(
     dek_cipher = AES.new(priv_cek, AES.MODE_GCM, nonce=initialization_vector,
                          mac_len=16)
 
-    # add additional authenticated data (aad)
-    dek_cipher.update(ascii_b64_protected_header)
+    try:
+        # add additional authenticated data (aad)
+        dek_cipher.update(ascii_b64_protected_header)
 
-    # TODO: Autom. padding helpful? Might replace pycryptodome anyway.
-    # from Cryptodome.Util.Padding import pad
-    # encrypted_dek, tag = \
-    #   dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
-    encrypted_dek, tag = dek_cipher.encrypt_and_digest(priv_dek)
+        # TODO: Autom. padding helpful? Might replace pycryptodome anyway.
+        # from Cryptodome.Util.Padding import pad
+        # encrypted_dek, tag = \
+        #   dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
+        encrypted_dek, tag = dek_cipher.encrypt_and_digest(priv_dek)
 
-    # Encode ciphertext as BASE64URL(Ciphertext)
-    b64_encrypted_dek = base64.urlsafe_b64encode(encrypted_dek)
+        # Encode ciphertext as BASE64URL(Ciphertext)
+        b64_encrypted_dek = base64.urlsafe_b64encode(encrypted_dek)
 
-    # Encode Authentication Tag as BASE64URL(Authentication Tag).
-    b64_tag = base64.urlsafe_b64encode(tag)
+        # Encode Authentication Tag as BASE64URL(Authentication Tag).
+        b64_tag = base64.urlsafe_b64encode(tag)
+    except Exception as exc:
+        ret = (b'', b'')
+        logger.error('Failed to encrypt dek: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Additional authenticated data (aad): '
@@ -133,15 +139,21 @@ def _create_jwe_token_json(
 
     trace_enter(inspect.currentframe())
 
-    jwe = b64_protected_header + b'.' + b64_cek_ciphertext + b'.' + \
-        b64_iv + b'.' + b64_encrypted_dek + b'.' + b64_tag
+    try:
+        jwe = b64_protected_header + b'.' + b64_cek_ciphertext + b'.' + \
+            b64_iv + b'.' + b64_encrypted_dek + b'.' + b64_tag
 
-    jwe_token = {
-        'kid': jwe_kid,
-        'jwe': jwe.decode()
-    }
+        jwe_token = {
+            'kid': jwe_kid,
+            'jwe': jwe.decode()
+        }
 
-    json_jwe_token = json.dumps(jwe_token)
+        json_jwe_token = json.dumps(jwe_token)
+    except Exception as exc:
+        ret = ''
+        logger.error('Failed to create JWE token: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ''
 
     logger.debug('Created JWE token: %s', json_jwe_token)
 
@@ -157,8 +169,14 @@ def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
     if nonce:
         protected_header['jti'] = nonce
 
-    b64_protected_header = base64.urlsafe_b64encode(
-        json.dumps(protected_header).encode('utf-8'))
+    try:
+        b64_protected_header = base64.urlsafe_b64encode(
+            json.dumps(protected_header).encode('utf-8'))
+    except Exception as exc:
+        ret = b''
+        logger.error('Failed to create protected header: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     trace_exit(inspect.currentframe(), b64_protected_header)
     return b64_protected_header
@@ -175,9 +193,15 @@ def get_wrapped_key_as_jwe(
 
     logger.info('Creating JWE token for request with kid "%s"...', jwe_kid)
 
-    # Generate a 256 bit AES content encryption key.
-    # 32 bytes * 8 = 256 bit -> AES256
-    cek = get_random_bytes(32)
+    try:
+        # Generate a 256 bit AES content encryption key.
+        # 32 bytes * 8 = 256 bit -> AES256
+        cek = get_random_bytes(32)
+    except Exception as exc:
+        ret = ''
+        logger.error('Failed to get random bytes: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Generated cek (BYOK AES key): %s (hex)', cek.hex())
@@ -189,13 +213,19 @@ def get_wrapped_key_as_jwe(
         trace_exit(inspect.currentframe(), '')
         return ''
 
-    # Generate an initialization vector (IV)
-    # for use as input to the data encryption
-    # key’s AES wrapping.
-    # (BASE64URL(IV)).
-    # 12 bytes * 8 = 96 bit
-    initialization_vector = get_random_bytes(12)
-    b64_iv = base64.urlsafe_b64encode(initialization_vector)
+    try:
+        # Generate an initialization vector (IV)
+        # for use as input to the data encryption
+        # key’s AES wrapping.
+        # (BASE64URL(IV)).
+        # 12 bytes * 8 = 96 bit
+        initialization_vector = get_random_bytes(12)
+        b64_iv = base64.urlsafe_b64encode(initialization_vector)
+    except Exception as exc:
+        ret = ''
+        logger.error('Failed to create initialization vector: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Generated IV/Nonce "%s" '
@@ -203,18 +233,42 @@ def get_wrapped_key_as_jwe(
 
     b64_protected_header = _get_jwe_protected_header(jwe_kid, nonce)
 
-    # Encode JWE protected header
-    # (ASCII(BASE64URL(UTF8(JWE Protected Header))))
-    ascii_b64_protected_header = \
-        b64_protected_header.decode().encode('ascii', errors='strict')
+    if not b64_protected_header:
+        ret = ''
+        logger.error('Failed to get JWE protected header.')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    try:
+        # Encode JWE protected header
+        # (ASCII(BASE64URL(UTF8(JWE Protected Header))))
+        ascii_b64_protected_header = \
+            b64_protected_header.decode().encode('ascii', errors='strict')
+    except Exception as exc:
+        ret = ''
+        logger.error('Failed to encode protected header: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     b64_encrypted_dek, b64_tag = \
         _encrypt_dek_with_cek(cek, initialization_vector, priv_dek,
                               ascii_b64_protected_header)
 
+    if (not b64_encrypted_dek) or (not b64_tag):
+        ret = ''
+        logger.error('Failed to encrypt dek.')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
     json_jwe_token = _create_jwe_token_json(
         jwe_kid, b64_protected_header, b64_cek_ciphertext, b64_iv,
         b64_encrypted_dek, b64_tag)
+
+    if not json_jwe_token:
+        ret = ''
+        logger.error('Failed to get JWE token.')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     # cleanup
     del priv_dek

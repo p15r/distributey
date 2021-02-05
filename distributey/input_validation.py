@@ -4,8 +4,7 @@ import base64
 import json
 from typing import Mapping
 import inspect
-from flask import abort
-from flask import Response
+from flask import abort, Response
 from webargs import ValidationError
 from webargs.flaskparser import parser
 from webargs import fields, validate

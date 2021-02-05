@@ -20,37 +20,54 @@ from dy_logging import logger
 from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
 import config
 
+VAULT_URL = config.get_config_by_keypath('VAULT_URL')
 
-def get_dynamic_secret(tenant: str, key: str, key_version: str,
-                       priv_jwt_token: str) -> bytes:
+
+def __get_vault_client() -> hvac.Client:
     trace_enter(inspect.currentframe())
-
-    vault_url = config.get_config_by_keypath('VAULT_URL')
-    vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
-    vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
 
     vault_mtls_client_cert = config.get_config_by_keypath('VAULT_MTLS_CLIENT_CERT')
     vault_mtls_client_key = config.get_config_by_keypath('VAULT_MTLS_CLIENT_KEY')
 
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
 
-    if vault_ca_cert := config.get_config_by_keypath('VAULT_CACERT'):
-        client = hvac.Client(cert=mtls_auth, url=vault_url,
-                             verify=vault_ca_cert)
-    else:
-        client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
+    try:
+        if vault_ca_cert := config.get_config_by_keypath('VAULT_CACERT'):
+            client = hvac.Client(cert=mtls_auth, url=VAULT_URL,
+                                 verify=vault_ca_cert)
+        else:
+            client = hvac.Client(cert=mtls_auth, url=VAULT_URL, verify=True)
+    except Exception as exc:
+        ret = None
+        logger.error('Failed to create hvac client: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    trace_exit(inspect.currentframe(), client)
+    return client
+
+
+def __authenticate_vault_client(client: hvac.Client, tenant: str,
+                                priv_jwt_token: str) -> hvac.Client:
+    trace_enter(inspect.currentframe())
+
+    vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
 
     logger.debug('Attempting to authenticate against Vault using JWT: %s',
                  priv_jwt_token)
 
-    response = client.auth.jwt.jwt_login(
-        role=config.get_vault_default_role_by_tenant(tenant),
-        jwt=priv_jwt_token,
-        path=vault_auth_jwt_path)
+    try:
+        response = client.auth.jwt.jwt_login(
+            role=config.get_vault_default_role_by_tenant(tenant),
+            jwt=priv_jwt_token,
+            path=vault_auth_jwt_path)
+    except Exception as exc:
+        ret = b''
+        logger.error('Failed to authenticate against Vault: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     logger.debug('Vault login response: %s', response)
-
-    # TODO: hier noch ein check: client.is_authenticated()?
 
     try:
         vault_token = response['auth']['client_token']
@@ -63,15 +80,36 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Vault client token returned: %s', vault_token)
 
-    if vault_ca_cert := config.get_config_by_keypath('VAULT_CACERT'):
-        client = hvac.Client(cert=mtls_auth, url=vault_url, token=vault_token,
-                             verify=vault_ca_cert)
-    else:
-        client = hvac.Client(cert=mtls_auth, url=vault_url, token=vault_token,
-                             verify=True)
+    client.token = vault_token
+
+    trace_exit(inspect.currentframe(), client)
+    return client
+
+
+def get_dynamic_secret(tenant: str, key: str, key_version: str,
+                       priv_jwt_token: str) -> bytes:
+    """Fetches dynamic secret from Vault."""
+
+    trace_enter(inspect.currentframe())
+
+    vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
+
+    client = __get_vault_client()
+    if not client:
+        ret = b''
+        logger.error('Failed to get Vault client.')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    client = __authenticate_vault_client(client, tenant, priv_jwt_token)
+    if not client:
+        ret = b''
+        logger.error('Failed to authenticate against Vault.')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if not client.sys.is_initialized():
-        logger.error('Vault at "%s" has not been initialized.', vault_url)
+        logger.error('Vault at "%s" has not been initialized.', VAULT_URL)
         trace_exit(inspect.currentframe(), b'')
         return b''
 
@@ -94,9 +132,14 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
             return b''
 
     # fetch key
-    response = client.secrets.transit.export_key(
-        name=key, key_type='encryption-key', version=key_version,
-        mount_point=vault_transit_path)
+    try:
+        response = client.secrets.transit.export_key(
+            name=key, key_type='encryption-key', version=key_version,
+            mount_point=vault_transit_path)
+    except Exception as exc:
+        logger.error('Failed to export key: %s ', exc)
+        trace_exit(inspect.currentframe(), b'')
+        return b''
 
     try:
         b64_key = response['data']['keys'][str(key_version)]

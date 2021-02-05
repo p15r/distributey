@@ -7,10 +7,7 @@ from typing import Tuple, Dict
 import inspect
 from webargs.flaskparser import use_args
 from markupsafe import escape
-from flask import Flask
-from flask import Response
-from flask import abort
-from flask import session
+from flask import Flask, Response, abort, session
 from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
 import jwt
 import jwe
@@ -20,14 +17,7 @@ import config
 
 
 app = Flask(__name__)
-app.secret_key = os.urandom(16)
-
-# Set up logging
-app.logger.handlers.clear()
-# Bcs of modules import such as jwe, vault_backend, etc.
-# dy_logging.__streamHandler has already been added to root logger,
-# thus this is not required and would add the handler twice:
-# app.logger.addHandler(dy_logging.__stream_handler)
+app.secret_key = os.urandom(32)
 
 app.logger.info('🚀 distributey is starting (pid %d)...', getpid())
 
@@ -166,7 +156,7 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
             config.get_jwt_validation_cert_by_tenant_and_kid(tenant, jwt_kid)):
         app.logger.error('No validation certificate exists in config.json to '
                          'verify signature for JWTs with kid "%s".', jwt_kid)
-
+        trace_exit(inspect.currentframe(), '')
         __http_error(500, '{"error": "internal error"}')
 
     app.logger.debug('Attempting to validate JWT signature using cert "%s".',
@@ -176,7 +166,12 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
     # TODO: Extract key from cert programmatically:
     #       https://pyjwt.readthedocs.io/en/latest/faq.html
     #           how-can-i-extract-a-public-private-key-from-a-x509-certificate
-    cert = open(validation_cert).read()
+    try:
+        cert = open(validation_cert).read()
+    except Exception as exc:
+        app.logger.error('Failed to read validation cert: %s', exc)
+        trace_exit(inspect.currentframe(), '')
+        __http_error(500, '{"error": "internal error"}')
 
     app.logger.debug('Received JWT: %s', token)
 
@@ -185,11 +180,13 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
     if not (cfg_sub := config.get_jwt_subject_by_tenant(tenant)):
         app.logger.error('Cannot get JWT subject for tenant "%s" from config.',
                          tenant)
+        trace_exit(inspect.currentframe(), '')
         __http_error(500, '{"error": "internal error"}')
 
     if not (cfg_iss := config.get_jwt_issuer_by_tenant(tenant)):
         app.logger.error('Cannot get JWT issuer for tenant "%s" from config.',
                          tenant)
+        trace_exit(inspect.currentframe(), '')
         __http_error(500, '{"error": "internal error"}')
 
     if (token_sub == cfg_sub) and (token_iss == cfg_iss):
@@ -259,6 +256,8 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
         error_msg = (f'Unauthorized request from {header_args["x-real-ip"]} '
                      f'({header_args["user-agent"]}).')
 
+        # WWW-Authenticate header according to:
+        #   https://tools.ietf.org/html/rfc6750#section-3
         ret = Response(
             response=json.dumps({
                 'error': 401,
@@ -268,9 +267,6 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
             headers={'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'})
 
         trace_exit(inspect.currentframe(), ret)
-
-        # WWW-Authenticate header according to:
-        #   https://tools.ietf.org/html/rfc6750#section-3
         return ret
 
     if app.config.get('TESTING', ''):

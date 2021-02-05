@@ -64,10 +64,9 @@ def __authenticate_vault_client(client: hvac.Client, tenant: str,
             jwt=priv_jwt_token,
             path=vault_auth_jwt_path)
     except Exception as exc:
-        ret = b''
         logger.error('Failed to authenticate against Vault: %s', exc)
-        trace_exit(inspect.currentframe(), ret)
-        return ret
+        trace_exit(inspect.currentframe(), None)
+        return None
 
     logger.debug('Vault login response: %s', response)
 
@@ -76,13 +75,19 @@ def __authenticate_vault_client(client: hvac.Client, tenant: str,
     except KeyError as exc:
         logger.error('Failed to access Vault token from auth response: %s',
                      exc)
-        trace_exit(inspect.currentframe(), b'')
-        return b''
+        trace_exit(inspect.currentframe(), None)
+        return None
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Vault client token returned: %s', vault_token)
 
     client.token = vault_token
+
+    if not client.is_authenticated():
+        logger.error('Attempt to authenticate against Vault failed. '
+                     'Review configuration (config/config.json).')
+        trace_exit(inspect.currentframe(), None)
+        return None
 
     trace_exit(inspect.currentframe(), client)
     return client

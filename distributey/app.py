@@ -167,7 +167,8 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
     #       https://pyjwt.readthedocs.io/en/latest/faq.html
     #           how-can-i-extract-a-public-private-key-from-a-x509-certificate
     try:
-        cert = open(validation_cert).read()
+        with open(validation_cert) as file:
+            cert = file.read()
     except Exception as exc:
         app.logger.error('Failed to read validation cert: %s', exc)
         trace_exit(inspect.currentframe(), '')

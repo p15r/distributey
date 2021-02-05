@@ -37,7 +37,8 @@ def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
         return ''
 
     try:
-        cert = open(key_consumer_cert_path).read().strip()
+        with open(key_consumer_cert_path) as file:
+            cert = file.read().strip()
     except Exception as exc:
         logger.error('Cannot read key consumer certificate at '
                      '"%s": %s.', key_consumer_cert_path, exc)

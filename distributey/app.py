@@ -77,7 +77,8 @@ def _get_jwt_from_header(priv_token: str) -> str:
     return ret
 
 
-def _decode_jwt(tenant: str, priv_jwt_token: str, cert: str) -> Tuple[str, str]:
+def _decode_jwt(tenant: str, priv_jwt_token: str,
+                cert: str) -> Tuple[str, str]:
     """
     The jwt_token must..
     - have a valid signature,
@@ -206,7 +207,8 @@ def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
                         jwe_kid: str) -> bytes:
     trace_enter(inspect.currentframe())
 
-    if not (vault_path := config.get_vault_path_by_tenant_and_kid(tenant, jwe_kid)):
+    if not (vault_path := config.get_vault_path_by_tenant_and_kid(
+            tenant, jwe_kid)):
         # kid not found in config,
         # assume kid and vault path are the same
         # and fetch latest version of secret
@@ -249,7 +251,8 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
     session['query_args'] = query_args
     session['header_args'] = header_args
 
-    if not (token := _authenticate(view_args['tenant'], header_args['priv_jwt'])):
+    if not (token := _authenticate(view_args['tenant'],
+                                   header_args['priv_jwt'])):
         if not (jwt_audience := config.get_jwt_audience_by_tenant(
                 view_args['tenant'])):
             jwt_audience = 'unknown'
@@ -296,7 +299,8 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
         return ret
 
     try:
-        json_jwe_token = jwe.get_wrapped_key_as_jwe(dek, tenant, jwe_kid, nonce)
+        json_jwe_token = jwe.get_wrapped_key_as_jwe(dek, tenant, jwe_kid,
+                                                    nonce)
     except Exception as exc:
         app.logger.error('Failed to create JWE: %s', exc)
         ret = Response(

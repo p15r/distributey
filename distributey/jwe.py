@@ -119,13 +119,9 @@ def _encrypt_dek_with_cek(
     return b64_encrypted_dek, b64_tag
 
 
-def _create_jwe_token_json(
-        jwe_kid: str,
-        b64_protected_header: bytes,
-        b64_cek_ciphertext: bytes,
-        b64_iv: bytes,
-        b64_encrypted_dek: bytes,
-        b64_tag: bytes) -> str:
+def _create_jwe_token_json(jwe_kid: str, b64_protected_header: bytes,
+                           b64_cek_ciphertext: bytes, b64_iv: bytes,
+                           b64_encrypted_dek: bytes, b64_tag: bytes) -> str:
     """
     Create JWE token according to:
     https://tools.ietf.org/html/rfc7516#section-3.3

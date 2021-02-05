@@ -26,8 +26,10 @@ VAULT_URL = config.get_config_by_keypath('VAULT_URL')
 def __get_vault_client() -> hvac.Client:
     trace_enter(inspect.currentframe())
 
-    vault_mtls_client_cert = config.get_config_by_keypath('VAULT_MTLS_CLIENT_CERT')
-    vault_mtls_client_key = config.get_config_by_keypath('VAULT_MTLS_CLIENT_KEY')
+    vault_mtls_client_cert = config.get_config_by_keypath(
+        'VAULT_MTLS_CLIENT_CERT')
+    vault_mtls_client_key = config.get_config_by_keypath(
+        'VAULT_MTLS_CLIENT_KEY')
 
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
 

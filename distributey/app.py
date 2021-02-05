@@ -273,7 +273,7 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
         #   https://tools.ietf.org/html/rfc6750#section-3
         return ret
 
-    if app.config['TESTING']:
+    if app.config.get('TESTING', ''):
         # FIXME: For some reason, query_args is empty if Flask is executed
         #        as unittest client
         #        (strangely, view_args & header_args have proper values).

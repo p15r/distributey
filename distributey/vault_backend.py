@@ -52,7 +52,13 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
 
     # TODO: hier noch ein check: client.is_authenticated()?
 
-    vault_token = response['auth']['client_token']
+    try:
+        vault_token = response['auth']['client_token']
+    except KeyError as exc:
+        logger.error('Failed to access Vault token from auth response: %s',
+                     exc)
+        trace_exit(inspect.currentframe(), b'')
+        return b''
 
     if config.get_config_by_key('DEV_MODE'):
         logger.debug('Vault client token returned: %s', vault_token)
@@ -79,14 +85,26 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
         return b''
 
     if key_version == 'latest':
-        key_version = response['data']['latest_version']
+        try:
+            key_version = response['data']['latest_version']
+        except KeyError as exc:
+            logger.error('Failed to access key version in Vault key read '
+                         'response: %s', exc)
+            trace_exit(inspect.currentframe(), b'')
+            return b''
 
     # fetch key
     response = client.secrets.transit.export_key(
         name=key, key_type='encryption-key', version=key_version,
         mount_point=vault_transit_path)
 
-    b64_key = response['data']['keys'][str(key_version)]
+    try:
+        b64_key = response['data']['keys'][str(key_version)]
+    except KeyError as exc:
+        logger.error('Failed to access key in Vault export response: %s',
+                     exc)
+        trace_exit(inspect.currentframe(), b'')
+        return b''
 
     ret = base64.b64decode(b64_key)
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)

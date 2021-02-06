@@ -1,5 +1,6 @@
+import os
 import pytest
-from app import app
+import app
 from werkzeug.datastructures import Headers
 import dev.create_jwt
 import config
@@ -16,13 +17,13 @@ def get_jwt():
 @pytest.fixture(name='get_endpoint_url')
 def get_endpoint_url():
     return ('/v1/salesforce/jwe-kid-salesforce-serviceX'
-            '?resourceId=randomstring')
+            f'?requestId={os.urandom(16).hex()}')
 
 
 @pytest.fixture(name='get_endpoint_url_nonexistingtenant')
 def get_endpoint_url_nonexistingtenant():
     return ('/v1/nontexistingtenant/jwe-kid-salesforce-serviceX'
-            '?resourceId=randomstring')
+            f'?requestId={os.urandom(16).hex()}')
 
 
 @pytest.fixture(name='get_jwt')
@@ -61,12 +62,24 @@ def get_jwt_signing_pubkey():
 
 @pytest.fixture
 def http_client():
-    app.config['TESTING'] = True
+    app.app.config['TESTING'] = True
 
-    with app.test_client() as client:
+    with app.app.test_client() as client:
         yield client
 
 
 @pytest.fixture(autouse=True)
-def setup_module(monkeypatch):
+def setup_module(monkeypatch, tmpdir):
     monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
+
+    # distributey keeps track of nonces in a db located in /tmp.
+    # for testing, a dedicated location for temporary files is used.
+    # However, importing the "app" module leads to the creation of
+    # /tmp/cache.db, which is ugly.
+
+    # create tmp dir for cache db
+    test_cache_db = tmpdir.mkdir('cachedb').join('test_cache.db')
+    monkeypatch.setattr(app, 'CACHE_DB', test_cache_db)
+
+    # initialize cache db in mocked dir
+    app.__initialize_cache_db()

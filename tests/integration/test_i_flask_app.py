@@ -1,3 +1,4 @@
+import os
 import base64
 import json
 import app
@@ -11,7 +12,7 @@ class TestIntegrationFlaskApp():
 
     def test_get_wrapped_key(self, http_client, monkeypatch, get_jwt):
         kid = 'jwe-kid-salesforce-serviceX'
-        nonce = 'randomstring'
+        nonce = os.urandom(16).hex()
         test_url = f'/v1/salesforce/{kid}?requestId={nonce}'
         test_headers = {
             'X_REAL_IP': '127.0.0.1',
@@ -27,4 +28,4 @@ class TestIntegrationFlaskApp():
         protected_header = json.loads(base64.urlsafe_b64decode(
             b64_protected_header))
         assert protected_header['kid'] == kid
-        assert protected_header['jti'] == nonce
+        assert protected_header['jti'] == 'randomstring'    # set in app.py

@@ -310,7 +310,8 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
     except Exception as exc:
         app.logger.error('Failed to create JWE: %s', exc)
         ret = Response(
-            response='Oops, internal error.',
+            response=json.dumps(
+                {'status': 'fail', 'output': 'Oops, internal error.'}),
             status=500,
             content_type='application/json; charset=utf-8')
         trace_exit(inspect.currentframe(), ret)
@@ -318,7 +319,8 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
 
     if not json_jwe_token:
         ret = Response(
-            response='Oops, internal error.',
+            response=json.dumps(
+                {'status': 'fail', 'output': 'Oops, internal error.'}),
             status=500,
             content_type='application/json; charset=utf-8')
         trace_exit(inspect.currentframe(), ret)

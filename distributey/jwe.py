@@ -61,10 +61,21 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
         trace_exit(inspect.currentframe(), b'')
         return b''
 
-    rsa_cert = RSA.importKey(key_consumer_cert)
-    cek_cipher = PKCS1_OAEP.new(rsa_cert, hashAlgo=SHA1)
-    cek_ciphertext = cek_cipher.encrypt(priv_cek)
-    b64_cek_ciphertext = base64.urlsafe_b64encode(cek_ciphertext)
+    try:
+        rsa_cert = RSA.importKey(key_consumer_cert)
+        cek_cipher = PKCS1_OAEP.new(rsa_cert, hashAlgo=SHA1)
+        cek_ciphertext = cek_cipher.encrypt(priv_cek)
+        b64_cek_ciphertext = base64.urlsafe_b64encode(cek_ciphertext)
+    except ValueError as exc:
+        # Check RSAES-OAEP encryption boundaries:
+        # The asymmetric encryption system RSAES-OAEP cannot encrypt plaintext
+        # of arbitrary length and is bound to (n-2)-2|H|, where n represents
+        # the RSA modulus (in bytes) and |H| the output size (in bytes) of the
+        # chosen hashing algorithm. Thus, this check should be implemented.
+        ret = b''
+        logger.error('Failed to encrypt cek: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     trace_exit(inspect.currentframe(), b64_cek_ciphertext)
     return b64_cek_ciphertext

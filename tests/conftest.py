@@ -72,10 +72,13 @@ def http_client():
 def setup_module(monkeypatch, tmpdir):
     monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
 
-    # distributey keeps track of nonces in a db located in /tmp.
-    # for testing, a dedicated location for temporary files is used.
+    # TODO: distributey keeps track of nonces in a db located in /tmp.
+    # For testing, a dedicated location for temporary files is provided
+    # by pytest.
     # However, importing the "app" module leads to the creation of
-    # /tmp/cache.db, which is ugly.
+    # /tmp/cache.db, which is ugly. It would be better to initialize the
+    # cache db outside the app module in a place that is executed before flask
+    # starts. E.g. in "entrypoint.sh".
 
     # create tmp dir for cache db
     test_cache_db = tmpdir.mkdir('cachedb').join('test_cache.db')

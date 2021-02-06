@@ -1,8 +1,10 @@
 """Contains the Flask app that serves distributey's API."""
 
+from pathlib import Path
 import json
 import os
 from os import getpid
+import sys
 from typing import Tuple, Dict
 import inspect
 from webargs.flaskparser import use_args
@@ -25,6 +27,39 @@ app.logger.info('🚀 distributey is starting (pid %d)...', getpid())
 BASE_PATH = '/'
 API_VERSIONING_PATH = 'v1/'
 PATH_PREFIX = BASE_PATH + API_VERSIONING_PATH
+
+# DB to temporarily store nonces
+CACHE_DB = '/tmp/cache.db'
+
+
+def __initialize_cache_db() -> bool:
+    """Temporary database to store nonces to prevent replay attacks."""
+    trace_enter(inspect.currentframe())
+
+    cache_db = Path(CACHE_DB)
+
+    if cache_db.is_file():
+        ret = True
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    try:
+        with open(CACHE_DB, 'a') as file:
+            file.close()
+    except Exception as exc:
+        ret = False
+        app.logger.error('Failed to create cache db: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    ret = True
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+if not __initialize_cache_db():
+    app.logger.error('Failed to initialize cache db. Aborting...')
+    sys.exit(1)
 
 
 def __http_error(status_code: int, msg: str) -> None:
@@ -131,6 +166,46 @@ def _decode_jwt(tenant: str, priv_jwt_token: str, cert: str) \
     ret = payload.get('sub', ''), payload.get('iss', '')
     trace_exit(inspect.currentframe(), ret)
     return ret
+
+
+def _is_replay_attack(nonce: str) -> bool:
+    # TODO: protect against tmp file handling, unittesting
+
+    try:
+        with open(CACHE_DB, 'r') as file:
+            used_nonces = file.read()
+    except Exception as exc:
+        ret = True
+        app.logger.error('Failed to read from replay attack cache db: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    deny_list = used_nonces.split('\n')
+
+    if nonce in deny_list:
+        ret = True
+        app.logger.error('Replay attack detected using nonce: %s', nonce)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    if len(deny_list) >= 100:
+        # remove first cache entry
+        deny_list.pop(0)
+
+    deny_list.append(nonce)
+    denied_nonces = '\n'.join(deny_list)
+
+    try:
+        with open(CACHE_DB, 'w') as file:
+            file.write(denied_nonces)
+    except Exception as exc:
+        ret = True
+        app.logger.error('Failed to write replay attack cache db: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    trace_exit(inspect.currentframe(), False)
+    return False
 
 
 def _authenticate(tenant: str, priv_auth_header: str) -> str:
@@ -253,9 +328,22 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
                 (to prevent replay attacks). Optional.
     """
     trace_enter(inspect.currentframe())
+
     session['view_args'] = view_args
     session['query_args'] = query_args
     session['header_args'] = header_args
+
+    if _is_replay_attack(query_args['requestId']):
+        err_msg = 'Replay attack detected for nonce: %s' % \
+            query_args['requestId']
+        app.logger.error(err_msg)
+        ret = Response(
+            response=json.dumps({'status': 'fail', 'output': err_msg}),
+            status=500,
+            content_type='application/json; charset=utf-8')
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if not (token := _authenticate(view_args['tenant'],
                                    header_args['priv_jwt'])):

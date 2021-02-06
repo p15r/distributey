@@ -4,6 +4,7 @@ import base64
 import json
 from typing import Mapping
 import inspect
+import re
 from flask import abort, Response
 from webargs import ValidationError
 from webargs.flaskparser import parser
@@ -43,6 +44,29 @@ def __handle_request_parsing_error(
 
 
 # various webargs validators
+def __request_id_validator(request_id: str) -> None:
+    # Replay attack detection specs of Salesforce's cache-only service:
+    # https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/
+    #   securityImplGuide/security_pe_byok_cache_replay.htm
+
+    request_id_length = 32
+
+    if len(request_id) != request_id_length:
+        err_msg = ('requestId/nonce length must be %s alphanummeric '
+                   'chars.' % request_id_length)
+        logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
+        raise ValidationError(err_msg, status_code=422)
+
+    result = re.match('^[a-zA-Z0-9]+$', request_id)
+
+    if not result:
+        err_msg = ('requestId/nonce must consist only of alphanummeric chars.')
+        logger.error(err_msg)
+        trace_exit(inspect.currentframe(), err_msg)
+        raise ValidationError(err_msg, status_code=422)
+
+
 def __user_agent_validator(user_agent: str) -> None:
     """
     Validates the user agent header.
@@ -192,8 +216,8 @@ _VIEW_ARGS = {
 
 _QUERY_ARGS = {
     'requestId': fields.Str(
-        required=False,
-        validate=validate.Length(min=1, max=80))
+        required=True,
+        validate=__request_id_validator)
 }
 
 _HEADER_ARGS = {

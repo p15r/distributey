@@ -62,6 +62,8 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
         return b''
 
     try:
+        # SHA1 is outdated and broken. However, Salesforce's cache-only key
+        # service mandates it.
         rsa_cert = RSA.importKey(key_consumer_cert)
         cek_cipher = PKCS1_OAEP.new(rsa_cert, hashAlgo=SHA1)
         cek_ciphertext = cek_cipher.encrypt(priv_cek)

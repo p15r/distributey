@@ -3,7 +3,7 @@
 set -euf -o pipefail
 
 echo "🛑 Removing containers..."
-docker-compose down
+docker-compose --compatibility down
 
 echo '🧹 Removing locally cached files..'
 [ -d docker/terraform/tf-cache ] && rm -r docker/terraform/tf-cache

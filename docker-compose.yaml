@@ -7,6 +7,9 @@ services:
     hostname: nginx
     restart: always
     privileged: false
+    security_opt:
+      - apparmor:docker-default
+      - seccomp:unconfined
     cap_drop:
       - ALL
     cap_add:
@@ -37,6 +40,9 @@ services:
     hostname: distributey
     restart: always
     privileged: false
+    security_opt:
+      - apparmor:docker-default
+      - seccomp:./docker/seccomp-docker-default.json
     cap_drop:
       - ALL
     cap_add:

@@ -32,9 +32,7 @@ else
 fi
 
 echo '🛫 Starting containers...'
-cd docker
 docker-compose up -d
-cd ..
 
 echo 'ℹ️  Container processes:'
 docker ps -a

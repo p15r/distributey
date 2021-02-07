@@ -38,3 +38,4 @@ This section is optional. If security is especially important, enable following 
     ```
 - Enable docker live restore: https://docs.docker.com/config/containers/live-restore/
 - Ensure that authorization for Docker client commands is enabled (authorization plugin required)
+- Once audited, enable Docker content trust: https://docs.docker.com/engine/security/trust/

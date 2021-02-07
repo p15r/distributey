@@ -25,6 +25,11 @@ services:
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
       - distributey
+    healthcheck:
+      test: curl -f -k https://localhost:8443/v1/healthz || exit 1
+      interval: 30s
+      timeout: 3s
+      retries: 2
 
   distributey:
     image: pat/distributey:0.1
@@ -47,6 +52,11 @@ services:
         tag: "dy-{{.Name}}"
     depends_on: # Comment for production.
       - vault   # Comment for production.
+    healthcheck:
+      test: wget -q http://localhost:5000/v1/healthz || exit 1
+      interval: 30s
+      timeout: 3s
+      retries: 2
 
 ###################################
 # Comment until EOF for production.

@@ -41,6 +41,7 @@ def get_config_by_keypath(keypath: str) -> Any:
         trace_exit(inspect.currentframe(), ret)
         return ret
 
+    trace_exit(inspect.currentframe(), cfg_value)
     return cfg_value
 
 

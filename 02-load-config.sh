@@ -15,4 +15,6 @@ echo "💾 Copy new config.."
 docker cp config/. distributey:/opt/distributey/config/
 
 echo "🔧 Set file permissions.."
-docker exec -u root distributey chown -R distributey:distributey /opt/distributey/config/
+docker exec -u root distributey chown -R 0:0 /opt/distributey/config
+docker exec -u root distributey find /opt/distributey/config/ -type d -exec chmod o+rx {} \;
+docker exec -u root distributey find /opt/distributey/config/ -type f -exec chmod o+r {} \;

@@ -34,6 +34,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
 - Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
   - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `distributey/config/config.json`
   - Fix config files permissions: `./02-fix-cfg-perms.sh`
+  - Restart container: `docker restart distributey`
 - To switch from HTTPS (mTLS) to HTTP between Vault and `distributey`, configure `"VAULT_URL": "http://vault:8200"` in `config/config.json`.
 
 ## Decrypt JWE

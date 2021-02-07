@@ -20,7 +20,6 @@ Currently supported integrations:
 
 ### For developers
 - Verify Vault deployment [[docs](docs/vault.md)]
-- Sync source code into container `distributey`: `./dev/sync_sc.sh`.
 
 ## Architecture
 - Read more [here](docs/architecture.md)

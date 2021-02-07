@@ -45,8 +45,14 @@ RUN addgroup -g ${GID} -S ${GNAME} && adduser -u ${UID} -G ${GNAME} -S -H ${UNAM
 COPY --from=build-image /opt/venv /opt/venv
 RUN apk add --no-cache python3>=3.8
 
-COPY --chown=${UNAME}:${GNAME} distributey ${ROOT}
-COPY --chown=${UNAME}:${GNAME} docker/entrypoint.sh ${ROOT}/entrypoint.sh
+# copy distributey src
+COPY --chown=0:0 distributey ${ROOT}
+COPY --chown=0:0 docker/entrypoint.sh ${ROOT}/entrypoint.sh
+
+# set distributey src fs permission
+RUN find /opt/distributey/ -type d -exec chmod o+rx {} \;
+RUN find /opt/distributey/ -type f -exec chmod o+r {} \;
+RUN chmod o+rx ${ROOT}/entrypoint.sh
 
 EXPOSE 5000
 

@@ -16,12 +16,12 @@
         "jwt_issuer": "issuer",
         "jwt_subject": "subject",
         "jwt_validation_certs": {
-          "jwt-kid": "config/auth/tenant-jwt-kid.pubkey"
+          "jwt-kid": "config/active/auth/tenant-jwt-kid.pubkey"
         }
       },
       "backend": {
         "jwe-kid": {
-          "key_consumer_cert": "config/backend/tenant_servicename_key_consumer.crt",
+          "key_consumer_cert": "config/active/backend/tenant_servicename_key_consumer.crt",
           "vault_path": "vault-path:latest"
         }
       },
@@ -30,8 +30,8 @@
       "vault_transit_path": "transit"
     }
   },
-  "VAULT_CACERT": "config/myCA.crt",
-  "VAULT_MTLS_CLIENT_CERT": "config/mtls_auth.crt",
-  "VAULT_MTLS_CLIENT_KEY": "config/mtls_auth.key",
+  "VAULT_CACERT": "config/active/myCA.crt",
+  "VAULT_MTLS_CLIENT_CERT": "config/active/mtls_auth.crt",
+  "VAULT_MTLS_CLIENT_KEY": "config/active/mtls_auth.key",
   "VAULT_URL": "https://vault:8300"
 }

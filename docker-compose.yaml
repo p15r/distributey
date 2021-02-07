@@ -79,12 +79,14 @@ services:
     depends_on: # Comment for production.
       - vault   # Comment for production.
     healthcheck:
-      test: wget -q http://localhost:5000/v1/healthz || exit 1
+      test: curl -f http://localhost:5000/v1/healthz || exit 1
       interval: 30s
       timeout: 3s
       retries: 2
     tmpfs:
       - /tmp:mode=770,size=20k
+    volumes:
+      - /opt/distributey/config/
 
 ###################################
 # Comment until EOF for production.

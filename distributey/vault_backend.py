@@ -20,8 +20,6 @@ from dy_logging import logger
 from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
 import config
 
-VAULT_URL = config.get_config_by_keypath('VAULT_URL')
-
 
 def __get_vault_client() -> hvac.Client:
     trace_enter(inspect.currentframe())
@@ -31,14 +29,16 @@ def __get_vault_client() -> hvac.Client:
     vault_mtls_client_key = config.get_config_by_keypath(
         'VAULT_MTLS_CLIENT_KEY')
 
+    vault_url = config.get_config_by_keypath('VAULT_URL')
+
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
 
     try:
         if vault_ca_cert := config.get_config_by_keypath('VAULT_CACERT'):
-            client = hvac.Client(cert=mtls_auth, url=VAULT_URL,
+            client = hvac.Client(cert=mtls_auth, url=vault_url,
                                  verify=vault_ca_cert)
         else:
-            client = hvac.Client(cert=mtls_auth, url=VAULT_URL, verify=True)
+            client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
     except Exception as exc:
         ret = None
         logger.error('Failed to create hvac client: %s', exc)
@@ -100,6 +100,7 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
     trace_enter(inspect.currentframe())
 
     vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
+    vault_url = config.get_config_by_keypath('VAULT_URL')
 
     client = __get_vault_client()
     if not client:
@@ -117,7 +118,7 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
 
     if not client.sys.is_initialized():
         ret = bytearray()
-        logger.error('Vault at "%s" has not been initialized.', VAULT_URL)
+        logger.error('Vault at "%s" has not been initialized.', vault_url)
         trace_exit(inspect.currentframe(), ret)
         return ret
 

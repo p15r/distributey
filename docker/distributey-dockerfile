@@ -10,6 +10,8 @@ ENV PYTHONUNBUFFERED=1
 # Activate virtualenv
 ENV PATH="/opt/venv/bin:$PATH"
 
+RUN apk update && apk update && apk add curl
+
 # pyjwt[crypto] requires: python3-dev libffi-dev openssl-dev
 # python3>=3.8: for walrus operator support
 RUN apk add --no-cache python3>=3.8 python3-dev libffi-dev openssl-dev py3-pip build-base
@@ -32,6 +34,8 @@ ENV LANG=C.UTF-8
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+RUN apk update && apk update && apk add curl
 
 # Activate virtualenv
 ENV PATH="/opt/venv/bin:$PATH"

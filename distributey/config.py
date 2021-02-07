@@ -12,7 +12,7 @@ from dy_trace import trace_enter, trace_exit
 # dy_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
-CFG_PATH = '/opt/distributey/config/config.json'
+CFG_PATH = '/opt/distributey/config/active/config.json'
 
 
 # TODO: be more specific than "Any" type hint.

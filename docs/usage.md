@@ -1,4 +1,4 @@
-# Usage
+Set config files permissions# Usage
 ## Get JWE token
 - Issue an HTTP request to retrieve a `jwe` token:
   ```bash
@@ -30,10 +30,10 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
   - `nginx`: `journalctl -f -t dy-nginx`
 - Enable debug logs
   - Set `LOG_LEVEL` to `debug` in `distributey/config/config.json`
-  - Load new config: `./02-load-config.sh`
+  - Fix config files permissions: `./02-fix-cfg-perms.sh`
 - Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
   - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `distributey/config/config.json`
-  - Load new config: `./02-load-config.sh`
+  - Fix config files permissions: `./02-fix-cfg-perms.sh`
 - To switch from HTTPS (mTLS) to HTTP between Vault and `distributey`, configure `"VAULT_URL": "http://vault:8200"` in `config/config.json`.
 
 ## Decrypt JWE

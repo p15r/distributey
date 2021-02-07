@@ -24,7 +24,7 @@ def get_config_by_keypath(keypath: str) -> Any:
         with open(CFG_PATH, 'r') as file:
             cfg = json.load(file)
     except FileNotFoundError as exc:
-        logger.error('Config not found. Has "02-load-config.sh" '
+        logger.error('Config not found. Has "02-fix-cfg-perms.sh" '
                      'been executed? %s', exc)
         trace_exit(inspect.currentframe(), False)
         return False

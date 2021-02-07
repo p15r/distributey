@@ -19,6 +19,7 @@ services:
     security_opt:
       - apparmor:docker-default
       - seccomp:unconfined
+      - no-new-privileges:true
     cap_drop:
       - ALL
     cap_add:
@@ -63,6 +64,7 @@ services:
     security_opt:
       - apparmor:docker-default
       - seccomp:./docker/seccomp-docker-default.json
+      - no-new-privileges:true
     cap_drop:
       - ALL
     cap_add:
@@ -86,7 +88,7 @@ services:
     tmpfs:
       - /tmp:mode=770,size=20k
     volumes:
-      - /opt/distributey/config/
+      - ./config:/opt/distributey/config/:ro
 
 ###################################
 # Comment until EOF for production.

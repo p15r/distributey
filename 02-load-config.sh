@@ -8,9 +8,6 @@ timestamp=$(date +%Y-%m-%d_%H:%M:%S)
 echo "🔧 Create \"config/\" directory if it does not exist.."
 docker exec -u root distributey sh -c "[ ! -d /opt/distributey/config/ ] && mkdir -p /opt/distributey/config/init || echo \"(Config directory already exists)\""
 
-#echo "💾 Create backup of current config.."
-#docker exec -u root distributey sh -c "mkdir /opt/distributey/config/config-$timestamp && cp -r /opt/distributey/config/active/* /opt/distributey/config/config-$timestamp"
-
 echo "🗑️ Delete current config.."
 docker exec -u root distributey sh -c "rm -rf /opt/distributey/config/*"
 

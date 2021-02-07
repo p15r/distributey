@@ -15,6 +15,7 @@ services:
           cpus: '0.25'
           memory: 128M
     privileged: false
+    read_only: true
     security_opt:
       - apparmor:docker-default
       - seccomp:unconfined
@@ -41,6 +42,8 @@ services:
       interval: 30s
       timeout: 3s
       retries: 2
+    tmpfs:
+      - /tmp:mode=770,size=20k
 
   distributey:
     image: pat/distributey:0.1
@@ -56,6 +59,7 @@ services:
           cpus: '0.25'
           memory: 256M
     privileged: false
+    read_only: true
     security_opt:
       - apparmor:docker-default
       - seccomp:./docker/seccomp-docker-default.json
@@ -79,6 +83,8 @@ services:
       interval: 30s
       timeout: 3s
       retries: 2
+    tmpfs:
+      - /tmp:mode=770,size=20k
 
 ###################################
 # Comment until EOF for production.

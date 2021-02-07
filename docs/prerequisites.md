@@ -12,3 +12,29 @@
   - activate virtual environment: `source /path/to/venv/bin/activate`
   - install dependencies: `python3 -m pip install -r requirements.txt`
   - type `deactivate` to exit the virtual environment
+
+## Security
+
+This section is optional. If security is especially important, enable following protection measures on infrastructure level:
+- Ensure network traffic is restricted between containers.
+- Enable user namespace support
+  - https://docs.docker.com/engine/security/userns-remap/
+  - https://dreamlab.net/en/blog/post/user-namespace-remapping-an-advanced-feature-to-protect-your-docker-environments/
+- Ensure cgroup usage has been confirmed:
+  - Get container id: `docker inspect distributey | jq '.[0].Id'`
+  - List cgroup usage of container: `lscgroup | grep <id>`
+    - example output:
+    ```bash
+    perf_event:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    pids:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    cpu,cpuacct:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    memory:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    freezer:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    net_cls,net_prio:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    blkio:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    hugetlb:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    cpuset:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    devices:/docker/edad520db3ed1227afeb88ae2c28d78acd93f294d062b6648976c18afe564d0b
+    ```
+- Enable docker live restore: https://docs.docker.com/config/containers/live-restore/
+- Ensure that authorization for Docker client commands is enabled (authorization plugin required)

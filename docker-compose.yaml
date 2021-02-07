@@ -6,6 +6,11 @@ services:
     container_name: nginx
     hostname: nginx
     restart: always
+    privileged: false
+    cap_drop:
+      - ALL
+    cap_add:
+      - AUDIT_WRITE
     command: ["sh", "-c", "sleep 10 && nginx -g 'daemon off;'"]
     logging:
       driver: syslog
@@ -26,6 +31,13 @@ services:
     container_name: distributey
     hostname: distributey
     restart: always
+    privileged: false
+    cap_drop:
+      - ALL
+    cap_add:
+      - AUDIT_WRITE
+      - DAC_OVERRIDE
+      - CHOWN
     build:
       context: .
       dockerfile: docker/distributey-dockerfile

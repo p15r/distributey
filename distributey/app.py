@@ -169,7 +169,10 @@ def _decode_jwt(tenant: str, priv_jwt_token: str, cert: str) \
 
 
 def _is_replay_attack(nonce: str) -> bool:
-    # TODO: protect against tmp file handling, unittesting
+    # TODO: Protect against: https://rules.sonarsource.com/python/RSPEC-5445
+    #       However, tempfile.NamedTemporaryFile() is not a solution, because
+    #       this would create a cache db per thread, instead of one global db.
+    #       Risk is acceptable since application runs in dedicated container.
 
     try:
         with open(CACHE_DB, 'r') as file:

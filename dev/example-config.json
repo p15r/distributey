@@ -16,12 +16,12 @@
         "jwt_issuer": "monitoring",
         "jwt_subject": "monitoring",
         "jwt_validation_certs": {
-          "jwt_kid_monitoring": "config/active/auth/jwt_salesforce_serviceX.pub"
+          "jwt_kid_monitoring": "config/auth/jwt_salesforce_serviceX.pub"
         }
       },
       "backend": {
         "jwe-kid-monitoring": {
-          "key_consumer_cert": "config/active/backend/distributey_allservices_key_consumer.crt",
+          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
           "vault_path": "monitoring:latest"
         }
       },
@@ -36,12 +36,12 @@
         "jwt_issuer": "salesforce",
         "jwt_subject": "cacheonlyservice",
         "jwt_validation_certs": {
-          "jwt_kid_salesforce_serviceX": "config/active/auth/jwt_salesforce_serviceX.pub"
+          "jwt_kid_salesforce_serviceX": "config/auth/jwt_salesforce_serviceX.pub"
         }
       },
       "backend": {
         "jwe-kid-salesforce-serviceX": {
-          "key_consumer_cert": "config/active/backend/distributey_allservices_key_consumer.crt",
+          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
           "vault_path": "salesforce:latest"
         }
       },
@@ -50,8 +50,8 @@
       "vault_transit_path": "transit"
     }
   },
-  "VAULT_CACERT": "config/active/myCA.crt",
-  "VAULT_MTLS_CLIENT_CERT": "config/active/mtls_auth.crt",
-  "VAULT_MTLS_CLIENT_KEY": "config/active/mtls_auth.key",
+  "VAULT_CACERT": "config/myCA.crt",
+  "VAULT_MTLS_CLIENT_CERT": "config/mtls_auth.crt",
+  "VAULT_MTLS_CLIENT_KEY": "config/mtls_auth.key",
   "VAULT_URL": "https://vault:8300"
 }

@@ -1,4 +1,4 @@
-"""Makes config file (json-based) accessible for distributey."""
+"""Reads JSON config file."""
 
 # TODO: cache config in-mem instead of loading file every time.
 
@@ -17,26 +17,28 @@ CFG_PATH = '/opt/distributey/config/config.json'
 
 # TODO: be more specific than "Any" type hint.
 def get_config_by_keypath(keypath: str) -> Any:
-    """Returns config."""
+    """Returns config by key path."""
 
     trace_enter(inspect.currentframe())
     try:
         with open(CFG_PATH, 'r') as file:
             cfg = json.load(file)
     except FileNotFoundError as exc:
+        ret = False
         logger.error('Config not found. Has "02-fix-cfg-perms.sh" '
                      'been executed? %s', exc)
-        trace_exit(inspect.currentframe(), False)
-        return False
+        trace_exit(inspect.currentframe(), ret)
+        return ret
     except Exception as exc:
+        ret = False
         logger.error('Failed to load config: %s', exc)
-        trace_exit(inspect.currentframe(), False)
-        return False
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     try:
         cfg_value = glom.glom(cfg, keypath)
     except glom.core.PathAccessError as exc:
-        ret = ''
+        ret = False
         logger.error('Failed to load key "%s" from config: %s', keypath, exc)
         trace_exit(inspect.currentframe(), ret)
         return ret
@@ -50,10 +52,10 @@ def get_key_consumer_cert_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.backend.{jwe_kid}.key_consumer_cert'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_path_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
@@ -61,10 +63,10 @@ def get_vault_path_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.backend.{jwe_kid}.vault_path'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_algorithm_by_tenant(tenant: str) -> str:
@@ -72,10 +74,10 @@ def get_jwt_algorithm_by_tenant(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_algorithm'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_audience_by_tenant(tenant: str) -> str:
@@ -83,10 +85,10 @@ def get_jwt_audience_by_tenant(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_audience'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_subject_by_tenant(tenant: str) -> str:
@@ -94,10 +96,10 @@ def get_jwt_subject_by_tenant(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_subject'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_issuer_by_tenant(tenant: str) -> str:
@@ -105,10 +107,10 @@ def get_jwt_issuer_by_tenant(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_issuer'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_validation_cert_by_tenant_and_kid(
@@ -117,10 +119,10 @@ def get_jwt_validation_cert_by_tenant_and_kid(
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_validation_certs.{jwt_kid}'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_default_role_by_tenant(tenant: str) -> str:
@@ -128,10 +130,10 @@ def get_vault_default_role_by_tenant(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.vault_default_role'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
@@ -139,10 +141,10 @@ def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.vault_auth_jwt_path'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_transit_path_by_tenant(tenant: str) -> str:
@@ -150,7 +152,7 @@ def get_vault_transit_path_by_tenant(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.vault_transit_path'
-    cfg_value = get_config_by_keypath(cfg_keypath)
+    ret = get_config_by_keypath(cfg_keypath)
 
-    trace_exit(inspect.currentframe(), cfg_value)
-    return cfg_value
+    trace_exit(inspect.currentframe(), ret)
+    return ret

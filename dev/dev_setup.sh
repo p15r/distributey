@@ -84,12 +84,12 @@ openssl req -passin pass:$cert_passphrase -new -sha512 -key $tmp_path/vault.key 
 echo "🔑 Generate Vault cert..."
 openssl x509 -passin pass:$ca_passphrase -req -in $tmp_path/vault.csr -CA $tmp_path/myCA.crt -CAkey $tmp_path/myCA.key -CAcreateserial -out $tmp_path/vault.crt -days 3650 -sha512 -extfile $tls_cfg_path/request.cfg -extensions 'v3_req_vault'
 
-echo "  Concatenate Vault cert with CA file"
+echo " Concatenate Vault cert with CA file"
 echo " The primary certificate should appear first in the combined file."
 cat $tmp_path/vault.crt $tmp_path/myCA.crt > $tmp_path/vault_combined.pem
 
 # Copy keys and certs to places...
-# Hack: add pubkey to tfvars. Terraform should read pubkey file.
+# Hack: add pubkey to tfvars. Terraform should read pubkey file instead.
 echo 'Adding JWT to Terraform config...'
 python3 dev/write_jwt_to_tfvars.py
 echo 'Copying config...'

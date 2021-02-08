@@ -3,8 +3,8 @@ info:
     title: distributey
     description: API of distributey.
     contact:
-        name: author
-        url: 'https://example.com/readme'
+        name: pat
+        url: 'https://github.com/p15r/distributey'
         email: author@example.com
     version: '0.1'
 host: distributey.example.com

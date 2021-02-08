@@ -2,9 +2,8 @@
 Script to decrypt dek key material for testing purposes.
 """
 
-from Cryptodome.Cipher import AES
 import base64
-
+from Cryptodome.Cipher import AES
 
 iv = base64.urlsafe_b64decode(b'somebytes')
 cek = bytes.fromhex('hex-formatted-string')
@@ -20,4 +19,5 @@ dek_cipher.update(aad)
 decrypted_dek = dek_cipher.decrypt_and_verify(encrypted_dek, tag)
 
 print(f'Decrypted dek:\n- raw: {decrypted_dek}\n- '
-      f'base64: {base64.b64encode(decrypted_dek).decode()}\nCompare it to dek in Vault.')
+      f'base64: {base64.b64encode(decrypted_dek).decode()}\n'
+      'Compare it to dek in Vault.')

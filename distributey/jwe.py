@@ -1,13 +1,15 @@
 """
 Creates JWEs to securely distribute key material.
 
-It follows https://help.salesforce.com/
+Implementation specs:
+    https://help.salesforce.com/
     articleView?id=security_pe_byok_cache_create.htm&type=5
-to support compliance with Salesforce's cache-only key service.
 
 Note that pyCryptoDome uses the terms IV and NONCE interchangeably:
-- https://pycryptodome.readthedocs.io/en/latest/src/cipher/
-    modern.html#modern-modes-of-operation-for-symmetric-block-ciphers
+    - https://pycryptodome.readthedocs.io/en/latest/src/cipher/
+        modern.html#modern-modes-of-operation-for-symmetric-block-ciphers
+    - do not mix up the cryptographic nonce (IV) with the replay attack
+        nonce (requestID URL query parameter)
 """
 
 import base64
@@ -25,25 +27,34 @@ import config
 
 
 def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
+    """
+    Retrieves the key consumer certificate. This cert is used to wrap
+    the cek (content encryption key)
+    """
     trace_enter(inspect.currentframe())
-    # key consumer cert: certificate from key consumer to wrap cek.
 
     if not (key_consumer_cert_path :=
             config.get_key_consumer_cert_by_tenant_and_kid(tenant, jwe_kid)):
+        ret = ''
+
         logger.error('Cannot find key consumer certificate for '
                      '"%s/%s". Configure it in config/config.json.',
                      tenant, jwe_kid)
-        trace_exit(inspect.currentframe(), '')
-        return ''
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     try:
         with open(key_consumer_cert_path) as file:
             cert = file.read().strip()
     except Exception as exc:
+        ret = ''
+
         logger.error('Cannot read key consumer certificate at '
                      '"%s": %s.', key_consumer_cert_path, exc)
-        trace_exit(inspect.currentframe(), '')
-        return ''
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     trace_exit(inspect.currentframe(), cert)
     return cert
@@ -56,10 +67,13 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
     # Encrypt cek with public key from key consumer using RSAES-OAEP
     # (BASE64URL(JWE Encrypted CEK Key))
     if not (key_consumer_cert := _get_key_consumer_cert(tenant, jwe_kid)):
+        ret = b''
+
         logger.error('Cannot get key consumer certificate for tenant '
                      '"%s" with JWE kid "%s".', tenant, jwe_kid)
-        trace_exit(inspect.currentframe(), b'')
-        return b''
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     try:
         # SHA1 is outdated and broken. However, Salesforce's cache-only key
@@ -75,7 +89,17 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
         # the RSA modulus (in bytes) and |H| the output size (in bytes) of the
         # chosen hashing algorithm. Thus, this check should be implemented.
         ret = b''
+
+        logger.error('Failed to encrypt cek, encryption boundary violated: %s',
+                     exc)
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+    except Exception as exc:
+        ret = b''
+
         logger.error('Failed to encrypt cek: %s', exc)
+
         trace_exit(inspect.currentframe(), ret)
         return ret
 
@@ -91,16 +115,16 @@ def _encrypt_dek_with_cek(priv_cek: bytearray, initialization_vector: bytes,
     Wrap dek with cek:
     - Perform authenticated encryption on dek with the AES GCM algorithm.
     - Use cek as encryption key, the initialization vector,
-      and the protecred header as Additional Authenticated Data value.
+      and the protected header as Additional Authenticated Data value.
     - Request a 128-bit Authentication Tag output.
     """
     trace_enter(inspect.currentframe())
 
-    # mac_len=16 bytes: 128 bit authentication tag
-    dek_cipher = AES.new(priv_cek, AES.MODE_GCM, nonce=initialization_vector,
-                         mac_len=16)
-
     try:
+        # mac_len=16 bytes: 128 bit authentication tag
+        dek_cipher = AES.new(priv_cek, AES.MODE_GCM,
+                             nonce=initialization_vector, mac_len=16)
+
         # add additional authenticated data (aad)
         dek_cipher.update(ascii_b64_protected_header)
 
@@ -110,13 +134,11 @@ def _encrypt_dek_with_cek(priv_cek: bytearray, initialization_vector: bytes,
         #   dek_cipher.encrypt_and_digest(pad(dek, AES.block_size))
         encrypted_dek, tag = dek_cipher.encrypt_and_digest(priv_dek)
 
+        # Remove sensitive data from memory
         del priv_dek[:]
         del priv_cek[:]
 
-        # Encode ciphertext as BASE64URL(Ciphertext)
         b64_encrypted_dek = base64.urlsafe_b64encode(encrypted_dek)
-
-        # Encode Authentication Tag as BASE64URL(Authentication Tag).
         b64_tag = base64.urlsafe_b64encode(tag)
     except Exception as exc:
         ret = (b'', b'')
@@ -138,17 +160,16 @@ def _create_jwe_token_json(jwe_kid: str, b64_protected_header: bytes,
                            b64_cek_ciphertext: bytes, b64_iv: bytes,
                            b64_encrypted_dek: bytes, b64_tag: bytes) -> str:
     """
-    Create JWE token according to:
-    https://tools.ietf.org/html/rfc7516#section-3.3
+    Creates JWE token according to:
+        https://tools.ietf.org/html/rfc7516#section-3.3
 
     Compact Serialization representation:
-    BASE64URL(UTF8(JWE Protected Header)) || '.' ||
-    BASE64URL(JWE Encrypted Key) || '.' ||
-    BASE64URL(JWE Initialization Vector) || '.' ||
-    BASE64URL(JWE Ciphertext) || '.' ||
-    BASE64URL(JWE Authentication Tag)
+        BASE64URL(UTF8(JWE Protected Header)) || '.' ||
+        BASE64URL(JWE Encrypted Key) || '.' ||
+        BASE64URL(JWE Initialization Vector) || '.' ||
+        BASE64URL(JWE Ciphertext) || '.' ||
+        BASE64URL(JWE Authentication Tag)
     """
-
     trace_enter(inspect.currentframe())
 
     try:
@@ -165,7 +186,7 @@ def _create_jwe_token_json(jwe_kid: str, b64_protected_header: bytes,
         ret = ''
         logger.error('Failed to create JWE token: %s', exc)
         trace_exit(inspect.currentframe(), ret)
-        return ''
+        return ret
 
     logger.debug('Created JWE token: %s', json_jwe_token)
 
@@ -174,8 +195,9 @@ def _create_jwe_token_json(jwe_kid: str, b64_protected_header: bytes,
 
 
 def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
+    """Creates JWE protected header (BASE64URL(UTF8(JWE Protected Header)))."""
     trace_enter(inspect.currentframe())
-    # Create JWE protected header (BASE64URL(UTF8(JWE Protected Header)))
+
     protected_header = {'alg': 'RSA-OAEP', 'enc': 'A256GCM', 'kid': jwe_kid}
 
     if nonce:
@@ -196,15 +218,13 @@ def _get_jwe_protected_header(jwe_kid: str, nonce: str) -> bytes:
 
 def get_wrapped_key_as_jwe(priv_dek: bytearray, tenant: str, jwe_kid: str,
                            nonce: str = '') -> str:
-    """Creates JWE."""
-
+    """Creates a JWE."""
     trace_enter(inspect.currentframe())
 
     logger.info('Creating JWE token for request with kid "%s"...', jwe_kid)
 
+    # Generate a 256 bit AES content encryption key (32 bytes * 8).
     try:
-        # Generate a 256 bit AES content encryption key.
-        # 32 bytes * 8 = 256 bit -> AES256
         cek = bytearray(get_random_bytes(32))
     except Exception as exc:
         ret = ''
@@ -217,17 +237,16 @@ def get_wrapped_key_as_jwe(priv_dek: bytearray, tenant: str, jwe_kid: str,
 
     if not (b64_cek_ciphertext :=
             _encrypt_cek_with_key_consumer_key(tenant, jwe_kid, cek)):
+
         logger.error('Cannot encrypt content encryption key with key consumer'
                      'key of %s/%s.', tenant, jwe_kid)
+
         trace_exit(inspect.currentframe(), '')
         return ''
 
+    # Generate an initialization vector (IV)
+    # (BASE64URL(IV)) (12 bytes * 8 = 96 bit)
     try:
-        # Generate an initialization vector (IV)
-        # for use as input to the data encryption
-        # key’s AES wrapping.
-        # (BASE64URL(IV)).
-        # 12 bytes * 8 = 96 bit
         initialization_vector = get_random_bytes(12)
         b64_iv = base64.urlsafe_b64encode(initialization_vector)
     except Exception as exc:
@@ -248,9 +267,9 @@ def get_wrapped_key_as_jwe(priv_dek: bytearray, tenant: str, jwe_kid: str,
         trace_exit(inspect.currentframe(), ret)
         return ret
 
+    # Encode JWE protected header
+    # (ASCII(BASE64URL(UTF8(JWE Protected Header))))
     try:
-        # Encode JWE protected header
-        # (ASCII(BASE64URL(UTF8(JWE Protected Header))))
         ascii_b64_protected_header = \
             b64_protected_header.decode().encode('ascii', errors='strict')
     except Exception as exc:
@@ -275,7 +294,7 @@ def get_wrapped_key_as_jwe(priv_dek: bytearray, tenant: str, jwe_kid: str,
 
     if not json_jwe_token:
         ret = ''
-        logger.error('Failed to get JWE token.')
+        logger.error('Failed to create JWE token.')
         trace_exit(inspect.currentframe(), ret)
         return ret
 

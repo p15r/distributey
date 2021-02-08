@@ -16,7 +16,7 @@ def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
     Takes dict of a function's arguments and censors sensitive
     arguments by replacing their values with '******'.
     """
-    arguments_and_values = dict()
+    arguments_and_values: Dict[Any, Any] = dict()
 
     for arg in effective_args:
         if arg not in func_args.locals:

@@ -13,7 +13,7 @@ resource "vault_jwt_auth_backend_role" "role_monitoring" {
   role_type       = "jwt"
   token_policies  = ["default", "monitoring"]
 }
- 
+
 # Transit engine for monitoring key
 resource "vault_mount" "transit_monitoring" {
   path = var.transit_monitoring_path

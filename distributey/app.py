@@ -352,9 +352,9 @@ def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
 # view_args: part of HTTP request.path
 # **kwargs catches "tenant" & jwe_kid; disregard because not filtered
 @app.route(__PATH_PREFIX + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
-@use_args(input_validation._VIEW_ARGS, location='view_args')
-@use_args(input_validation._QUERY_ARGS, location='query')
-@use_args(input_validation._HEADER_ARGS, location='headers')
+@use_args(input_validation.VIEW_ARGS, location='view_args')
+@use_args(input_validation.QUERY_ARGS, location='query')
+@use_args(input_validation.HEADER_ARGS, location='headers')
 def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
                     **kwargs):
     """

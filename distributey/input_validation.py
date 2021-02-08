@@ -204,7 +204,7 @@ def __jwt_validator(priv_jwt: str) -> None:
         raise ValidationError(err_msg, status_code=422)
 
 
-_VIEW_ARGS = {
+VIEW_ARGS = {
     'tenant': fields.Str(
         required=True,
         validate=validate.Length(min=1, max=50)),
@@ -213,13 +213,13 @@ _VIEW_ARGS = {
         validate=validate.Length(min=1, max=50))
 }
 
-_QUERY_ARGS = {
+QUERY_ARGS = {
     'requestId': fields.Str(
         required=True,
         validate=__request_id_validator)
 }
 
-_HEADER_ARGS = {
+HEADER_ARGS = {
     'priv_jwt': fields.Str(
         data_key='Authorization',
         required=True,

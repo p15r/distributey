@@ -82,7 +82,7 @@ def setup_module(monkeypatch, tmpdir):
 
     # create tmp dir for cache db
     test_cache_db = tmpdir.mkdir('cachedb').join('test_cache.db')
-    monkeypatch.setattr(app, 'CACHE_DB', test_cache_db)
+    monkeypatch.setattr(app, '__CACHE_DB', test_cache_db)
 
     # initialize cache db in mocked dir
-    app.__initialize_cache_db()
+    app._initialize_cache_db()

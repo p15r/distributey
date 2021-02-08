@@ -63,7 +63,7 @@ class TestUnitFlaskApp():
         assert app._decode_jwt(
             'salesforce', old_token, get_jwt_signing_pubkey) == ('', '')
 
-    def test__authenticate(self, get_headers, get_jwt):
+    def test___authenticate(self, get_headers, get_jwt):
         assert app._authenticate('salesforce', 'Bearer ' + get_jwt) == get_jwt
 
     def test_get_wrapped_key_no_auth(

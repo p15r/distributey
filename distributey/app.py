@@ -24,19 +24,19 @@ app.secret_key = os.urandom(32)
 app.logger.info('🚀 distributey is starting (pid %d)...', getpid())
 
 # URL-based API versioning
-BASE_PATH = '/'
-API_VERSIONING_PATH = 'v1/'
-PATH_PREFIX = BASE_PATH + API_VERSIONING_PATH
+__BASE_PATH = '/'
+__API_VERSIONING_PATH = 'v1/'
+__PATH_PREFIX = __BASE_PATH + __API_VERSIONING_PATH
 
 # DB to temporarily store nonces
-CACHE_DB = '/tmp/cache.db'
+__CACHE_DB = '/tmp/cache.db'
 
 
-def __initialize_cache_db() -> bool:
+def _initialize_cache_db() -> bool:
     """Init temporary database to store nonces to prevent replay attacks."""
     trace_enter(inspect.currentframe())
 
-    cache_db = Path(CACHE_DB)
+    cache_db = Path(__CACHE_DB)
 
     if cache_db.is_file():
         ret = True
@@ -45,7 +45,7 @@ def __initialize_cache_db() -> bool:
 
     try:
         # create empty file
-        with open(CACHE_DB, 'a') as file:
+        with open(__CACHE_DB, 'a') as file:
             file.close()
     except Exception as exc:
         ret = False
@@ -58,7 +58,7 @@ def __initialize_cache_db() -> bool:
     return ret
 
 
-if not __initialize_cache_db():
+if not _initialize_cache_db():
     trace_enter(inspect.currentframe())
 
     app.logger.error('Failed to initialize cache db. Aborting...')
@@ -67,7 +67,7 @@ if not __initialize_cache_db():
     sys.exit(1)
 
 
-def __http_error(status_code: int, msg: str, headers: dict = None) -> None:
+def _http_error(status_code: int, msg: str, headers: dict = None) -> None:
     trace_enter(inspect.currentframe())
 
     ret = Response(
@@ -80,7 +80,7 @@ def __http_error(status_code: int, msg: str, headers: dict = None) -> None:
     abort(ret)
 
 
-def __http_20x(status_code: int, msg: str, headers: dict = None) -> Response:
+def _http_20x(status_code: int, msg: str, headers: dict = None) -> Response:
     trace_enter(inspect.currentframe())
 
     ret = Response(
@@ -149,13 +149,13 @@ def _decode_jwt(tenant: str, priv_jwt_token: str, cert: str) \
         app.logger.error('Cannot get JWT audience for tenant "%s" from '
                          'config.', tenant)
         trace_exit(inspect.currentframe(), ('', ''))
-        __http_error(500, '{"error": "internal error"}')
+        _http_error(500, '{"error": "internal error"}')
 
     if not (algos := config.get_jwt_algorithm_by_tenant(tenant)):
         app.logger.error('Cannot get JWT algorithms for tenant "%s" from '
                          'config.', tenant)
         trace_exit(inspect.currentframe(), ('', ''))
-        __http_error(500, '{"error": "internal error"}')
+        _http_error(500, '{"error": "internal error"}')
 
     try:
         # 10s leeway as clock skew margin
@@ -206,7 +206,7 @@ def _is_replay_attack(nonce: str) -> bool:
     nr_of_cache_db_entries = 100
 
     try:
-        with open(CACHE_DB, 'r') as file:
+        with open(__CACHE_DB, 'r') as file:
             used_nonces = file.read()
     except Exception as exc:
         ret = True
@@ -230,7 +230,7 @@ def _is_replay_attack(nonce: str) -> bool:
     denied_nonces = '\n'.join(deny_list)
 
     try:
-        with open(CACHE_DB, 'w') as file:
+        with open(__CACHE_DB, 'w') as file:
             file.write(denied_nonces)
     except Exception as exc:
         ret = True
@@ -270,7 +270,7 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
         app.logger.error('No validation certificate exists in config.json to '
                          'verify signature for JWTs with kid "%s".', jwt_kid)
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, '{"error": "internal error"}')
+        _http_error(500, '{"error": "internal error"}')
 
     app.logger.debug('Attempting to validate JWT signature using cert "%s".',
                      validation_cert)
@@ -286,7 +286,7 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
         ret = ''
         app.logger.error('Failed to read validation cert: %s', exc)
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, '{"error": "internal error"}')
+        _http_error(500, '{"error": "internal error"}')
 
     app.logger.debug('Received JWT: %s', token)
 
@@ -297,14 +297,14 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
         app.logger.error('Cannot get JWT subject for tenant "%s" from config.',
                          tenant)
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, '{"error": "internal error"}')
+        _http_error(500, '{"error": "internal error"}')
 
     if not (cfg_iss := config.get_jwt_issuer_by_tenant(tenant)):
         ret = ''
         app.logger.error('Cannot get JWT issuer for tenant "%s" from config.',
                          tenant)
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, '{"error": "internal error"}')
+        _http_error(500, '{"error": "internal error"}')
 
     if (token_sub == cfg_sub) and (token_iss == cfg_iss):
         app.logger.info('Successfully authenticated JWT issuer: %s, '
@@ -351,7 +351,7 @@ def _get_dek_from_vault(priv_jwt_token: str, tenant: str,
 
 # view_args: part of HTTP request.path
 # **kwargs catches "tenant" & jwe_kid; disregard because not filtered
-@app.route(PATH_PREFIX + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
+@app.route(__PATH_PREFIX + '<string:tenant>/<string:jwe_kid>', methods=['GET'])
 @use_args(input_validation._VIEW_ARGS, location='view_args')
 @use_args(input_validation._QUERY_ARGS, location='query')
 @use_args(input_validation._HEADER_ARGS, location='headers')
@@ -379,7 +379,7 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
 
         ret = '{"status": "fail", "output": "%s"}' % err_msg
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, ret)
+        _http_error(500, ret)
 
     if not (token := _authenticate(view_args['tenant'],
                                    header_args['priv_jwt'])):
@@ -397,7 +397,7 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
         header = {'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'}
 
         trace_exit(inspect.currentframe(), http_err_msg)
-        __http_error(401, http_err_msg, header)
+        _http_error(401, http_err_msg, header)
 
     if app.config.get('TESTING', ''):
         # FIXME: For some reason, query_args is empty if Flask is executed
@@ -419,7 +419,7 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
         ret = '{"status": "fail", "output": "%s"}' % err_msg
 
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, ret)
+        _http_error(500, ret)
 
     try:
         json_jwe_token = jwe.get_wrapped_key_as_jwe(dek, tenant, jwe_kid,
@@ -428,25 +428,25 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
         ret = '{"status": "fail", "output": "Oops, internal error."}'
         app.logger.error('Failed to create JWE: %s', exc)
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, ret)
+        _http_error(500, ret)
 
     if not json_jwe_token:
         ret = '{"status": "fail", "output": "Oops, internal error."}'
         app.logger.error('Failed to create JWE for unknown reason.')
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, ret)
+        _http_error(500, ret)
 
     app.logger.info('JWE token with kid "%s" sent.',
                     json.loads(json_jwe_token)['kid'])
     app.logger.debug('JWE token: %s', json_jwe_token)
 
-    ret_resp = __http_20x(200, json_jwe_token)
+    ret_resp = _http_20x(200, json_jwe_token)
 
     trace_exit(inspect.currentframe(), ret_resp)
     return ret_resp
 
 
-@app.route(PATH_PREFIX + '/healthz', methods=['GET'])
+@app.route(__PATH_PREFIX + '/healthz', methods=['GET'])
 def get_healthz():
     """
     This healthz implementation adheres to:
@@ -460,9 +460,9 @@ def get_healthz():
     if not config.get_config_by_keypath('LOG_LEVEL'):
         ret = '{"status": "fail", "output": "Config not loaded"}'
         trace_exit(inspect.currentframe(), ret)
-        __http_error(500, ret)
+        _http_error(500, ret)
 
-    ret = __http_20x(200, '{"status": "pass"}')
+    ret = _http_20x(200, '{"status": "pass"}')
 
     trace_exit(inspect.currentframe(), ret)
     return ret

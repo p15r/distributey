@@ -4,6 +4,7 @@ import logging
 import sys
 from flask import has_request_context, session
 import config
+from splunk_handler import SplunkHandler
 
 
 log_level = config.get_config_by_keypath('LOG_LEVEL')
@@ -47,8 +48,6 @@ logger.setLevel(LOGLVL)
 logger.addHandler(__stream_handler)
 
 if splunk_enabled:
-    from splunk_handler import SplunkHandler
-
     __splunk = SplunkHandler(
         host=config.get_config_by_keypath('SPLUNK_HOST'),
         port=config.get_config_by_keypath('SPLUNK_PORT'),

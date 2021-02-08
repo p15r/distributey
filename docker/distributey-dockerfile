@@ -10,6 +10,9 @@ ENV PYTHONUNBUFFERED=1
 # Activate virtualenv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Disable rust build for py req "cryptography"
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
 RUN apk update && apk update && apk add curl
 
 # pyjwt[crypto] requires: python3-dev libffi-dev openssl-dev
@@ -17,6 +20,7 @@ RUN apk update && apk update && apk add curl
 RUN apk add --no-cache python3>=3.8 python3-dev libffi-dev openssl-dev py3-pip build-base
 
 RUN python3 -m venv /opt/venv
+RUN python3 -m pip install --upgrade pip
 COPY requirements.txt /root/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /root/requirements.txt
 

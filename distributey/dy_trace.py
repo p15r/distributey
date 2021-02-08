@@ -3,7 +3,7 @@
 import os
 import inspect
 from inspect import ArgInfo
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List
 from types import FrameType
 import logging
 
@@ -11,16 +11,17 @@ logger = logging.getLogger(__name__)
 CAMOUFLAGE_SIGN = '******'
 
 
-def __camouflage(func_args, effective_args):
+def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
     """
     Takes dict of a function's arguments and censors sensitive
     arguments by replacing their values with '******'.
     """
     arguments_and_values = dict()
+
     for arg in effective_args:
         if arg not in func_args.locals:
-            # The value of an argument might not exist if the variable has
-            # been explicitely deleted within the function.
+            # The value of an argument might not exist anymore if the variable
+            # has been explicitely deleted within the function (eg. "del var").
             arguments_and_values[arg] = '<MISSING>'
             continue
         if arg.startswith('priv_'):
@@ -28,9 +29,10 @@ def __camouflage(func_args, effective_args):
             continue
 
         if isinstance(func_args.locals[arg], dict):
-            # arg is a dict, let's check for keys marked as private
+            # arg is a dict, let's check for keys marked as private as well
             keys = func_args.locals[arg].keys()
             arguments_and_values[arg] = dict()
+
             for key in keys:
                 if key.startswith('priv_'):
                     arguments_and_values[arg][key] = CAMOUFLAGE_SIGN

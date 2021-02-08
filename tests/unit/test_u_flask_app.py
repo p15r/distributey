@@ -212,7 +212,7 @@ class TestUnitFlaskApp():
         assert response.json == \
             {'headers':
              {'Authorization':
-              ['JWT token must match "header.payload.signature"']}}
+              ['JWT token does not match format "header.payload.signature".']}}
 
         # test with invalid jwt: required field missing in protected header
         # get jwt protected header
@@ -242,7 +242,7 @@ class TestUnitFlaskApp():
         assert response.json == \
             {'headers':
              {'Authorization':
-              ['JWT header must include "typ", "alg" and "kid".']}}
+              ['JWT protected header must include "typ", "alg" and "kid".']}}
 
         # test with invalid jwt: missing sub claim
 

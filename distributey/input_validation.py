@@ -25,7 +25,6 @@ def __handle_request_parsing_error(
         error_status_code: int = None,
         error_headers: Mapping[str, str] = None) -> None:
     """Handles errors, or raised exceptions respectively."""
-
     trace_enter(inspect.currentframe())
 
     input_data = validation_error.__dict__['data']
@@ -48,6 +47,7 @@ def __request_id_validator(request_id: str) -> None:
     # Replay attack detection specs of Salesforce's cache-only service:
     # https://developer.salesforce.com/docs/atlas.en-us.securityImplGuide.meta/
     #   securityImplGuide/security_pe_byok_cache_replay.htm
+    trace_enter(inspect.currentframe())
 
     request_id_length = 32
 
@@ -61,7 +61,7 @@ def __request_id_validator(request_id: str) -> None:
     result = re.match('^[a-zA-Z0-9]+$', request_id)
 
     if not result:
-        err_msg = ('requestId/nonce must consist only of alphanummeric chars.')
+        err_msg = ('requestId/nonce must consist of alphanummeric chars only.')
         logger.error(err_msg)
         trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
@@ -100,8 +100,8 @@ def __user_agent_validator(user_agent: str) -> None:
 
 def __x_real_ip_validator(x_real_ip: str) -> None:
     """Validates the X-Real-IP header."""
-
     trace_enter(inspect.currentframe())
+
     if not 6 < len(x_real_ip) < 16:
         err_msg = 'X-Real-Ip must be between 7 and 15 characters long.'
         logger.error(err_msg)
@@ -128,8 +128,8 @@ def __x_real_ip_validator(x_real_ip: str) -> None:
 
 def __jwt_validator(priv_jwt: str) -> None:
     """Validates the Authorization header and the JWT."""
-
     trace_enter(inspect.currentframe())
+
     parts = priv_jwt.split()
 
     if parts[0].lower() != 'bearer':
@@ -155,7 +155,7 @@ def __jwt_validator(priv_jwt: str) -> None:
     token_parts = token.split('.')
 
     if len(token_parts) != 3:
-        err_msg = 'JWT token must match "header.payload.signature"'
+        err_msg = 'JWT token does not match format "header.payload.signature".'
         logger.error(err_msg)
         trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
@@ -173,21 +173,21 @@ def __jwt_validator(priv_jwt: str) -> None:
         header = base64.b64decode(b64_header).decode()
         header = json.loads(header)
     except Exception as exc:
-        err_msg = f'JWT header must be base64 encoded json: {exc}.'
+        err_msg = f'JWT protected header must be base64 encoded json: {exc}.'
         logger.error(err_msg)
         trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422) from exc
 
     if ('typ' not in header) or ('alg' not in header) or ('kid' not in header):
-        err_msg = 'JWT header must include "typ", "alg" and "kid".'
+        err_msg = 'JWT protected header must include "typ", "alg" and "kid".'
         logger.error(err_msg)
         trace_exit(inspect.currentframe(), err_msg)
         raise ValidationError(err_msg, status_code=422)
 
-    # fix padding required by python base64 module: + '==='
-    payload = payload + '==='
-
     try:
+        # fix padding required by python base64 module: + '==='
+        payload = payload + '==='
+
         payload = base64.b64decode(payload).decode()
         payload = json.loads(payload)
     except Exception as exc:
@@ -204,7 +204,6 @@ def __jwt_validator(priv_jwt: str) -> None:
         raise ValidationError(err_msg, status_code=422)
 
 
-# input validation
 _VIEW_ARGS = {
     'tenant': fields.Str(
         required=True,

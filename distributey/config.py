@@ -12,7 +12,7 @@ from dy_trace import trace_enter, trace_exit
 # dy_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
-CFG_PATH = '/opt/distributey/config/config.json'
+__CFG_PATH = '/opt/distributey/config/config.json'
 
 
 # TODO: be more specific than "Any" type hint.
@@ -21,7 +21,7 @@ def get_config_by_keypath(keypath: str) -> Any:
 
     trace_enter(inspect.currentframe())
     try:
-        with open(CFG_PATH, 'r') as file:
+        with open(__CFG_PATH, 'r') as file:
             cfg = json.load(file)
     except FileNotFoundError as exc:
         ret = False

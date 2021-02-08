@@ -92,7 +92,7 @@ class TestUnitFlaskApp():
 
         # test w/o available config file
         monkeypatch.setattr(
-            config, 'CFG_PATH', 'config/NONEXISTINGCONFIG.json')
+            config, '__CFG_PATH', 'config/NONEXISTINGCONFIG.json')
 
         response = http_client.get(endpoint, headers=headers)
         assert response.status_code == 500

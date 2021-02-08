@@ -70,7 +70,7 @@ def http_client():
 
 @pytest.fixture(autouse=True)
 def setup_module(monkeypatch, tmpdir):
-    monkeypatch.setattr(config, 'CFG_PATH', 'config/config.json')
+    monkeypatch.setattr(config, '__CFG_PATH', 'config/config.json')
 
     # TODO: distributey keeps track of nonces in a db located in /tmp.
     # For testing, a dedicated location for temporary files is provided

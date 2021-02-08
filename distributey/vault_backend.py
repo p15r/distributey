@@ -1,10 +1,10 @@
 """
-Retrieves dynamic secret from Vault.
+Retrieves dynamic secrets from Vault.
 
 Security Note:
 
-HVAC, and requests respectively, store the exported secret in memory as
-(immutable) string and can therefore not be safely erased from memory:
+HVAC, and requests respectively, store exported secrets in-memory as
+immutable strings and can therefore not be safely erased from memory:
 - https://github.com/hvac/hvac/blob/b9343973307eaba1bbe28ebf9e1911520ffcbf0a/
       hvac/api/secrets_engines/transit.py#L274
 - https://github.com/hvac/hvac/blob/b9343973307eaba1bbe28ebf9e1911520ffcbf0a/
@@ -28,7 +28,6 @@ def __get_vault_client() -> hvac.Client:
         'VAULT_MTLS_CLIENT_CERT')
     vault_mtls_client_key = config.get_config_by_keypath(
         'VAULT_MTLS_CLIENT_KEY')
-
     vault_url = config.get_config_by_keypath('VAULT_URL')
 
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
@@ -64,19 +63,24 @@ def __authenticate_vault_client(client: hvac.Client, tenant: str,
             jwt=priv_jwt_token,
             path=vault_auth_jwt_path)
     except Exception as exc:
+        ret = None
         logger.error('Failed to authenticate against Vault: %s', exc)
-        trace_exit(inspect.currentframe(), None)
-        return None
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     logger.debug('Vault login response: %s', response)
 
     try:
         vault_token = response['auth']['client_token']
     except KeyError as exc:
-        logger.error('Failed to access Vault token from auth response: %s',
+        ret = None
+
+        logger.error('Failed to access Vault token from auth response: %s. '
+                     'This is most likely a permission issue.',
                      exc)
-        trace_exit(inspect.currentframe(), None)
-        return None
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug('Vault client token returned: %s', vault_token)
@@ -84,10 +88,13 @@ def __authenticate_vault_client(client: hvac.Client, tenant: str,
     client.token = vault_token
 
     if not client.is_authenticated():
+        ret = None
+
         logger.error('Attempt to authenticate against Vault failed. '
                      'Review configuration (config/config.json).')
-        trace_exit(inspect.currentframe(), None)
-        return None
+
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     trace_exit(inspect.currentframe(), client)
     return client
@@ -96,7 +103,6 @@ def __authenticate_vault_client(client: hvac.Client, tenant: str,
 def get_dynamic_secret(tenant: str, key: str, key_version: str,
                        priv_jwt_token: str) -> bytearray:
     """Fetches dynamic secret from Vault."""
-
     trace_enter(inspect.currentframe())
 
     vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
@@ -137,8 +143,10 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
             key_version = response['data']['latest_version']
         except KeyError as exc:
             ret = bytearray()
+
             logger.error('Failed to access key version in Vault key read '
                          'response: %s', exc)
+
             trace_exit(inspect.currentframe(), ret)
             return ret
 
@@ -156,14 +164,19 @@ def get_dynamic_secret(tenant: str, key: str, key_version: str,
     try:
         bytearray_b64_key = bytearray(
             response['data']['keys'][str(key_version)].encode())
-    except KeyError as exc:
+
+        bytearray_key = bytearray(base64.b64decode(bytearray_b64_key))
+    except Exception as exc:
         ret = bytearray()
-        logger.error('Failed to access key in Vault export response: %s',
+
+        logger.error('Failed to get key material from response: %s',
                      exc)
+
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    bytearray_key = bytearray(base64.b64decode(bytearray_b64_key))
+    # delete sensitive data from memory
     del bytearray_b64_key[:]
+
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
     return bytearray_key

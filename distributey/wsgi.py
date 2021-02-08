@@ -1,3 +1,5 @@
+"""Runs Flask app."""
+
 from app import app
 
 

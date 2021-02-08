@@ -67,16 +67,30 @@ if not __initialize_cache_db():
     sys.exit(1)
 
 
-def __http_error(status_code: int, msg: str) -> None:
+def __http_error(status_code: int, msg: str, headers: dict = None) -> None:
     trace_enter(inspect.currentframe())
 
     ret = Response(
         response=msg,
         status=status_code,
-        content_type='application/json; charset=utf-8')
+        content_type='application/json; charset=utf-8',
+        headers=headers)
 
     trace_exit(inspect.currentframe(), ret)
     abort(ret)
+
+
+def __http_20x(status_code: int, msg: str, headers: dict = None) -> Response:
+    trace_enter(inspect.currentframe())
+
+    ret = Response(
+        response=msg,
+        status=status_code,
+        content_type='application/json; charset=utf-8',
+        headers=headers)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def _get_kid_from_jwt(priv_token: str) -> str:
@@ -380,14 +394,10 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
 
         # WWW-Authenticate header according to:
         #   https://tools.ietf.org/html/rfc6750#section-3
-        ret_resp = Response(
-            response=http_err_msg,
-            status=401,
-            content_type='application/json; charset=utf-8',
-            headers={'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'})
+        header = {'WWW-Authenticate': f'Bearer scope="{jwt_audience}"'}
 
-        trace_exit(inspect.currentframe(), ret_resp)
-        return ret_resp
+        trace_exit(inspect.currentframe(), http_err_msg)
+        __http_error(401, http_err_msg, header)
 
     if app.config.get('TESTING', ''):
         # FIXME: For some reason, query_args is empty if Flask is executed
@@ -430,10 +440,7 @@ def get_wrapped_key(view_args: Dict, query_args: Dict, header_args: Dict,
                     json.loads(json_jwe_token)['kid'])
     app.logger.debug('JWE token: %s', json_jwe_token)
 
-    ret_resp = Response(
-        response=json_jwe_token,
-        status=200,
-        content_type='application/json; charset=utf-8')
+    ret_resp = __http_20x(200, json_jwe_token)
 
     trace_exit(inspect.currentframe(), ret_resp)
     return ret_resp
@@ -451,15 +458,11 @@ def get_healthz():
     trace_enter(inspect.currentframe())
 
     if not config.get_config_by_keypath('LOG_LEVEL'):
-        response = '{"status": "fail", "output": "Config not loaded"}'
-        status = 500
-    else:
-        response = '{"status": "pass"}'
-        status = 200
+        ret = '{"status": "fail", "output": "Config not loaded"}'
+        trace_exit(inspect.currentframe(), ret)
+        __http_error(500, ret)
 
-    ret = Response(
-        response=response, status=status,
-        content_type='application/health+json; charset=utf-8')
+    ret = __http_20x(200, '{"status": "pass"}')
 
     trace_exit(inspect.currentframe(), ret)
     return ret

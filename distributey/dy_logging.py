@@ -11,9 +11,9 @@ log_level = config.get_config_by_keypath('LOG_LEVEL')
 splunk_enabled = config.get_config_by_keypath('SPLUNK_ENABLED')
 
 if log_level == 'debug':
-    LOGLVL = logging.DEBUG
+    __LOGLVL = logging.DEBUG
 else:
-    LOGLVL = logging.INFO
+    __LOGLVL = logging.INFO
 
 
 class __RequestFormatter(logging.Formatter):
@@ -44,7 +44,7 @@ __stream_handler.setFormatter(
         'ua: %(user_agent)s - %(message)s'))
 
 logger = logging.getLogger()
-logger.setLevel(LOGLVL)
+logger.setLevel(__LOGLVL)
 logger.addHandler(__stream_handler)
 
 if splunk_enabled:

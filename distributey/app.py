@@ -59,7 +59,11 @@ def __initialize_cache_db() -> bool:
 
 
 if not __initialize_cache_db():
+    trace_enter(inspect.currentframe())
+
     app.logger.error('Failed to initialize cache db. Aborting...')
+
+    trace_exit(inspect.currentframe(), None)
     sys.exit(1)
 
 

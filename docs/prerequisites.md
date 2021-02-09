@@ -40,4 +40,4 @@ This section is optional. If security is especially important, enable following 
 - Enable docker live restore: https://docs.docker.com/config/containers/live-restore/
 - Ensure that authorization for Docker client commands is enabled (authorization plugin required)
 - Once audited, enable Docker content trust: https://docs.docker.com/engine/security/trust/
-- By default, the default docker seccomp profile ([link](https://github.com/moby/moby/blob/master/profiles/seccomp/default.json)) is loaded. A more restrictive seccomp profile could be created.
+- The default Docker seccomp profile ([link](https://github.com/moby/moby/blob/master/profiles/seccomp/default.json)) is loaded. A more restrictive seccomp profile can be created.

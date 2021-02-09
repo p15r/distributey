@@ -8,7 +8,7 @@
 Why does `distributey` (say "duh·stri·byoot·i") exist? Particularly in enterprises, key material is often generated on-premises for compliance & security reasons. Traditionally, HSMs are often used to create and store said key material. However, using the cloud becomes increasingly popular which inevitably leads to the challenge that the on-prem key material must be made available to cloud encryption services. Typically, one of two approaches is used to distribute key material in such a situation: bring your own key (BYOK) or hold your own key (HYOK). BYOK means that the key service actively pushes key material to a key consumer ("the cloud") while HYOK means that the key consumer can request key material from the key service. The rationale behind HYOK is that the key consumer holds the key material in a temporary cache that is flushed frequently. If a specific key is required, it is requested on-demand. Many popular key services do not support HYOK out of the box, which is where `distributey` comes into play. It can be installed "in front of" a key service, serving HYOK requests from key consumers by communicating with the key service on their behalf.
 
 Currently supported integrations:
-- Key services: Hashicorp Vault
+- Key service: Hashicorp Vault
 - Key consumer: Salesforce [Cache-only Key Service](https://help.salesforce.com/articleView?id=security_pe_byok_cache.htm&type=5)
 
 ## Installation

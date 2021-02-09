@@ -2,6 +2,7 @@
 
 # TODO: cache config in-mem instead of loading file every time.
 
+import os
 import json
 import logging
 from typing import Any
@@ -12,7 +13,42 @@ from dy_trace import trace_enter, trace_exit
 # dy_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
-__CFG_PATH = '/opt/distributey/config/config.json'
+
+def _is_cfg_path_valid(path: str) -> bool:
+    """Validates format of config path supplied via env var."""
+    trace_enter(inspect.currentframe())
+
+    if not isinstance(path, str):
+        logger.error('Config path is not a string.')
+        ret = False
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    max_path_length = 150
+    if len(path) > max_path_length:
+        logger.error('Config path is longer than %i chars.', max_path_length)
+        ret = False
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    parts = path.split('/')
+
+    path_end = 'config.json'
+    if parts[-1] != path_end:
+        logger.error('Config path does not end with "%s"', path_end)
+        ret = False
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    ret = True
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+__CFG_PATH = os.environ['DY_CFG_PATH']
+
+if not _is_cfg_path_valid(__CFG_PATH):
+    raise ValueError('Input validation for config path failed. Aborting...')
 
 
 # TODO: be more specific than "Any" type hint.

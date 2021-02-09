@@ -25,7 +25,6 @@ Currently supported integrations:
 - Read more [here](docs/architecture.md)
 
 ## Further reading
-- Salesforce key  example: https://github.com/forcedotcom/CacheOnlyKey
 - JWE libs (not used in `distributey`, but good references)
   - `pyjwkest`: https://github.com/rohe/pyjwkest (no longer maintained)
   - `Authlib`: https://docs.authlib.org/en/stable/jose/jwe.html

@@ -2,6 +2,7 @@
 
 # TODO: cache config in-mem instead of loading file every time.
 
+import os
 import json
 import logging
 from typing import Any
@@ -12,7 +13,8 @@ from dy_trace import trace_enter, trace_exit
 # dy_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
-__CFG_PATH = '/opt/distributey/config/config.json'
+# TODO: input validation
+__CFG_PATH = os.environ['DY_CFG_PATH']
 
 
 # TODO: be more specific than "Any" type hint.

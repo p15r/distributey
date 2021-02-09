@@ -39,6 +39,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 
+ENV DY_CFG_PATH=/opt/distributey/config/config.json
+
 RUN apk update && apk update && apk add curl
 
 # Activate virtualenv

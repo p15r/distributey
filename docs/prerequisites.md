@@ -16,7 +16,7 @@
 
 ## Security
 
-This section is optional. If security is especially important, enable following protection measures on infrastructure level:
+This section is optional. If security is especially important, enable following protection measures for Docker:
 - Ensure network traffic is restricted between containers.
 - Enable user namespace support
   - https://docs.docker.com/engine/security/userns-remap/

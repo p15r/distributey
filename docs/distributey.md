@@ -12,7 +12,7 @@ The following actions are required to configure & run `distributey`:
 - `distributey` is now operational
 - For audit purposes, container logs are written to the host's logging infrastructure. However, `docker-compose.yaml` can be edited to forward logs to a remote logging service as well ([link](https://docs.docker.com/config/containers/logging/syslog/)).
 
-To stop or uninstall `distributey`:
+To stop or remove `distributey`:
 - Stop service: `./03-stop.sh`
 - Remove service: `./04-remove.sh`
 

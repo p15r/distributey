@@ -1,4 +1,4 @@
-Set config files permissions# Usage
+# Usage
 ## Get JWE token
 - Issue an HTTP request to retrieve a `jwe` token:
   ```bash

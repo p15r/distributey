@@ -14,7 +14,7 @@ Currently, `distributey` only supports Salesforce as a key consumer.
 
 ## Step-by-step
 ### Key Consumer Authentication
-Configure Salesforce to authenticate against `distributey` using a JWT-based token.
+Configure Salesforce to authenticate its HYOK requests to `distributey` using JWT-based tokens.
 
 1. Create pub/priv keypair for `JWT` token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
    - Create key in Salesforce (**Recommended**)

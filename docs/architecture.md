@@ -6,5 +6,5 @@ The following workflow is executed when a key consumer requests key material:
 3. `distributey` creates a `JWE`.
 4. The key consumer unwraps the key material in the `JWE` and imports it.
 
-The workflow is similar for every key consumer. However, this example illustrates the process for Salesforce.
+The workflow is similar for every key consumer. However, this example illustrates the process of Salesforce's cache-only key service:
 ![workflow](cache-only-key-service-v3.png)

@@ -1,5 +1,5 @@
 # Usage
-## Get JWE token
+## Request JWE token
 - Issue an HTTP request to retrieve a `jwe` token:
   ```bash
   $ curl -k --no-progress-meter https://vault/v1/salesforce/jwe-kid-salesforce-serviceX?requestId=$(openssl rand -hex 16) -H "Authorization: $(python3 dev/create_jwt.py)" | jq

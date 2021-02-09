@@ -7,8 +7,7 @@
 - TLS certificate & key for reverse proxy.
   - `Nginx` is used as reverse proxy. Create a certificate that matches your desired URL (`CN`) of `distributey`. Most key consumers, such as Salesforce, require a valid certificate, signed by an official root CA. Store the certificate as `distributey/docker/certs/nginx.crt` and the key as `distributey/docker/certs/nginx.key`.
   - For development
-    - Run `./00-build.sh -d` to build the container & generate self-signed certificates.
-    - Use the following command to generate self-signed certificates (for development purposes only): `openssl req -x509 -nodes -days 999 -newkey rsa:2048 -keyout distributey/docker/certs/nginx.key -out distributey/docker/certs/nginx.crt -subj "/C=No/ST=NoState/L=NoLocation/O=NoOrg/OU=NoOrgUnit/CN=NoCommonName"`
+    - Run `./00-build.sh -d` to build the container & generate self-signed certificates, or generate them yourself: `openssl req -x509 -nodes -days 999 -newkey rsa:2048 -keyout distributey/docker/certs/nginx.key -out distributey/docker/certs/nginx.crt -subj "/C=No/ST=NoState/L=NoLocation/O=NoOrg/OU=NoOrgUnit/CN=NoCommonName"`
 - `distributey` comes with some helper tools that can be found under `dev/`. To use them, the python dependencies must be satisfied
   - create a virtual environment: `python3 -m venv /path/to/venv`
   - activate virtual environment: `source /path/to/venv/bin/activate`

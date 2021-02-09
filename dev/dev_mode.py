@@ -11,7 +11,3 @@ from app import app # noqa
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-    # TODO:
-    # set app.config['TESTING'] = True
-    # (or only required for running unittests?)

@@ -6,6 +6,24 @@ services:
     container_name: nginx
     hostname: nginx
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    privileged: false
+    read_only: true
+    security_opt:
+      - apparmor:docker-default
+      - seccomp:unconfined
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - AUDIT_WRITE
     command: ["sh", "-c", "sleep 10 && nginx -g 'daemon off;'"]
     logging:
       driver: syslog
@@ -20,13 +38,39 @@ services:
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
       - distributey
-      - vault-agent # Comment for production.
+    healthcheck:
+      test: curl -f -k https://localhost:8443/v1/healthz || exit 1
+      interval: 30s
+      timeout: 3s
+      retries: 2
+    tmpfs:
+      - /tmp:mode=770,size=20k
 
   distributey:
     image: pat/distributey:0.1
     container_name: distributey
     hostname: distributey
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    privileged: false
+    read_only: true
+    security_opt:
+      - apparmor:docker-default
+      - seccomp:./docker/seccomp-docker-default.json
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - AUDIT_WRITE
+      - DAC_OVERRIDE
+      - CHOWN
     build:
       context: .
       dockerfile: docker/distributey-dockerfile
@@ -36,6 +80,15 @@ services:
         tag: "dy-{{.Name}}"
     depends_on: # Comment for production.
       - vault   # Comment for production.
+    healthcheck:
+      test: curl -f http://localhost:5000/v1/healthz || exit 1
+      interval: 30s
+      timeout: 3s
+      retries: 2
+    tmpfs:
+      - /tmp:mode=770,size=20k
+    volumes:
+      - ./config:/opt/distributey/config/:ro
 
 ###################################
 # Comment until EOF for production.
@@ -53,9 +106,14 @@ services:
       - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 # server config
       - VAULT_ADDR=http://127.0.0.1:8200      # cli config
       - VAULT_TOKEN=root                      # cli config
+    volumes:
+      - ./docker/vault:/vault/config
     ports:
       - target: 8200
         published: 8200
+        protocol: tcp
+      - target: 8300
+        published: 8300
         protocol: tcp
 
   terraform:
@@ -73,29 +131,5 @@ services:
       - CHECKPOINT_DISABLE=true               # prevent tf from checking for updates
     volumes:
       - ./docker/terraform:/terraform
-      - approle:/approle          # write approle secret id to volume shared with vault-agent
     depends_on:
       - vault
-
-  vault-agent:
-    image: vault:1.5.3
-    container_name: vault-agent
-    hostname: vault-agent
-    build:
-      context: docker/vault-agent/
-      dockerfile: Dockerfile
-    cap_add:
-      - IPC_LOCK
-    command: ["agent", "-config", "/vault/config/vault-agent.hcl"]
-    volumes:
-      - ./docker/vault-agent/config:/vault/config
-      - approle:/approle
-    depends_on:
-    - terraform
-
-volumes:
-  # Shared mount between vault-agent and terraform
-  # to provision AppRole authentication credentials.
-  # Terraform on Docker is the Trusted Orchestrator:
-  # https://learn.hashicorp.com/tutorials/vault/secure-introduction
-  approle:

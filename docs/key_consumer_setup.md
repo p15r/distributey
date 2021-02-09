@@ -1,6 +1,8 @@
 # Key Consumer Setup
 Currently, `distributey` only supports Salesforce as a key consumer.
 
+⚠️ Security Note: The on-boarding process of the key consumer is crucial. It creates the trust between `distributey` and the key consumer. Every subsequent transaction (e.g. key material distribution) is based on this initial trust. Therefore, it is vital that the key consumer properly protects the private key of the key consumer certificate. Further, the key consumer public certificate's actual origin should be cryptographically verified before adding it to `distributey`. Installing a public key from an undisclosed/improperly identified origin could lead to compromise of key material.
+
 ## Specs
 - Salesforce HYOK format specification: [[docs](https://help.salesforce.com/articleView?id=security_pe_byok_cache_create.htm&type=5)]
 
@@ -12,7 +14,7 @@ Currently, `distributey` only supports Salesforce as a key consumer.
 
 ## Step-by-step
 ### Key Consumer Authentication
-Configure Salesforce to authenticate against `distributey` using a JWT-based token.
+Configure Salesforce to authenticate its HYOK requests to `distributey` using JWT-based tokens.
 
 1. Create pub/priv keypair for `JWT` token signing. It is recommended to create a dedicated keypair for every Salesforce service. Two options exist:
    - Create key in Salesforce (**Recommended**)

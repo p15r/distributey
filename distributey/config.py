@@ -1,116 +1,158 @@
-# TODO: Rewrite using (json) query approach: https://github.com/mwilliamson/jq.py
+"""Reads JSON config file."""
+
+# TODO: cache config in-mem instead of loading file every time.
 
 import json
 import logging
 from typing import Any
+import inspect
+import glom
+from dy_trace import trace_enter, trace_exit
 
-# distributey_logging.logger() would cause import loop
+# dy_logging.logger() would cause import loop
 logger = logging.getLogger(__name__)
 
-CFG_PATH = '/opt/distributey/config/config.json'
+__CFG_PATH = '/opt/distributey/config/config.json'
 
 
 # TODO: be more specific than "Any" type hint.
-def get_config_by_key(key: str) -> Any:
-    try:
-        with open(CFG_PATH, 'r') as f:
-            cfg = json.load(f)
-    except FileNotFoundError as e:
-        logger.error('Cannot load config file. Has "02-load-config.sh" already been executed?')
-        logger.error(e)
-        return False
+def get_config_by_keypath(keypath: str) -> Any:
+    """Returns config by key path."""
 
-    # Let this raise KeyError if key does not exist
-    return cfg[key]
+    trace_enter(inspect.currentframe())
+    try:
+        with open(__CFG_PATH, 'r') as file:
+            cfg = json.load(file)
+    except FileNotFoundError as exc:
+        ret = False
+        logger.error('Config not found. Has "02-fix-cfg-perms.sh" '
+                     'been executed? %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+    except Exception as exc:
+        ret = False
+        logger.error('Failed to load config: %s', exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    try:
+        cfg_value = glom.glom(cfg, keypath)
+    except glom.core.PathAccessError as exc:
+        ret = False
+        logger.error('Failed to load key "%s" from config: %s', keypath, exc)
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    trace_exit(inspect.currentframe(), cfg_value)
+    return cfg_value
 
 
 def get_key_consumer_cert_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['backend'][jwe_kid]['key_consumer_cert']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" '
-            f'in path TENANT_CFG.{tenant}.backend.{jwe_kid}.key_consumer_cert')
-        return ''
+    """Returns key consumer certificate."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.backend.{jwe_kid}.key_consumer_cert'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_path_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['backend'][jwe_kid]['vault_path']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.backend.{jwe_kid}.vault_path')
-        return ''
+    """Returns Vault path."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.backend.{jwe_kid}.vault_path'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_algorithm_by_tenant(tenant: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['auth']['jwt_algorithm']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_algorithm')
-        return ''
+    """Returns JWT algorithm."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_algorithm'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_audience_by_tenant(tenant: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['auth']['jwt_audience']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_audience')
-        return ''
+    """Returns JWT audience claim."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_audience'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_subject_by_tenant(tenant: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['auth']['jwt_subject']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_subject')
-        return ''
+    """Returns JWT sub claim."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_subject'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_jwt_issuer_by_tenant(tenant: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['auth']['jwt_issuer']
-    except KeyError as e:
-        logger.error(
-                f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.auth.jwt_issuer')
-        return ''
+    """Returns JWT issuer claim."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_issuer'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
-def get_jwt_validation_cert_by_tenant_and_kid(tenant: str, jwt_kid: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['auth']['jwt_validation_certs'][jwt_kid]
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path '
-            f'TENANT_CFG.{tenant}.auth.jwt_validation_certs.{jwt_kid}')
-        return ''
+def get_jwt_validation_cert_by_tenant_and_kid(
+        tenant: str, jwt_kid: str) -> str:
+    """Returns JWT validation certificate."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_validation_certs.{jwt_kid}'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_default_role_by_tenant(tenant: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['vault_default_role']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.vault_default_role')
-        return ''
+    """Returns Vault default role."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.vault_default_role'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['vault_auth_jwt_path']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.vault_auth_jwt_path')
-        return ''
+    """Returns Vault authorization JWT path."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.vault_auth_jwt_path'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_vault_transit_path_by_tenant(tenant: str) -> str:
-    try:
-        return get_config_by_key('TENANT_CFG')[tenant]['vault_transit_path']
-    except KeyError as e:
-        logger.error(
-            f'Cannot access config (config/config.json) "{e}" in path TENANT_CFG.{tenant}.vault_transit_path')
-        return ''
+    """Returns Vault transit path."""
+    trace_enter(inspect.currentframe())
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.vault_transit_path'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret

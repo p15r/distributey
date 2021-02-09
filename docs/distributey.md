@@ -5,14 +5,14 @@ If you install `distributey` in an environment that has no internet access, foll
 The following actions are required to configure & run `distributey`:
 - If you plan to run `distributey` in production, edit `docker-compose.yaml` and comment configuration as documented with in-line comments. The default configuration runs `distributey` in development mode, which deploys Hashicorp Vault using its in-memory database.
 - Build service: run `./00-build.sh` (`./00-build.sh -d` if you are developer)
-- Run service: `./01-start.sh`
 - Configure service: `config/config.json`
    - Check example config: `dev/example-config.json`
-- (Re-) load config: `./02-load-config.sh`
+- Set config files permissions: `./02-fix-cfg-perms.sh`
+- Run service: `./01-start.sh`
 - `distributey` is now operational
 - For audit purposes, container logs are written to the host's logging infrastructure. However, `docker-compose.yaml` can be edited to forward logs to a remote logging service as well ([link](https://docs.docker.com/config/containers/logging/syslog/)).
 
-To stop or uninstall `distributey`:
+To stop or remove `distributey`:
 - Stop service: `./03-stop.sh`
 - Remove service: `./04-remove.sh`
 

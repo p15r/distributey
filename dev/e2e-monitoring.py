@@ -58,11 +58,11 @@ import datetime
 import inspect
 import logging
 import json
-import jwt
-import requests
 import sys
 import types
 from typing import Any, Optional
+import jwt
+import requests
 
 from Cryptodome.Cipher import PKCS1_OAEP, AES
 from Cryptodome.Hash import SHA1

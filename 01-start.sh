@@ -32,9 +32,11 @@ else
 fi
 
 echo '🛫 Starting containers...'
-cd docker
-docker-compose up -d
-cd ..
+docker-compose --compatibility up -d
+
+echo '🛡️  Setting pid limit (no longer supported via docker-compose v3 format)...'
+docker container update --pids-limit=20 distributey
+docker container update --pids-limit=20 nginx
 
 echo 'ℹ️  Container processes:'
 docker ps -a

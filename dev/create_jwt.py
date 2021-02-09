@@ -1,6 +1,10 @@
+"""
+Creates a JWT token.
+"""
+
 import sys
-import jwt
 import datetime
+import jwt
 
 with open('dev/tmp/jwt.key') as f:
     private_key = f.read()
@@ -26,7 +30,8 @@ payload = {
     'iss': iss,
     'aud': 'urn:distributey',
     'iat': datetime.datetime.utcnow(),
-    'exp': datetime.datetime.utcnow() + datetime.timedelta(seconds=expiration_time)
+    'exp': datetime.datetime.utcnow() + datetime.timedelta(
+        seconds=expiration_time)
 }
 
 token = jwt.encode(

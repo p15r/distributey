@@ -3,8 +3,9 @@ import vault_backend
 
 class TestVaultBackend():
     def test_get_dynamic_secret(self, get_jwt):
-        key = vault_backend.get_dynamic_secret('salesforce', 'salesforce', 'latest', get_jwt)
-        assert isinstance(key, bytes)
+        key = vault_backend.get_dynamic_secret('salesforce', 'salesforce',
+                                               'latest', get_jwt)
+        assert isinstance(key, bytearray)
 
         if len(key) > 0:
             assert True, 'Successfully retrieved dek from Vault.'

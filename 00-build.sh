@@ -20,7 +20,7 @@ done
 
 
 echo "⛏️  Building container images..."
-docker-compose build
+docker-compose --compatibility build
 
 if [ "$dev_mode" = true ] ; then
     ./dev/dev_setup.sh

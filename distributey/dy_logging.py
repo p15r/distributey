@@ -1,24 +1,33 @@
+"""Provides formatted logging handler for distributey."""
+
 import logging
 import sys
-from flask import request, has_request_context
+from flask import has_request_context, session
 import config
+from splunk_handler import SplunkHandler
 
 
-log_level = config.get_config_by_key('LOG_LEVEL')
+log_level = config.get_config_by_keypath('LOG_LEVEL')
+splunk_enabled = config.get_config_by_keypath('SPLUNK_ENABLED')
 
 if log_level == 'debug':
-    loglvl = logging.DEBUG
+    __LOGLVL = logging.DEBUG
 else:
-    loglvl = logging.INFO
+    __LOGLVL = logging.INFO
 
 
 class __RequestFormatter(logging.Formatter):
     def format(self, record):
         if has_request_context():
-            # request.path.split() is safe, because URL is validated by Flask on entry.
-            record.tenant = request.path.split('/')[2]
-            record.x_real_ip = request.headers['X-Real-Ip']
-            record.user_agent = request.user_agent
+            try:
+                record.user_agent = session['header_args']['user-agent']
+                record.tenant = session['view_args']['tenant']
+                record.x_real_ip = session['header_args']['x-real-ip']
+            except KeyError:
+                # input validation failed
+                record.user_agent = 'N/A'
+                record.tenant = 'N/A'
+                record.x_real_ip = 'N/A'
         else:
             record.tenant = 'system'
             record.x_real_ip = 'localhost'
@@ -31,8 +40,20 @@ __stream_handler = logging.StreamHandler(stream=sys.stderr)
 __stream_handler.setFormatter(
     __RequestFormatter(
         '[%(asctime)s] distributey {%(pathname)s:%(lineno)d} %(levelname)s - '
-        'tenant: %(tenant)s, origin: %(x_real_ip)s, ua: %(user_agent)s - %(message)s'))
+        'tenant: %(tenant)s, origin: %(x_real_ip)s, '
+        'ua: %(user_agent)s - %(message)s'))
 
 logger = logging.getLogger()
-logger.setLevel(loglvl)
+logger.setLevel(__LOGLVL)
 logger.addHandler(__stream_handler)
+
+if splunk_enabled:
+    __splunk = SplunkHandler(
+        host=config.get_config_by_keypath('SPLUNK_HOST'),
+        port=config.get_config_by_keypath('SPLUNK_PORT'),
+        protocol=config.get_config_by_keypath('SPLUNK_PROTOCOL'),
+        verify=config.get_config_by_keypath('SPLUNK_VERIFY'),
+        token=config.get_config_by_keypath('SPLUNK_TOKEN'),
+        index=config.get_config_by_keypath('SPLUNK_INDEX'))
+
+    logger.addHandler(__splunk)

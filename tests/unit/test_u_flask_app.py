@@ -1,10 +1,16 @@
+"""Test module for Flask app."""
+
 import json
 import base64
+import datetime
 import app
+import werkzeug
+import jwt
 import config
 
 
 class TestUnitFlaskApp():
+    """Test class for Flask app."""
     def test__get_kid_from_jwt(self, get_jwt):
         assert app._get_kid_from_jwt(get_jwt) == 'jwt_kid_salesforce_serviceX'
 
@@ -16,27 +22,28 @@ class TestUnitFlaskApp():
         kid = app._get_kid_from_jwt(bad_jwt)
 
         if kid:
-            assert False, f'Should fail if protected header is malformed. Got kid "{kid}".'
+            assert False, ('Should fail if protected header is malformed.'
+                           f'Got kid "{kid}".')
         else:
             assert True, 'Failed as expected on malformed protected header.'
 
     def test__get_jwt_from_header(self, get_headers, get_jwt):
-        assert app._get_jwt_from_header(get_headers) == get_jwt
+        assert app._get_jwt_from_header('Bearer ' + get_jwt) == get_jwt
 
         # test w/ headers w/o bearer token
-        headers = get_headers
-        headers['Authorization'] = 'no bearer here'
-        assert app._get_jwt_from_header(headers) == ''
+        assert app._get_jwt_from_header(get_jwt) == ''
 
-    def test__decode_jwt(self, monkeypatch, get_jwt, get_jwt_signing_pubkey):
-        assert app._decode_jwt('salesforce', get_jwt, get_jwt_signing_pubkey) == \
+    def test__decode_jwt(self, get_jwt, get_jwt_signing_pubkey):
+        assert app._decode_jwt(
+            'salesforce', get_jwt, get_jwt_signing_pubkey) == \
             ('cacheonlyservice', 'salesforce')
 
         # test w/ non existing tenant
         try:
-            app._decode_jwt('nonexistingtenant', get_jwt, get_jwt_signing_pubkey)
+            app._decode_jwt(
+                'nonexistingtenant', get_jwt, get_jwt_signing_pubkey)
             assert False, 'Should fail if non existing tenant is given.'
-        except ValueError:
+        except werkzeug.exceptions.HTTPException:
             assert True, 'Failed as expected on non existing tenant.'
 
         # test w/ expired token
@@ -53,22 +60,174 @@ class TestUnitFlaskApp():
                      '0CGCKTtCP8psga3M6W9WUgaCpgYnDS-YQdEnD3VG575J-1Cmd'
                      'cShKc-Fo2F-FWpybcP98hMaFg2sQfgjgFNg')
 
-        assert app._decode_jwt('salesforce', old_token, get_jwt_signing_pubkey) == ('', '')
+        assert app._decode_jwt(
+            'salesforce', old_token, get_jwt_signing_pubkey) == ('', '')
 
-    def test__authenticate(self, monkeypatch, get_headers, get_jwt):
-        assert app._authenticate('salesforce', get_headers) == get_jwt
+    def test___authenticate(self, get_headers, get_jwt):
+        assert app._authenticate('salesforce', 'Bearer ' + get_jwt) == get_jwt
 
-        # test jwt w/o kid
+    def test_get_wrapped_key_no_auth(
+            self, http_client, get_jwt, get_endpoint_url,
+            get_endpoint_url_nonexistingtenant):
+        # this integration test runs here, because it has no runtime deps
+        headers = {'X_REAL_IP': '127.0.0.1'}
+
+        # access API w/o Authorization header
+        response = http_client.get(get_endpoint_url, headers=headers)
+        assert response.status_code == 422
+
+        # access API w/ wrong tenant
+        response = http_client.get(
+            get_endpoint_url_nonexistingtenant, headers=headers)
+        assert response.status_code == 422
+
+        # further coverage requires Vault, thus covered w/ integration tests
+
+    def test_get_healthz(self, monkeypatch, http_client):
+        endpoint = '/v1/healthz'
+        headers = {'X_REAL_IP': '127.0.0.1'}
+
+        response = http_client.get(endpoint, headers=headers)
+        assert response.status_code == 200
+
+        # test w/o available config file
+        monkeypatch.setattr(
+            config, '__CFG_PATH', 'config/NONEXISTINGCONFIG.json')
+
+        response = http_client.get(endpoint, headers=headers)
+        assert response.status_code == 500
+
+    def test___user_agent_validator(
+            self, http_client, get_endpoint_url, get_headers):
+        """
+        Issues invalid HTTP request and validates response.
+        This test also covers "__handle_request_parsing_error()".
+        """
+
+        # set invalid UA to trigger error
+        headers = get_headers
+        headers['User-Agent'] = 'NoValueAfterSlash/'
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'user-agent':
+              ['User agent pattern does not match "name/version"']}}
+        assert response.mimetype == 'application/json'
+        assert response.charset == 'utf-8'
+
+    def test___x_real_ip_validator(
+            self, http_client, get_endpoint_url, get_headers):
+        headers = get_headers
+        headers['X-Real-Ip'] = '1'
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'X-Real-Ip':
+              ['X-Real-Ip must be between 7 and 15 characters long.']}}
+
+        headers['X-Real-Ip'] = '012345678'
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'X-Real-Ip':
+              ['X-Real-Ip format does not match: '
+               'digits.digits.digits.digits.']}}
+
+        headers['X-Real-Ip'] = '127.0.0.1111'
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'X-Real-Ip':
+              ['X-Real-Ip format does not match: x.x.x.x-xxx.xxx.xxx.xxx']}}
+
+    def test___jwt_validator(
+            self, http_client, get_endpoint_url, get_headers, get_jwt):
+        headers = get_headers
+        orig_headers = headers.copy()
+
+        # test with a valid jwt + auth header
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 200
+        assert response.json['kid'] == 'jwe-kid-salesforce-serviceX'
+        assert isinstance(response.json['jwe'], str)
+
+        # test with invalid auth header:
+        # remove "Bearer" string from auth header
+        headers['Authorization'] = headers['Authorization'].split(' ')[1]
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'Authorization':
+              ['Authorization header must start with "Bearer"']}}
+
+        # test with invalid auth header: remove jwt
+        headers['Authorization'] = 'Bearer '
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers': {'Authorization': ['Token not found']}}
+
+        # test with invalid auth header: auth header too long
+        headers = orig_headers.copy()
+        headers['Authorization'] = headers['Authorization'] + ' SOMETHING'
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'Authorization':
+              ['Authorization header must be "Bearer token".']}}
+
+        # test with invalid jwt: no signature
         # get jwt protected header
-        b64_jwt = get_headers['Authorization'].split(' ')[1]
+        headers = orig_headers.copy()
+        b64_jwt = headers['Authorization'].split(' ')[1]
+        modified_b64_jwt = b64_jwt.split('.')[0:1]  # pos 2 would be sign.
+
+        # add modified jwt to auth header
+        headers = orig_headers.copy()
+        headers['Authorization'] = 'Bearer ' + '.'.join(modified_b64_jwt)
+
+        response = http_client.get(get_endpoint_url, headers=headers)
+
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'Authorization':
+              ['JWT token does not match format "header.payload.signature".']}}
+
+        # test with invalid jwt: required field missing in protected header
+        # get jwt protected header
+        headers = orig_headers.copy()
+        b64_jwt = headers['Authorization'].split(' ')[1]
         b64_protected_header = b64_jwt.split('.')[0]
-        protected_header = json.loads(base64.urlsafe_b64decode(b64_protected_header))
+        protected_header = json.loads(
+            base64.urlsafe_b64decode(b64_protected_header))
 
         # remove kid from protected header
         del protected_header['kid']
 
         # add modified protected header to initial jwt
-        modified_b64_protected_header = base64.urlsafe_b64encode(json.dumps(protected_header).encode())
+        modified_b64_protected_header = base64.urlsafe_b64encode(
+            json.dumps(protected_header).encode())
         b64_jwt = b64_jwt.split('.')
         b64_jwt[0] = modified_b64_protected_header.decode()
         b64_jwt = '.'.join(b64_jwt)
@@ -77,36 +236,41 @@ class TestUnitFlaskApp():
         headers = get_headers
         headers['Authorization'] = 'Bearer ' + b64_jwt
 
-        if app._authenticate('salesforce', headers) == '':
-            assert True, 'Failed as expected w/ missing kid in JWT protected header.'
-        else:
-            assert False, 'Should fail if kid in missing in JWT protected header.'
+        response = http_client.get(get_endpoint_url, headers=headers)
 
-    def test_get_wrapped_key_no_auth(self, http_client, monkeypatch, get_jwt):
-        # this integration test runs here, because it has no runtime deps
-        endpoint = '/v1/salesforce/jwe-kid-salesforce-serviceX?resourceId=randomstring'
-        headers = {'X_REAL_IP': '127.0.0.1'}
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'Authorization':
+              ['JWT protected header must include "typ", "alg" and "kid".']}}
 
-        # access API w/o Authorization header
-        response = http_client.get(endpoint, headers=headers)
-        assert response.status_code == 401
+        # test with invalid jwt: missing sub claim
 
-        # access API w/ wrong tenant
-        endpoint_nonexisting_tenant = '/v1/nontexistingtenant/jwe-kid-salesforce-serviceX?resourceId=randomstring'
-        response = http_client.get(endpoint_nonexisting_tenant, headers=headers)
-        assert response.status_code == 401
+        expiration_time = 300
+        payload = {
+            # 'sub': sub,
+            'iss': 'unittest',
+            'aud': 'urn:distributey',
+            'iat': datetime.datetime.utcnow(),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(
+                seconds=expiration_time)
+        }
 
-        # further coverage requires Vault, thus covered w/ integration tests
+        with open('dev/tmp/jwt.key') as file:
+            private_key = file.read()
 
-    def test_get_healthz(self, http_client, monkeypatch):
-        endpoint = '/v1/healthz'
-        headers = {'X_REAL_IP': '127.0.0.1'}
+        token = jwt.encode(
+            payload, private_key, algorithm='RS256',
+            headers=dict(kid='unittest'))
+        token = token.decode('utf-8')
 
-        response = http_client.get(endpoint, headers=headers)
-        assert response.status_code == 200
+        headers = orig_headers.copy()
+        headers['Authorization'] = 'Bearer ' + token
 
-        # test w/o available config file
-        monkeypatch.setattr(config, 'CFG_PATH', 'config/NONEXISTINGCONFIG.json')
+        response = http_client.get(get_endpoint_url, headers=headers)
 
-        response = http_client.get(endpoint, headers=headers)
-        assert response.status_code == 500
+        assert response.status_code == 422
+        assert response.json == \
+            {'headers':
+             {'Authorization':
+              ['JWT payload must include "sub", "iss" & "aud" claim.']}}

@@ -3,6 +3,7 @@
 set -euf -o pipefail
 
 echo '🛬 Stopping distributey...'
-cd docker
-docker-compose stop
-cd ..
+docker-compose --compatibility stop
+
+echo '🔓 Resetting ownership of Vault config bind mount'
+sudo chown -R $USER: ./docker/vault

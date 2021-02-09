@@ -1,9 +1,12 @@
+"""Tests module jwe.py."""
+
 import base64
 import json
 import jwe
 
 
 class TestJwe():
+    """Tests module jwe.py."""
     def test__get_key_consumer_cert(self):
         key_consumer_cert = jwe._get_key_consumer_cert('salesforce', 'jwe-kid-salesforce-serviceX')
         assert isinstance(key_consumer_cert, str)
@@ -12,7 +15,8 @@ class TestJwe():
         else:
             assert False, 'Cannot detect certificate.'
 
-        assert jwe._get_key_consumer_cert('nonexistingtenant', 'jwe-kid-salesforce-serviceX') == ''
+        assert jwe._get_key_consumer_cert(
+            'nonexistingtenant', 'jwe-kid-salesforce-serviceX') == ''
 
     def test__encrypt_cek_with_key_consumer_key(self):
         b64_cek_ciphertext = jwe._encrypt_cek_with_key_consumer_key(
@@ -26,7 +30,8 @@ class TestJwe():
             assert False, e
 
         assert jwe._encrypt_cek_with_key_consumer_key(
-            'nonexistingtenant', 'jwe-kid-salesforce-serviceX', 'randrom-cek') == b''
+            'nonexistingtenant', 'jwe-kid-salesforce-serviceX',
+            'randrom-cek') == b''
 
     def test__encrypt_dek_with_cek(self, get_protected_headers):
         b64_dek_ciphertext, b64_tag = jwe._encrypt_dek_with_cek(

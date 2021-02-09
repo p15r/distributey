@@ -4,9 +4,16 @@ docker/terraform/terraform-plugins/
 docker/terraform/terraform.tfstate
 docker/terraform/.terraform/
 docker/terraform/tf-cache/
+config/myCA.crt
 config/auth/
 config/backend/
+config/mtls_auth.crt
+config/mtls_auth.key
 dev/tmp/
 dev/key_consumer_cert.crt
 .coverage
 coverage.xml
+docker/terraform/.terraform.lock.hcl
+docker/vault/myCA.crt
+docker/vault/vault.key
+docker/vault/vault_combined.pem

@@ -23,7 +23,7 @@
 If Splunk logging has been enabled in `config/config.json`, use the following Splunk search to discover `distributey` logs: `index=<INDEXNAME> host="distributey"`.
 
 ## Debugging
-- Create a dummy JWT: `python3 dev/create_jwt.py` (for developers)
+- Create a dummy JWT: `python3 dev/create_jwt.py`
 - Check if container `distributey`, `nginx` (and `vault` if in developer mode) are running: `docker ps -a`
 - Check logs:
   - `distributey`: `journalctl -f -t dy-distributey`

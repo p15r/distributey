@@ -46,7 +46,7 @@ def _initialize_cache_db() -> bool:
     try:
         # create empty file
         with open(__CACHE_DB, 'a') as file:
-            file.close()
+            file.write('')
     except Exception as exc:
         ret = False
         app.logger.error('Failed to create cache db: %s', exc)

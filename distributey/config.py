@@ -45,7 +45,7 @@ def _is_cfg_path_valid(path: str) -> bool:
     return ret
 
 
-__CFG_PATH = os.environ['DY_CFG_PATH']
+__CFG_PATH = os.getenv('DY_CFG_PATH', '')
 
 if not _is_cfg_path_valid(__CFG_PATH):
     raise ValueError('Input validation for config path failed. Aborting...')

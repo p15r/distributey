@@ -1,7 +1,5 @@
 """Test module for Flask app."""
 
-import os
-import pytest
 import app
 import werkzeug
 import config
@@ -155,24 +153,3 @@ class TestUnitFlaskApp():
         ret = app._initialize_cache_db()
 
         assert ret is False
-
-    def test_if_not_initialized(self):
-        cache_db = '/tmp/cache.db'
-
-        if os.path.exists(cache_db):
-            os.remove(cache_db)
-
-        # should be file, make it a dir
-        os.mkdir(cache_db)
-
-        # use pytest-flask
-        # create_app() --> requires Flask application factory
-
-        with pytest.raises(SystemExit) as exc:
-            # run flask
-            pass
-
-        assert exc.type == SystemExit
-        assert exc.value.code == 1
-
-        os.rmdir(cache_db)

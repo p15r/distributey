@@ -4,7 +4,6 @@ from pathlib import Path
 import json
 import os
 from os import getpid
-import sys
 from typing import Tuple, Dict
 import inspect
 from webargs.flaskparser import use_args
@@ -64,7 +63,8 @@ if not _initialize_cache_db():
     app.logger.error('Failed to initialize cache db. Aborting...')
 
     trace_exit(inspect.currentframe(), None)
-    sys.exit(1)
+    # sys.exit(1)
+    raise SystemExit(1)
 
 
 def _http_error(status_code: int, msg: str, headers: dict = None) -> None:

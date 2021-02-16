@@ -1,5 +1,7 @@
 """Test module for Flask app."""
 
+import pytest
+import jwt
 import app
 import werkzeug
 import config
@@ -24,12 +26,17 @@ class TestUnitFlaskApp():
             assert True, 'Failed as expected on malformed protected header.'
 
     def test__get_jwt_from_header(self, get_headers, get_jwt):
+        # test w/ valid token
         assert app._get_jwt_from_header('Bearer ' + get_jwt) == get_jwt
+
+        # test w/ invalid header format
+        assert app._get_jwt_from_header('Bearer Bearer' + get_jwt) == ''
+        assert app._get_jwt_from_header('Bearer ') == ''
 
         # test w/ headers w/o bearer token
         assert app._get_jwt_from_header(get_jwt) == ''
 
-    def test__decode_jwt(self, get_jwt, get_jwt_signing_pubkey):
+    def test__decode_jwt(self, monkeypatch, get_jwt, get_jwt_signing_pubkey):
         assert app._decode_jwt(
             'salesforce', get_jwt, get_jwt_signing_pubkey) == \
             ('cacheonlyservice', 'salesforce')
@@ -42,8 +49,8 @@ class TestUnitFlaskApp():
         except werkzeug.exceptions.HTTPException:
             assert True, 'Failed as expected on non existing tenant.'
 
-        # test w/ expired token
-        old_token = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZC'
+        # test w/ invalid signature
+        invalid_s = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZC'
                      'I6Imp3dF9raWRfc2FsZXNmb3JjZV9zZXJ2aWNlWCJ9.eyJzdW'
                      'IiOiJjYWNoZW9ubHlzZXJ2aWNlIiwiaXNzIjoic2FsZXNmb3J'
                      'jZSIsImF1ZCI6InVybjpoeW9rLXdyYXBwZXIiLCJpYXQiOjE2'
@@ -57,7 +64,103 @@ class TestUnitFlaskApp():
                      'cShKc-Fo2F-FWpybcP98hMaFg2sQfgjgFNg')
 
         assert app._decode_jwt(
-            'salesforce', old_token, get_jwt_signing_pubkey) == ('', '')
+            'salesforce', invalid_s, get_jwt_signing_pubkey) == ('', '')
+
+        # test w/ expired token
+        expired_sig_token = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZ'
+                             'CI6Imp3dF9raWRfc2FsZXNmb3JjZV9zZXJ2aWNlWC'
+                             'J9.eyJzdWIiOiJjYWNoZW9ubHlzZXJ2aWNlIiwiaX'
+                             'NzIjoic2FsZXNmb3JjZSIsImF1ZCI6InVybjpkaXN'
+                             '0cmlidXRleVhYWFhYWCIsImlhdCI6MTYxMzQ1Nzg0'
+                             'NiwiZXhwIjoxNjEzNDU4MTQ2fQ.kZ-1h7KaP75CXJ'
+                             'ZIslyg2sPmRge2eH0U2xtgHbkpm7SijYnpA7Y2DLq'
+                             '5K2wupXj-E9nSXddixJu3KCiGeGw7P_CdESrjSalH'
+                             'LLnAdqJ9v_swEydEu00cxTyV063bh008zegzm06Ub'
+                             'eSk8Dwc7n8De8bgFev97L2B16JG89UrSR7tUJMgfc'
+                             '5DAYjjw6W_GW_8YevzmkrjhAFYOpXsK5VESBZ9E77'
+                             'iGS2HzKJ0jw6m0bw3QGvwH9RKYSARVqm-gXt8trvW'
+                             'ZVnlVcZXuRu2tqQIKWpP2vxvn_wnMoG-FUw0PBCdC'
+                             '5GBaz1laNMNLEB2_piP-uxO69lhXWoQnoFR-NhhSi'
+                             'Gv8FG_ozt7ddAWREM_dMbpTe-zBohosYd3r3c_Sna'
+                             'KXO61zOdXTBDm3l0Ie86JRX9_xM1vVnvrsckpA5ly'
+                             'kzMHHOK-gKBX7jDwVRdnGCUXkJZc5KbaYIoXoQIen'
+                             'ObS65eSCV4Nq698fbx7Bz3BWVK4fSRw0zO0HMYTNx'
+                             'kdretWtUU84AHzMIODRkLX608XgiFiAxLvqNOcOTF'
+                             'vWomnlgqQQgge5qF1JhrQYjGZ4HU_8O8rLxeRyOpa'
+                             '2zCIGbGakZ7iHWavTFARmWyTnoImrxN2INSdiGGqj'
+                             'AupunU64ZOdmkgQZL8eSlY4RHBsS9jf07R1Li2BFb'
+                             'u3dF0Bv6FiPF4')
+
+        assert app._decode_jwt('salesforce', expired_sig_token,
+                               get_jwt_signing_pubkey) == ('', '')
+
+        # test w/ missing exp claim
+        invalid_aud_token = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZ'
+                             'CI6Imp3dF9raWRfc2FsZXNmb3JjZV9zZXJ2aWNlWC'
+                             'J9.eyJzdWIiOiJjYWNoZW9ubHlzZXJ2aWNlIiwiaX'
+                             'NzIjoic2FsZXNmb3JjZSIsImF1ZCI6InVybjpkaXN'
+                             '0cmlidXRleVhYWFhYWCIsImlhdCI6MTYxMzQ1ODcw'
+                             'Mn0.UpXtLj214gEnipiNBMF-X0M5vPCPSzxIO8HmM'
+                             '3UkRGICPNkMKO5W0CstowrgalzjEoj-tX_s3YiFCo'
+                             'mJpH4-NBw2WcpcCBmSoSCyURWlfW8Rn0VrYZyMDk5'
+                             'AVx_v6hbRHB2hsxeGoj51DxOGAdyt6V-0HnsJq5q8'
+                             'yx_AP2Ppd8apr5oWIpNTP1VP8TraJrBF-octZBjnE'
+                             'FSeS2b2zJgYxczc4rstfaPsBSXHOpf12SqGUBoXFM'
+                             'nhopVbuW0xd_7N2twPm5uNhyy1I5ftniv95zEckKy'
+                             '0mU3k7UM2V2cO4pIEFEMSzwpPJPhHQhBgcisrbjia'
+                             'VAci4aqJQB5TjojeaawVBScH0Pao2ifAX8BO-SeYW'
+                             'Sc9RuyyDRSwped2ERQOSWv8BuKOuoV5p3aKWi1Ect'
+                             'MVoJyTiavIQcKBpP4cxvoYJZSzTLvZCDqn0btjX2p'
+                             'AnkHKhAvS5iqy9NmjXk935ZlyuENLYEyihXh8qLJ8'
+                             'QokgTXQH62JWyWshuY1DhkH7EWE_0wIlq923L_MFG'
+                             'axWaL5zG-qCpo3yhEPuMD_VE_zqATV0mK-6suBeez'
+                             'CBMQx5m0CCV4AW9vX8P31jy240GhsJ3YSLElbGD6d'
+                             '8OA4KqIyBTsd6u3EaDpld8lygFBDJN-bCEw8p0Rp9'
+                             'YChTjntesdf88mAjGZDGIrHD9uIFNQY===')
+
+        with pytest.raises(jwt.exceptions.MissingRequiredClaimError):
+            app._decode_jwt('salesforce', invalid_aud_token,
+                            get_jwt_signing_pubkey)
+
+        # test w/ invalid audience claim
+        invalid_aud_claim = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZ'
+                             'CI6Imp3dF9raWRfc2FsZXNmb3JjZV9zZXJ2aWNlWC'
+                             'J9.eyJzdWIiOiJjYWNoZW9ubHlzZXJ2aWNlIiwiaX'
+                             'NzIjoic2FsZXNmb3JjZSIsImF1ZCI6InVybjpkaXN'
+                             '0cmlidXRleVhYWFhYWCIsImlhdCI6MTYxMzQ1OTEx'
+                             'MywiZXhwIjozMzExNzkyMzExM30.rSuK2OjZWeyqy'
+                             'RXmp3-8qxSqZkPa2Ebwe67Dye1EWvIxi6Tsdfbd8x'
+                             'INKZSrwCteSYFbJTtMrtVZl7vkG-wdvkXJ-iQBffk'
+                             'btWwWsYcJHbZwb-YioBIlsrNjAv-TAFqhd6Vrom__'
+                             'jCmWX6M5vSkS97sDZQgtpnti0ZVQpzTwMZHz27L9P'
+                             'euMJvjHP5V0Oau_CJrXymhO17g34Bhs_IWDglW8nP'
+                             '0xpV_myz_gywiQZoT4zzSvFcn4o2iozm7xRZynkrZ'
+                             'V0CgD_guUcdMcfhNI1wuRxS-u2YODY5hYxefTYfHj'
+                             'pxZ7zqXL_1D_8SbnlCY0j7mdag6mH_KeVmmZGhzXo'
+                             'Q0LzXDnEdC2sisCDN18oSzgEnXwHWV7WKp4RIjQEZ'
+                             'CLwfhQS8I0308HnKmBwy22ghHrQMS4E3wD0NXaZDD'
+                             'ZxYukAJecK4ScEsrHBq-XLPWw5WFOIUn6uhhEWM0n'
+                             'ud5SHnun-zrVFainAqqL6pNFbGzWrbpOoQWGZz-2x'
+                             'vB9V-zawYlgJunNQLM-Onr6ZwSYhbOwPwZMrpTojr'
+                             'ldjR3vPX0zlIvdD3OtFn-CjkFq9servXcciYuCN8e'
+                             'uIrROnkw-3LO5pCzLF0TowRgRXF7sn3p4UAHknezh'
+                             'wTSjj7Rt6Upg-uF-VwQ88ByM2L2GC112DNvzi2MEX'
+                             'WlF4seaHjHDFM4')
+
+        assert app._decode_jwt('salesforce', invalid_aud_claim,
+                               get_jwt_signing_pubkey) == ('', '')
+
+        # test invalid jwt algo cfg
+        def mock_config_get_jwt_algorithm_by_tenant(*args):
+            return ''
+
+        monkeypatch.setattr(config, 'get_jwt_algorithm_by_tenant',
+                            mock_config_get_jwt_algorithm_by_tenant)
+
+        # should return http 500
+        with pytest.raises(werkzeug.exceptions.HTTPException):
+            app._decode_jwt(
+                'salesforce', get_jwt, get_jwt_signing_pubkey)
 
     def test___authenticate(self, get_headers, get_jwt):
         assert app._authenticate('salesforce', 'Bearer ' + get_jwt) == get_jwt

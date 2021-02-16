@@ -129,6 +129,12 @@ def _get_jwt_from_header(priv_token: str) -> str:
         trace_exit(inspect.currentframe(), ret)
         return ret
 
+    if len(parts[1].strip()) == 0:
+        ret = ''
+        app.logger.error('Found "Bearer" string in auth header, but no JWT.')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
     ret = parts[1].strip()
 
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)

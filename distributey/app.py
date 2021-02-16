@@ -28,7 +28,7 @@ __API_VERSIONING_PATH = 'v1/'
 __PATH_PREFIX = __BASE_PATH + __API_VERSIONING_PATH
 
 # DB to temporarily store nonces
-__CACHE_DB = '/tmp/cache.db'
+__CACHE_DB = '/tmp/cache.db'    # NOSONAR
 __CACHE_DB_NR_ENTRIES = 100
 
 

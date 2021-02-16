@@ -3,7 +3,6 @@
 import os
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR, S_IRUSR
 import pytest
-import jwt
 import app
 import vault_backend
 import werkzeug
@@ -96,34 +95,6 @@ class TestUnitFlaskApp():
 
         assert app._decode_jwt('salesforce', expired_sig_token,
                                get_jwt_signing_pubkey) == ('', '')
-
-        # test w/ missing exp claim
-        invalid_aud_token = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZ'
-                             'CI6Imp3dF9raWRfc2FsZXNmb3JjZV9zZXJ2aWNlWC'
-                             'J9.eyJzdWIiOiJjYWNoZW9ubHlzZXJ2aWNlIiwiaX'
-                             'NzIjoic2FsZXNmb3JjZSIsImF1ZCI6InVybjpkaXN'
-                             '0cmlidXRleVhYWFhYWCIsImlhdCI6MTYxMzQ1ODcw'
-                             'Mn0.UpXtLj214gEnipiNBMF-X0M5vPCPSzxIO8HmM'
-                             '3UkRGICPNkMKO5W0CstowrgalzjEoj-tX_s3YiFCo'
-                             'mJpH4-NBw2WcpcCBmSoSCyURWlfW8Rn0VrYZyMDk5'
-                             'AVx_v6hbRHB2hsxeGoj51DxOGAdyt6V-0HnsJq5q8'
-                             'yx_AP2Ppd8apr5oWIpNTP1VP8TraJrBF-octZBjnE'
-                             'FSeS2b2zJgYxczc4rstfaPsBSXHOpf12SqGUBoXFM'
-                             'nhopVbuW0xd_7N2twPm5uNhyy1I5ftniv95zEckKy'
-                             '0mU3k7UM2V2cO4pIEFEMSzwpPJPhHQhBgcisrbjia'
-                             'VAci4aqJQB5TjojeaawVBScH0Pao2ifAX8BO-SeYW'
-                             'Sc9RuyyDRSwped2ERQOSWv8BuKOuoV5p3aKWi1Ect'
-                             'MVoJyTiavIQcKBpP4cxvoYJZSzTLvZCDqn0btjX2p'
-                             'AnkHKhAvS5iqy9NmjXk935ZlyuENLYEyihXh8qLJ8'
-                             'QokgTXQH62JWyWshuY1DhkH7EWE_0wIlq923L_MFG'
-                             'axWaL5zG-qCpo3yhEPuMD_VE_zqATV0mK-6suBeez'
-                             'CBMQx5m0CCV4AW9vX8P31jy240GhsJ3YSLElbGD6d'
-                             '8OA4KqIyBTsd6u3EaDpld8lygFBDJN-bCEw8p0Rp9'
-                             'YChTjntesdf88mAjGZDGIrHD9uIFNQY===')
-
-        with pytest.raises(jwt.exceptions.MissingRequiredClaimError):
-            app._decode_jwt('salesforce', invalid_aud_token,
-                            get_jwt_signing_pubkey)
 
         # test w/ invalid audience claim
         invalid_aud_claim = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZ'

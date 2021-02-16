@@ -1,7 +1,7 @@
 """Test module for Flask app."""
 
 import os
-from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
+from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR, S_IRUSR
 import pytest
 import jwt
 import app
@@ -164,8 +164,45 @@ class TestUnitFlaskApp():
             app._decode_jwt(
                 'salesforce', get_jwt, get_jwt_signing_pubkey)
 
-    def test___authenticate(self, get_headers, get_jwt):
+    def test__authenticate(self, monkeypatch, get_headers, get_jwt):
+        # test w/ valid request
         assert app._authenticate('salesforce', 'Bearer ' + get_jwt) == get_jwt
+
+        # test w/ missing JWT
+        assert app._authenticate('salesforce', 'Bearer') == ''
+
+        # test if missing JWT kid
+        def mock(*args):
+            return False
+
+        monkeypatch.setattr(app, '_get_kid_from_jwt', mock)
+
+        assert app._authenticate('salesforce', 'Bearer ' + get_jwt) == ''
+
+    def test__authenticate_2(self, monkeypatch, get_headers, get_jwt):
+        def mock(*args):
+            return False
+
+        # test if missing validation cert
+        monkeypatch.setattr(config,
+                            'get_jwt_validation_cert_by_tenant_and_kid',
+                            mock)
+
+        with pytest.raises(werkzeug.exceptions.HTTPException):
+            app._authenticate('salesforce', 'Bearer ' + get_jwt)
+
+    def test__authenticate_3(self, monkeypatch, get_headers, get_jwt):
+        # test w/ invalid cert path
+        validation_cert = config.get_jwt_validation_cert_by_tenant_and_kid(
+                'salesforce', 'jwt_kid_salesforce_serviceX')
+
+        os.chmod(validation_cert, S_IROTH)     # remove read perms
+
+        with pytest.raises(werkzeug.exceptions.HTTPException):
+            app._authenticate('salesforce', 'Bearer ' + get_jwt)
+
+        # TODO: restore read perms
+        os.chmod(validation_cert, S_IRUSR | S_IRGRP)
 
     def test_get_wrapped_key_no_auth(
             self, http_client, get_jwt, get_endpoint_url,

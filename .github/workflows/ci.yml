@@ -32,6 +32,11 @@ jobs:
           ./dev/dev_setup.sh
           ./run_tests.sh -u
 
+      - name: Upload coverage report to codecov
+        run: |
+          cd $GITHUB_WORKSPACE
+          bash <(curl -s https://codecov.io/bash)
+
       - name: Conduct Sonar Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:

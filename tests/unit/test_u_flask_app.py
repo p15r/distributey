@@ -5,6 +5,7 @@ from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR, S_IRUSR
 import pytest
 import jwt
 import app
+import vault_backend
 import werkzeug
 import config
 
@@ -171,6 +172,33 @@ class TestUnitFlaskApp():
         # test w/ missing JWT
         assert app._authenticate('salesforce', 'Bearer') == ''
 
+        # test w/ invalid sub
+        invalid_sub_token = ('eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZC'
+                             'I6Imp3dF9raWRfc2FsZXNmb3JjZV9zZXJ2aWNlWCJ9'
+                             '.eyJzdWIiOiJXUk9OR1NVQiIsImlzcyI6InNhbGVzZ'
+                             'm9yY2UiLCJhdWQiOiJ1cm46ZGlzdHJpYnV0ZXkiLCJ'
+                             'pYXQiOjE2MTM0OTc0MDYsImV4cCI6MzMxMTc5NjE0M'
+                             'DZ9.sEhzJo7ffzZWLDmJ93_Yifm4498C3-k11v2J4o'
+                             'oDmpTFzT79sfo0A0uZ1dYYqBhj4V8KNCwKk6XKpBjU'
+                             'GSSM6cC2CpR395S0McOynUFcEZR3VboX4DSazAXRmx'
+                             '-I9HY3aLr9DnwxPkjrmwpF9VACUVhLOJy95j9nwK5C'
+                             '_rHcUOCnI8gY2V9moenPBaLFRfVB8I1hBHDSYOBIDY'
+                             'RPTXusf_QzlsvsG2mXY05PpF1q5rD3Ohu-axiCWYim'
+                             'yM9IQ6ctqC7UNLVLUs0A6h2hcv_3spRclmvAcMOBsq'
+                             'RsRIRSpgvEb36qM1cFrCxCsd3-uUpCtYTVNGF_00Zu'
+                             '5w0kcM3H2-8IK7m5zmNsRWN0zUQ6z_qSlk5_FfuSnI'
+                             'qXtBCtdWY3wWDp2K1oJn41Znam6qZERldhTxIfgDVt'
+                             'YglPnkXmH9wdtmqGSkiCYN2lAyMMVwe4H_DJiiMYrO'
+                             'xoxqtaW30bqlKTeMutLaI8c2xd5pnDywFc_WSMZn0q'
+                             'g7wFXn7sq2wG7gv4DIvwRu6caYYKKO0LME3tqqBwPn'
+                             'FEvg4tqBDsKyUT8R0MOYmKhIBaPj_TncKUuTqgRDdF'
+                             'PhRoU7kZo4MMLsJsyUc-wx2yOxHSLFdKr-Nh6qxme9'
+                             'RBtW-AUxYRnmVPqpP0NY3T_cqTe5QsCWirWoenDtkH'
+                             'K_j_eoXloo2S77Q')
+
+        assert app._authenticate('salesforce',
+                                 'Bearer ' + invalid_sub_token) == ''
+
         # test if missing JWT kid
         def mock(*args):
             return False
@@ -203,6 +231,23 @@ class TestUnitFlaskApp():
 
         # TODO: restore read perms
         os.chmod(validation_cert, S_IRUSR | S_IRGRP)
+
+        def mock(*args):
+            return False
+
+        monkeypatch.setattr(config, 'get_jwt_subject_by_tenant', mock)
+
+        with pytest.raises(werkzeug.exceptions.HTTPException):
+            app._authenticate('salesforce', 'Bearer ' + get_jwt)
+
+    def test__authenticate_4(self, monkeypatch, get_headers, get_jwt):
+        def mock(*args):
+            return False
+
+        monkeypatch.setattr(config, 'get_jwt_issuer_by_tenant', mock)
+
+        with pytest.raises(werkzeug.exceptions.HTTPException):
+            app._authenticate('salesforce', 'Bearer ' + get_jwt)
 
     def test_get_wrapped_key_no_auth(
             self, http_client, get_jwt, get_endpoint_url,
@@ -327,3 +372,39 @@ class TestUnitFlaskApp():
         # test w/ invalid path for cache db
         monkeypatch.setattr(app, '__CACHE_DB', '/nonexistingpath/')
         assert app._is_replay_attack(nonce) is True
+
+    def test__get_dek_from_vault(self, monkeypatch, get_jwt):
+        def mock_get_dynamic_secret(*args):
+            return b'fakedek'
+
+        monkeypatch.setattr(vault_backend, 'get_dynamic_secret',
+                            mock_get_dynamic_secret)
+
+        assert app._get_dek_from_vault(
+            get_jwt, 'salesforce', 'jwe-kid-salesforce-serviceX') == b'fakedek'
+
+        def mock_get_dynamic_secret_false(*args):
+            return b''
+
+        monkeypatch.setattr(vault_backend, 'get_dynamic_secret',
+                            mock_get_dynamic_secret_false)
+
+        assert app._get_dek_from_vault(
+            get_jwt, 'salesforce', 'jwe-kid-salesforce-serviceX') == b''
+
+    def test__get_dek_from_vault_2(self, monkeypatch, get_jwt):
+        def mock_get_dynamic_secret(*args):
+            return b'fakedek'
+
+        def mock_devmode(*args):
+            # if get_config_by_keypath() is called with key DEV_MODE,
+            # interfere and return true, if called with other keys, ignore
+            if args[0] == 'DEV_MODE':
+                return True
+
+        monkeypatch.setattr(vault_backend, 'get_dynamic_secret',
+                            mock_get_dynamic_secret)
+        monkeypatch.setattr(config, 'get_config_by_keypath', mock_devmode)
+
+        assert app._get_dek_from_vault(
+            get_jwt, 'salesforce', 'jwe-kid-salesforce-serviceX') == b'fakedek'

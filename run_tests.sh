@@ -19,7 +19,7 @@ function help {
 
 function runtests {
     export DY_CFG_PATH='config/config.json'
-    python3 -m coverage run -m pytest -s -vv $1
+    python3 -m coverage run -m pytest --capture=fd -s -vv $1
     python3 -m coverage report -m $(find distributey/ -name "*.py")
     python3 -m coverage xml $(find distributey/ -name "*.py")
 }

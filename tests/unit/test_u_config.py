@@ -1,3 +1,5 @@
+"""Tests config module."""
+
 import config
 
 
@@ -6,6 +8,19 @@ class TestUnitConfig():
         self.tenant = 'salesforce'
         self.jwe_kid = 'jwe-kid-salesforce-serviceX'
         self.jwt_kid = 'jwt_kid_salesforce_serviceX'
+
+    def test__is_cfg_path_valid(self):
+        # test w/ invalid path type
+        assert config._is_cfg_path_valid(1) is False
+
+        # test w/ too long path
+        long_path = ('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+                     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1')
+        assert config._is_cfg_path_valid(long_path) is False
+
+        # test w/ missing 'config.json' at the end
+        assert config._is_cfg_path_valid('/path/') is False
 
     def test_get_config_by_keypath(self):
         cfg = config.get_config_by_keypath('LOG_LEVEL')

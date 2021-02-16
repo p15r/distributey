@@ -4,7 +4,6 @@ from pathlib import Path
 import json
 import os
 from os import getpid
-import sys
 from typing import Tuple, Dict
 import inspect
 from webargs.flaskparser import use_args
@@ -30,6 +29,7 @@ __PATH_PREFIX = __BASE_PATH + __API_VERSIONING_PATH
 
 # DB to temporarily store nonces
 __CACHE_DB = '/tmp/cache.db'
+__CACHE_DB_NR_ENTRIES = 100
 
 
 def _initialize_cache_db() -> bool:
@@ -64,7 +64,8 @@ if not _initialize_cache_db():
     app.logger.error('Failed to initialize cache db. Aborting...')
 
     trace_exit(inspect.currentframe(), None)
-    sys.exit(1)
+    # sys.exit(1)
+    raise SystemExit(1)
 
 
 def _http_error(status_code: int, msg: str, headers: dict = None) -> None:
@@ -126,6 +127,12 @@ def _get_jwt_from_header(priv_token: str) -> str:
     if len(parts) != 2:
         ret = ''
         app.logger.error('Token format does not match "Bearer Token".')
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    if len(parts[1].strip()) == 0:
+        ret = ''
+        app.logger.error('Found "Bearer" string in auth header, but no JWT.')
         trace_exit(inspect.currentframe(), ret)
         return ret
 
@@ -203,8 +210,6 @@ def _is_replay_attack(nonce: str) -> bool:
     #       create a cache db per thread, instead of one global db.
     #       Risk is acceptable since application runs in dedicated container.
 
-    nr_of_cache_db_entries = 100
-
     try:
         with open(__CACHE_DB, 'r') as file:
             used_nonces = file.read()
@@ -222,7 +227,7 @@ def _is_replay_attack(nonce: str) -> bool:
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    if len(deny_list) >= nr_of_cache_db_entries:
+    if len(deny_list) >= __CACHE_DB_NR_ENTRIES:
         # remove first cache entry
         deny_list.pop(0)
 

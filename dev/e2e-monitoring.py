@@ -53,6 +53,7 @@ SETUP
    "2020-12-30 09:32:37,739 [INFO] OK. Retrieved secret matches."
 """
 
+import os
 import base64
 import datetime
 import inspect
@@ -81,7 +82,7 @@ CFG_JWT_EXPIRATION_TIME = 300     # ms
 CFG_JWT_KID = 'jwt_kid_monitoring'
 # </USER CONFIG>
 
-jwe_nonce = 'a-very-randrom-nonce'
+jwe_nonce = os.urandom(16).hex()
 dy_api_path = f'/v1/monitoring/{CFG_JWE_KID}'
 
 logFormatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')

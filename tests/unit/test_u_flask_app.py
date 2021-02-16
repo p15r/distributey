@@ -256,3 +256,21 @@ class TestUnitFlaskApp():
         ret = app._initialize_cache_db()
 
         assert ret is False
+
+    def test__is_replay_attack(self, monkeypatch):
+        nonce = '12345678901234567890123456789012'
+
+        # valid test
+        assert app._is_replay_attack(nonce) is False
+
+        # test replay attack
+        assert app._is_replay_attack(nonce) is True
+
+        # test w/ small cache
+        monkeypatch.setattr(app, '__CACHE_DB_NR_ENTRIES', 0)
+        assert app._is_replay_attack('12345678901234567890123456789011') is \
+            False
+
+        # test w/ invalid path for cache db
+        monkeypatch.setattr(app, '__CACHE_DB', '/nonexistingpath/')
+        assert app._is_replay_attack(nonce) is True

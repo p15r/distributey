@@ -1,5 +1,7 @@
 """Test module for Flask app."""
 
+import os
+from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 import pytest
 import jwt
 import app
@@ -257,7 +259,7 @@ class TestUnitFlaskApp():
 
         assert ret is False
 
-    def test__is_replay_attack(self, monkeypatch):
+    def test__is_replay_attack(self, monkeypatch, capfd):
         nonce = '12345678901234567890123456789012'
 
         # valid test
@@ -270,6 +272,20 @@ class TestUnitFlaskApp():
         monkeypatch.setattr(app, '__CACHE_DB_NR_ENTRIES', 0)
         assert app._is_replay_attack('12345678901234567890123456789011') is \
             False
+
+        # test w/ read-only file
+        tmp_cache_db = getattr(app, '__CACHE_DB')
+        os.chmod(tmp_cache_db, S_IREAD | S_IRGRP | S_IROTH)
+
+        app._is_replay_attack('12345678901234567890123456789013')
+        out, err = capfd.readouterr()
+
+        pos = err.find('Failed to write replay attack cache db: '
+                       '[Errno 13] Permission denied:')
+        assert pos > -1     # if pos > -1, the string has been found
+
+        # make file writable again
+        os.chmod(tmp_cache_db, S_IWUSR | S_IREAD)
 
         # test w/ invalid path for cache db
         monkeypatch.setattr(app, '__CACHE_DB', '/nonexistingpath/')

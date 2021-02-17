@@ -4,7 +4,6 @@ import base64
 import os
 from stat import S_IRGRP, S_IROTH, S_IRUSR
 import json
-from Cryptodome import Random
 import config
 import jwe
 
@@ -14,14 +13,75 @@ class TestJwe():
     def test_get_wrapped_key_as_jwe(self, monkeypatch, get_jwt):
         nonce = '12345678901234567890123456789012'
         jwe_kid = 'jwe-kid-salesforce-serviceX'
+
+        def mock_devmode(*args):
+            if args[0] == 'DEV_MODE':
+                return True
+            else:
+                cert = ('config/backend/distributey_allservices_key_consumer.'
+                        'crt')
+                return cert
+
+        monkeypatch.setattr(config, 'get_config_by_keypath', mock_devmode)
+
         jwe_token = jwe.get_wrapped_key_as_jwe(bytearray('randomdek'.encode()),
                                                'salesforce', jwe_kid, nonce)
         assert json.loads(jwe_token)['kid'] == jwe_kid
 
-        def mock_raise(*args):
-            raise Exception('testing')
+    def test_get_wrapped_key_as_jwe_2(self, monkeypatch, get_jwt):
+        nonce = '12345678901234567890123456789013'
+        jwe_kid = 'jwe-kid-salesforce-serviceX'
 
-        monkeypatch.setattr(Random, 'get_random_bytes', mock_raise)
+        def mock_false(*args):
+            return False
+
+        monkeypatch.setattr(jwe, '_encrypt_cek_with_key_consumer_key',
+                            mock_false)
+
+        jwe_token = jwe.get_wrapped_key_as_jwe(bytearray('randomdek'.encode()),
+                                               'salesforce', jwe_kid, nonce)
+
+        assert jwe_token == ''
+
+    def test_get_wrapped_key_as_jwe_3(self, monkeypatch, get_jwt):
+        nonce = '12345678901234567890123456789014'
+        jwe_kid = 'jwe-kid-salesforce-serviceX'
+
+        def mock_false(*args):
+            return False
+
+        monkeypatch.setattr(jwe, '_get_jwe_protected_header',
+                            mock_false)
+
+        jwe_token = jwe.get_wrapped_key_as_jwe(bytearray('randomdek'.encode()),
+                                               'salesforce', jwe_kid, nonce)
+
+        assert jwe_token == ''
+
+    def test_get_wrapped_key_as_jwe_4(self, monkeypatch, get_jwt):
+        nonce = '12345678901234567890123456789015'
+        jwe_kid = 'jwe-kid-salesforce-serviceX'
+
+        def mock_false(*args):
+            return ('', '')
+
+        monkeypatch.setattr(jwe, '_encrypt_dek_with_cek',
+                            mock_false)
+
+        jwe_token = jwe.get_wrapped_key_as_jwe(bytearray('randomdek'.encode()),
+                                               'salesforce', jwe_kid, nonce)
+
+        assert jwe_token == ''
+
+    def test_get_wrapped_key_as_jwe_5(self, monkeypatch, get_jwt):
+        nonce = '12345678901234567890123456789014'
+        jwe_kid = 'jwe-kid-salesforce-serviceX'
+
+        def mock_false(*args):
+            return ''
+
+        monkeypatch.setattr(jwe, '_create_jwe_token_json',
+                            mock_false)
 
         jwe_token = jwe.get_wrapped_key_as_jwe(bytearray('randomdek'.encode()),
                                                'salesforce', jwe_kid, nonce)

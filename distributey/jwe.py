@@ -97,9 +97,7 @@ def _encrypt_cek_with_key_consumer_key(tenant: str, jwe_kid: str,
         return ret
     except Exception as exc:
         ret = b''
-
         logger.error('Failed to encrypt cek: %s', exc)
-
         trace_exit(inspect.currentframe(), ret)
         return ret
 
@@ -238,7 +236,7 @@ def get_wrapped_key_as_jwe(priv_dek: bytearray, tenant: str, jwe_kid: str,
     if not (b64_cek_ciphertext :=
             _encrypt_cek_with_key_consumer_key(tenant, jwe_kid, cek)):
 
-        logger.error('Cannot encrypt content encryption key with key consumer'
+        logger.error('Cannot encrypt content encryption key with key consumer '
                      'key of %s/%s.', tenant, jwe_kid)
 
         trace_exit(inspect.currentframe(), '')

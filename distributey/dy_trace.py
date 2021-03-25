@@ -1,5 +1,6 @@
 """Provides functionality to trace execution flow of distributey."""
 
+import copy
 import os
 import inspect
 from inspect import ArgInfo
@@ -7,8 +8,35 @@ from typing import Optional, Any, Dict, List
 from types import FrameType
 import logging
 
+import glom
+
 logger = logging.getLogger(__name__)
 CAMOUFLAGE_SIGN = '******'
+
+
+def __get_dict_keypaths(
+        a_dict: dict, current_path: str = '', depth: int = 0
+) -> list:
+    """Generates list of keypaths of a dict."""
+    if depth > 15:
+        logger.critical(
+            'Camouflage aborted, dict exceeded depth "%i".' % depth
+        )
+        return []
+    depth += 1
+
+    keypaths: List[str] = list()
+    for key, value in a_dict.items():
+        if isinstance(value, dict):
+            new_keypaths = __get_dict_keypaths(
+                value,
+                current_path=current_path + f'{key}.',
+                depth=depth)
+            keypaths.extend(new_keypaths)
+        else:
+            keypaths.append(current_path + f'{key}')
+
+    return keypaths
 
 
 def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
@@ -30,14 +58,35 @@ def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
 
         if isinstance(func_args.locals[arg], dict):
             # arg is a dict, let's check for keys marked as private as well
-            keys = func_args.locals[arg].keys()
-            arguments_and_values[arg] = dict()
 
-            for key in keys:
-                if key.startswith('priv_'):
-                    arguments_and_values[arg][key] = CAMOUFLAGE_SIGN
-                else:
-                    arguments_and_values[arg][key] = func_args.locals[arg][key]
+            # copy all data (also sensitive), camouflage it afterwords
+            # this way, arguments_and_values[arg] has the correct
+            # data structure. Otherwise the data structure must be
+            # reproduced, which is unnecessary complex.
+            # Note: deepcopy() does not work on file descriptors
+            arguments_and_values[arg] = copy.deepcopy(func_args.locals[arg])
+
+            keypaths = __get_dict_keypaths(func_args.locals[arg])
+
+            # e.g. "path.to.priv_key.subkey"
+            for keypath in keypaths:
+                # e.g. "priv_key.subkey"
+                if (pos_start := keypath.find('priv_')) != -1:
+                    # e.g. "priv_key"
+                    pos_end = keypath[pos_start:].find('.')
+                    # e.g. "path.to.priv_key"
+                    if pos_end == -1:
+                        # if keypath is only "priv_key", then end_pos is end
+                        # of string
+                        pos_end = len(keypath)
+
+                    priv_keypath = keypath[:pos_start+pos_end]
+
+                    glom.assign(
+                        arguments_and_values[arg],
+                        priv_keypath,
+                        CAMOUFLAGE_SIGN
+                    )
             continue
 
         arguments_and_values[arg] = func_args.locals[arg]

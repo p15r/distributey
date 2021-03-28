@@ -12,15 +12,17 @@ import glom
 
 logger = logging.getLogger(__name__)
 CAMOUFLAGE_SIGN = '******'
+NESTED_DICT_DEPTH_MAX = 15
 
 
 def __get_dict_keypaths(
         a_dict: dict, current_path: str = '', depth: int = 0
 ) -> list:
-    """Generates list of keypaths of a dict."""
-    if depth > 15:
+    """Generates list of keypaths of a dict, max. dict nested depth is 15."""
+
+    if depth > NESTED_DICT_DEPTH_MAX:
         logger.critical(
-            'Camouflage aborted, dict exceeded depth "%i".' % depth
+            'Aborting, nested dict depth ("%i") exceeded.', depth - 1
         )
         return []
     depth += 1
@@ -34,16 +36,23 @@ def __get_dict_keypaths(
                 depth=depth)
             keypaths.extend(new_keypaths)
         else:
-            keypaths.append(current_path + f'{key}')
+            keypaths.append(current_path + key)
 
     return keypaths
 
 
 def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
     """
-    Takes dict of a function's arguments and censors sensitive
-    arguments by replacing their values with '******'.
+    Processes arguments of a function and censors sensitive argument values by
+    replacing them with CAMOUFLAGE_SIGN.
+    Sensitive arguments are recognized by their prefix "priv_" in the variable
+    name (e.g. "priv_arg1").
+
+    Note: all function arguments are deepcopy()-ed to avoid interference with
+    arguments that haven't been processed yet by the interpreter.
+    deepcopy() doesn't work if an argument is an open file descriptor.
     """
+
     arguments_and_values: Dict[Any, Any] = dict()
 
     for arg in effective_args:
@@ -53,40 +62,53 @@ def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
             arguments_and_values[arg] = '<MISSING>'
             continue
         if arg.startswith('priv_'):
+            # found sensitive argument, camouflage its value
             arguments_and_values[arg] = CAMOUFLAGE_SIGN
             continue
 
         if isinstance(func_args.locals[arg], dict):
             # arg is a dict, let's check for keys marked as private as well
 
-            # copy all data (also sensitive), camouflage it afterwords
-            # this way, arguments_and_values[arg] has the correct
-            # data structure. Otherwise the data structure must be
+            # Copy all arguments (also sensitive values) and camouflage them
+            # afterwards. If original data is not copied, its data
+            # structure, that might contains many nested dicts, must be
             # reproduced, which is unnecessary complex.
-            # Note: deepcopy() does not work on file descriptors
             arguments_and_values[arg] = copy.deepcopy(func_args.locals[arg])
 
             keypaths = __get_dict_keypaths(func_args.locals[arg])
 
-            # e.g. "path.to.priv_key.subkey"
+            # example keypath: "path.to.priv_key.subkey"
             for keypath in keypaths:
-                # e.g. "priv_key.subkey"
+                # "priv_key.subkey"
                 if (pos_start := keypath.find('priv_')) != -1:
-                    # e.g. "priv_key"
+                    # "priv_key"
                     pos_end = keypath[pos_start:].find('.')
-                    # e.g. "path.to.priv_key"
+
                     if pos_end == -1:
                         # if keypath is only "priv_key", then end_pos is end
                         # of string
                         pos_end = len(keypath)
 
+                    # "path.to.priv_key"
                     priv_keypath = keypath[:pos_start+pos_end]
 
-                    glom.assign(
-                        arguments_and_values[arg],
-                        priv_keypath,
-                        CAMOUFLAGE_SIGN
-                    )
+                    # camouflage sensitive value of argument
+                    try:
+                        glom.assign(
+                            arguments_and_values[arg],
+                            priv_keypath,
+                            CAMOUFLAGE_SIGN
+                        )
+                    except Exception as exc:
+                        logger.critical(
+                            'Failed to camouflage sensitive argument '
+                            'for path "%s".'
+                            'Exception: "%s"', keypath, exc
+                        )
+
+                        # Keep sensitive value in log instead of aborting
+                        # logging.
+                        continue
             continue
 
         arguments_and_values[arg] = func_args.locals[arg]
@@ -99,6 +121,7 @@ def __extract_arguments(func_args: ArgInfo) -> Dict:
     Extracts a function's arguments and returns dict with
     argument name as key and argument value as value.
     """
+
     effective_args = list()
 
     if func_args.args:

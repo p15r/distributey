@@ -41,6 +41,41 @@ def __get_dict_keypaths(
     return keypaths
 
 
+def __camouflage_nested_dict(args_and_values: dict, keypaths: List[str]):
+    # example keypath: "path.to.priv_key.subkey"
+    for keypath in keypaths:
+        # "priv_key.subkey"
+        if (pos_start := keypath.find('priv_')) != -1:
+            # "priv_key"
+            pos_end = keypath[pos_start:].find('.')
+
+            if pos_end == -1:
+                # if keypath is only "priv_key", then end_pos is end
+                # of string
+                pos_end = len(keypath)
+
+            # "path.to.priv_key"
+            priv_keypath = keypath[:pos_start+pos_end]
+
+            # camouflage sensitive value of argument
+            try:
+                glom.assign(
+                    args_and_values,
+                    priv_keypath,
+                    CAMOUFLAGE_SIGN
+                )
+            except Exception as exc:
+                logger.critical(
+                    'Failed to camouflage sensitive argument '
+                    'for path "%s".'
+                    'Exception: "%s"', keypath, exc
+                )
+
+                # Keep sensitive value in log instead of aborting
+                # logging.
+                continue
+
+
 def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
     """
     Processes arguments of a function and censors sensitive argument values by
@@ -77,38 +112,8 @@ def __camouflage(func_args: ArgInfo, effective_args: List) -> Dict:
 
             keypaths = __get_dict_keypaths(func_args.locals[arg])
 
-            # example keypath: "path.to.priv_key.subkey"
-            for keypath in keypaths:
-                # "priv_key.subkey"
-                if (pos_start := keypath.find('priv_')) != -1:
-                    # "priv_key"
-                    pos_end = keypath[pos_start:].find('.')
+            __camouflage_nested_dict(arguments_and_values[arg], keypaths)
 
-                    if pos_end == -1:
-                        # if keypath is only "priv_key", then end_pos is end
-                        # of string
-                        pos_end = len(keypath)
-
-                    # "path.to.priv_key"
-                    priv_keypath = keypath[:pos_start+pos_end]
-
-                    # camouflage sensitive value of argument
-                    try:
-                        glom.assign(
-                            arguments_and_values[arg],
-                            priv_keypath,
-                            CAMOUFLAGE_SIGN
-                        )
-                    except Exception as exc:
-                        logger.critical(
-                            'Failed to camouflage sensitive argument '
-                            'for path "%s".'
-                            'Exception: "%s"', keypath, exc
-                        )
-
-                        # Keep sensitive value in log instead of aborting
-                        # logging.
-                        continue
             continue
 
         arguments_and_values[arg] = func_args.locals[arg]

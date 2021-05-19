@@ -73,7 +73,7 @@ services:
       - CHOWN
     build:
       context: .
-      dockerfile: docker/distributey-dockerfile
+      dockerfile: docker/Dockerfile
     logging:
       driver: syslog
       options:

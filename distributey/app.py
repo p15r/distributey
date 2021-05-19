@@ -15,6 +15,7 @@ import jwe
 import vault_backend
 import input_validation
 import config
+import utils
 
 
 app = Flask(__name__)
@@ -90,23 +91,6 @@ def _http_20x(status_code: int, msg: str, headers: dict = None) -> Response:
         content_type='application/json; charset=utf-8',
         headers=headers)
 
-    trace_exit(inspect.currentframe(), ret)
-    return ret
-
-
-def _get_kid_from_jwt(priv_token: str) -> str:
-    trace_enter(inspect.currentframe())
-
-    try:
-        protected_header_unverified = jwt.get_unverified_header(priv_token)
-    except jwt.DecodeError as exc:
-        ret = ''
-        app.logger.error('Cannot decode JWT in order to get kid: %s', exc)
-        app.logger.debug('JWT: %s', priv_token)
-        trace_exit(inspect.currentframe(), ret)
-        return ret
-
-    ret = protected_header_unverified.get('kid', '')
     trace_exit(inspect.currentframe(), ret)
     return ret
 
@@ -260,7 +244,7 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    if not (jwt_kid := _get_kid_from_jwt(token)):
+    if not (jwt_kid := utils.get_kid_from_jwt(token)):
         ret = ''
         app.logger.error('Cannot get kid from JWT.')
         app.logger.debug('JWT: %s', token)

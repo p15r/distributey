@@ -1,5 +1,5 @@
 """
-Shared functionality that is accessed by multiple modules.
+A collection of shared functionality.
 """
 
 import inspect
@@ -19,7 +19,7 @@ def get_kid_from_jwt(priv_token: str) -> str:
         protected_header_unverified = jwt.get_unverified_header(priv_token)
     except jwt.DecodeError as exc:
         ret = ''
-        logger.error('Cannot decode JWT in order to get kid: %s', exc)
+        logger.error('Cannot decode JWT to get kid: %s', exc)
         logger.debug('JWT: %s', priv_token)
         trace_exit(inspect.currentframe(), ret)
         return ret

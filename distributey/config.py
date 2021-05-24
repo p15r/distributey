@@ -5,7 +5,7 @@
 import os
 import json
 import logging
-from typing import Any
+from typing import Union
 import inspect
 import glom
 from dy_trace import trace_enter, trace_exit
@@ -51,8 +51,7 @@ if not _is_cfg_path_valid(__CFG_PATH):
     raise ValueError('Input validation for config path failed. Aborting...')
 
 
-# TODO: be more specific than "Any" type hint.
-def get_config_by_keypath(keypath: str) -> Any:
+def get_config_by_keypath(keypath: str) -> Union[str, bool]:
     """Returns config by key path."""
 
     trace_enter(inspect.currentframe())
@@ -83,7 +82,8 @@ def get_config_by_keypath(keypath: str) -> Any:
     return cfg_value
 
 
-def get_key_consumer_cert_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
+def get_key_consumer_cert_by_tenant_and_kid(
+        tenant: str, jwe_kid: str) -> Union[str, bool]:
     """Returns key consumer certificate."""
     trace_enter(inspect.currentframe())
 
@@ -94,7 +94,8 @@ def get_key_consumer_cert_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
     return ret
 
 
-def get_vault_path_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
+def get_vault_path_by_tenant_and_kid(
+        tenant: str, jwe_kid: str) -> Union[str, bool]:
     """Returns Vault path."""
     trace_enter(inspect.currentframe())
 
@@ -105,7 +106,7 @@ def get_vault_path_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
     return ret
 
 
-def get_jwt_algorithm_by_tenant(tenant: str) -> str:
+def get_jwt_algorithm_by_tenant(tenant: str) -> Union[str, bool]:
     """Returns JWT algorithm."""
     trace_enter(inspect.currentframe())
 
@@ -116,7 +117,7 @@ def get_jwt_algorithm_by_tenant(tenant: str) -> str:
     return ret
 
 
-def get_jwt_audience_by_tenant(tenant: str) -> str:
+def get_jwt_audience_by_tenant(tenant: str) -> Union[str, bool]:
     """Returns JWT audience claim."""
     trace_enter(inspect.currentframe())
 
@@ -127,7 +128,7 @@ def get_jwt_audience_by_tenant(tenant: str) -> str:
     return ret
 
 
-def get_jwt_subject_by_tenant(tenant: str) -> str:
+def get_jwt_subject_by_tenant(tenant: str) -> Union[str, bool]:
     """Returns JWT sub claim."""
     trace_enter(inspect.currentframe())
 
@@ -138,7 +139,7 @@ def get_jwt_subject_by_tenant(tenant: str) -> str:
     return ret
 
 
-def get_jwt_issuer_by_tenant(tenant: str) -> str:
+def get_jwt_issuer_by_tenant(tenant: str) -> Union[str, bool]:
     """Returns JWT issuer claim."""
     trace_enter(inspect.currentframe())
 
@@ -150,7 +151,7 @@ def get_jwt_issuer_by_tenant(tenant: str) -> str:
 
 
 def get_jwt_validation_cert_by_tenant_and_kid(
-        tenant: str, jwt_kid: str) -> str:
+        tenant: str, jwt_kid: str) -> Union[str, bool]:
     """Returns JWT validation certificate."""
     trace_enter(inspect.currentframe())
 
@@ -161,7 +162,7 @@ def get_jwt_validation_cert_by_tenant_and_kid(
     return ret
 
 
-def get_vault_default_role_by_tenant(tenant: str) -> str:
+def get_vault_default_role_by_tenant(tenant: str) -> Union[str, bool]:
     """Returns Vault default role."""
     trace_enter(inspect.currentframe())
 
@@ -172,7 +173,7 @@ def get_vault_default_role_by_tenant(tenant: str) -> str:
     return ret
 
 
-def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
+def get_vault_auth_jwt_path_by_tenant(tenant: str) -> Union[str, bool]:
     """Returns Vault authorization JWT path."""
     trace_enter(inspect.currentframe())
 
@@ -183,7 +184,7 @@ def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
     return ret
 
 
-def get_vault_transit_path_by_tenant(tenant: str) -> str:
+def get_vault_transit_path_by_tenant(tenant: str) -> Union[str, bool]:
     """Returns Vault transit path."""
     trace_enter(inspect.currentframe())
 

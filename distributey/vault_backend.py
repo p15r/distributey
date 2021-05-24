@@ -44,19 +44,14 @@ def __get_vault_client() -> hvac.Client:
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
     vault_ca_cert = config.get_config_by_keypath('VAULT_CACERT')
 
-    try:
-        if vault_ca_cert:
-            client = hvac.Client(
-                cert=mtls_auth,
-                url=vault_url,
-                verify=vault_ca_cert)
-        else:
-            client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
-    except Exception as exc:
-        ret = None
-        logger.error('Failed to create hvac client: %s', exc)
-        trace_exit(inspect.currentframe(), ret)
-        return ret
+    # hvac.Client() never raises exceptions, regardless of the parameters
+    if vault_ca_cert:
+        client = hvac.Client(
+            cert=mtls_auth,
+            url=vault_url,
+            verify=vault_ca_cert)
+    else:
+        client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
 
     trace_exit(inspect.currentframe(), client)
     return client

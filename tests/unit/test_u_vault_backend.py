@@ -22,23 +22,6 @@ def test___get_vault_client(monkeypatch):
     assert isinstance(client, hvac.Client)
 
 
-def test___get_vault_client_2(monkeypatch):
-    # test w/ forced exception
-    def mock_raise(*args):
-        if args[0] == 'VAULT_CACERT':
-            raise Exception('testing')
-        elif args[0] == 'VAULT_MTLS_CLIENT_CERT':
-            return 'config/mtls_auth.crt'
-        else:
-            return 'config/mtls_auth.key'
-
-    monkeypatch.setattr(config, 'get_config_by_keypath', mock_raise)
-
-    client = vault_backend.__get_vault_client()
-
-    assert client is None
-
-
 def test___authenticate_vault_client(get_jwt):
     client = vault_backend.__get_vault_client()
 

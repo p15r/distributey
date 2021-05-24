@@ -4,6 +4,7 @@ import os
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR, S_IRUSR
 import pytest
 import app
+import utils
 import vault_backend
 import werkzeug
 import config
@@ -12,14 +13,14 @@ import config
 class TestUnitFlaskApp():
     """Test class for Flask app."""
     def test__get_kid_from_jwt(self, get_jwt):
-        assert app._get_kid_from_jwt(get_jwt) == 'jwt_kid_salesforce_serviceX'
+        assert utils.get_kid_from_jwt(get_jwt) == 'jwt_kid_salesforce_serviceX'
 
         # test w/ invalid jwt protected header
         split_protected_header = get_jwt.split('.')
         split_protected_header[0] = split_protected_header[0] + 'badstring'
         bad_jwt = '.'.join(split_protected_header)
 
-        kid = app._get_kid_from_jwt(bad_jwt)
+        kid = utils.get_kid_from_jwt(bad_jwt)
 
         if kid:
             assert False, ('Should fail if protected header is malformed.'
@@ -174,7 +175,7 @@ class TestUnitFlaskApp():
         def mock(*args):
             return False
 
-        monkeypatch.setattr(app, '_get_kid_from_jwt', mock)
+        monkeypatch.setattr(utils, 'get_kid_from_jwt', mock)
 
         assert app._authenticate('salesforce', 'Bearer ' + get_jwt) == ''
 

@@ -22,17 +22,6 @@ def test___get_vault_client(monkeypatch):
     assert isinstance(client, hvac.Client)
 
 
-def test___authenticate_vault_client(get_jwt):
-    client = vault_backend.__get_vault_client()
-
-    # test w/o connection to vault
-    auth_client = vault_backend.__authenticate_vault_client(client,
-                                                            'salesforce',
-                                                            get_jwt)
-
-    assert auth_client is None
-
-
 def test_get_dynamic_secret(monkeypatch, get_jwt):
     # test w/o connection to vault
     dek = vault_backend.get_dynamic_secret('salesforce', 'salesforce',
@@ -244,3 +233,91 @@ def test_get_dynamic_secret_8(monkeypatch, get_jwt):
                                            1, get_jwt)
 
     assert dek == b'magic_dek'
+
+
+def test___get_vault_token(monkeypatch, get_jwt):
+    # test with valid token
+    client = vault_backend.__get_vault_client()
+
+    fake_token = 's.FAKETOKEN'
+
+    def mock_devmode(*args):
+        # if get_config_by_keypath() is called with key DEV_MODE,
+        # interfere and return true, if called with other keys, ignore
+        if args[0] == 'DEV_MODE':
+            return True
+
+    monkeypatch.setattr(config, 'get_config_by_keypath', mock_devmode)
+
+    def mock_vault_auth_jwt(*args, **kwargs):
+        # example token: s.f7Ea3C3ojOYE0GRLzmhSGNkE
+        response = {'auth': {'client_token': fake_token}}
+        return response
+
+    monkeypatch.setattr(
+        hvac.api.auth_methods.jwt.JWT, 'jwt_login', mock_vault_auth_jwt)
+
+    token = vault_backend.__get_vault_token(
+        client,
+        'salesforce',
+        get_jwt,
+        'salesforce:latest',
+        'jwt_kid_salesforce_serviceX')
+
+    assert token == fake_token
+
+
+def test___get_vault_token2(monkeypatch, get_jwt):
+    # test with invalid response
+    client = vault_backend.__get_vault_client()
+
+    fake_token = 's.FAKETOKEN'
+
+    def mock_vault_auth_jwt(*args, **kwargs):
+        # example token: s.f7Ea3C3ojOYE0GRLzmhSGNkE
+        response = {'auth': {'wrong_key': fake_token}}
+        return response
+
+    monkeypatch.setattr(
+        hvac.api.auth_methods.jwt.JWT, 'jwt_login', mock_vault_auth_jwt)
+
+    token = vault_backend.__get_vault_token(
+        client,
+        'salesforce',
+        get_jwt,
+        'salesforce:latest',
+        'jwt_kid_salesforce_serviceX')
+
+    assert token == ''
+
+
+def test___authenticate_vault_client(monkeypatch, get_jwt):
+    # test with "valid" token
+    client = vault_backend.__get_vault_client()
+
+    def mock_client_is_authenticated(*args, **kwargs):
+        return True
+
+    monkeypatch.setattr(
+        hvac.v1.Client, 'is_authenticated', mock_client_is_authenticated)
+
+    client = vault_backend.__authenticate_vault_client(
+        client, 'salesforce', get_jwt)
+
+    assert isinstance(client, hvac.v1.Client)
+
+
+def test___authenticate_vault_client2(monkeypatch, get_jwt):
+    # test with invalid token
+    client = vault_backend.__get_vault_client()
+
+    def mock_client_is_authenticated(*args, **kwargs):
+        return False
+
+    monkeypatch.setattr(
+        hvac.v1.Client, 'is_authenticated', mock_client_is_authenticated)
+
+    client = vault_backend.__authenticate_vault_client(
+        client, 'salesforce', get_jwt)
+
+    assert client is None

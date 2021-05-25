@@ -54,8 +54,6 @@ if not _is_cfg_path_valid(__CFG_PATH):
 def get_config_by_keypath(keypath: str) -> Any:
     """
     Returns config by key path.
-
-    Potentially, the config value can be of any type (typically str or bool).
     """
     trace_enter(inspect.currentframe())
     try:

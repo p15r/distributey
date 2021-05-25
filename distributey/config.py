@@ -51,11 +51,10 @@ if not _is_cfg_path_valid(__CFG_PATH):
     raise ValueError('Input validation for config path failed. Aborting...')
 
 
-# TODO: be more specific than "Any" type hint.
 def get_config_by_keypath(keypath: str) -> Any:
     """Returns config by key path."""
-
     trace_enter(inspect.currentframe())
+
     try:
         with open(__CFG_PATH, 'r') as file:
             cfg = json.load(file)

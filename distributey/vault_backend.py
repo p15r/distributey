@@ -86,7 +86,8 @@ def __get_vault_token(
         ret = ''
 
         logger.error(
-            'Failed to access the Vault token from auth response: %s. '
+            'Failed to access the Vault token from auth response: '
+            'KeyError on key %s. '
             'This is most likely a permission issue.',
             exc)
 
@@ -155,6 +156,10 @@ def __authenticate_vault_client(
 
         trace_exit(inspect.currentframe(), ret)
         return ret
+
+    logger.debug(
+        'Successfully authenticated Vault client '
+        'for tenant "%s"', tenant)
 
     trace_exit(inspect.currentframe(), client)
     return client

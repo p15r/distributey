@@ -65,7 +65,7 @@ def __get_vault_token(
         cache_client_id: str) -> str:
 
     trace_enter(inspect.currentframe())
-    # TODO: unittesting
+
     try:
         response = client.auth.jwt.jwt_login(
             role=config.get_vault_default_role_by_tenant(tenant),

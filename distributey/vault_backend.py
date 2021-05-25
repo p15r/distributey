@@ -144,7 +144,7 @@ def __authenticate_vault_client(
         client.token = token
 
     if not client.is_authenticated():
-        # token might be invalid/expired
+        # token might be invalid/has expired
         del __VAULT_TOKEN_CACHE[cache_client_id]
 
         ret = None

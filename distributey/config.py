@@ -52,10 +52,9 @@ if not _is_cfg_path_valid(__CFG_PATH):
 
 
 def get_config_by_keypath(keypath: str) -> Any:
-    """
-    Returns config by key path.
-    """
+    """Returns config by key path."""
     trace_enter(inspect.currentframe())
+
     try:
         with open(__CFG_PATH, 'r') as file:
             cfg = json.load(file)

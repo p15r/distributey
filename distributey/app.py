@@ -30,7 +30,7 @@ __PATH_PREFIX = __BASE_PATH + __API_VERSIONING_PATH
 
 # DB to temporarily store nonces
 __CACHE_DB = '/tmp/cache.db'    # NOSONAR
-__CACHE_DB_NR_ENTRIES = 100
+__CACHE_DB_NR_ENTRIES = 10000
 
 
 def _initialize_cache_db() -> bool:
@@ -211,7 +211,7 @@ def _is_replay_attack(nonce: str) -> bool:
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    if len(deny_list) >= __CACHE_DB_NR_ENTRIES:
+    if len(deny_list) >= __CACHE_DB_NR_ENTRIES+1:
         # remove first cache entry
         deny_list.pop(0)
 

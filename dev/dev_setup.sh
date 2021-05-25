@@ -95,12 +95,12 @@ python3 dev/write_jwt_to_tfvars.py
 echo 'Copying config...'
 cp dev/example-config.json config/config.json
 echo 'Copying JWT public key...'
-chmod 600 config/auth/jwt_salesforce_serviceX.pub
+[ -f config/auth/jwt_salesforce_serviceX.pub ] && chmod 600 config/auth/jwt_salesforce_serviceX.pub
 cp $tmp_path/jwt.pub config/auth/jwt_salesforce_serviceX.pub
 echo 'Copying self-signed certs for API...'
 cp $tmp_path/nginx.{key,crt} docker/certs/
 echo 'Copying key consumer cert & key...'
-chmod 600 config/backend/distributey_allservices_key_consumer.crt
+[ -f config/backend/distributey_allservices_key_consumer.crt ] && chmod 600 config/backend/distributey_allservices_key_consumer.crt
 cp $tmp_path/key_consumer_key.crt config/backend/distributey_allservices_key_consumer.crt
 echo 'Copying Vault mTLS auth cert/key and CA for distributey hvac client...'
 cp $tmp_path/mtls_auth.crt $tmp_path/mtls_auth.key $tmp_path/myCA.crt config/

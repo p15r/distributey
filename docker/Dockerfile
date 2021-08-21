@@ -1,4 +1,4 @@
-FROM alpine:3.12 AS build-image
+FROM alpine:latest AS build-image
 
 # Sets utf-8 encoding for Python et al
 ENV LANG=C.UTF-8
@@ -24,7 +24,7 @@ RUN python3 -m pip install --upgrade pip
 COPY requirements.txt /root/requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /root/requirements.txt
 
-FROM alpine:3.12
+FROM alpine:latest
 
 LABEL maintainer="pat@p15r.net"
 

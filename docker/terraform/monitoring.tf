@@ -3,6 +3,7 @@ resource "vault_jwt_auth_backend" "jwt_monitoring" {
   path                   = var.auth_jwt_monitoring_path
   jwt_validation_pubkeys = var.auth_jwt_monitoring_validation_pubkeys
   default_role           = var.auth_jwt_monitoring_default_role
+  provider               = vault.tenant
 }
 
 resource "vault_jwt_auth_backend_role" "role_monitoring" {
@@ -12,16 +13,19 @@ resource "vault_jwt_auth_backend_role" "role_monitoring" {
   user_claim      = "iss"
   role_type       = "jwt"
   token_policies  = ["default", "monitoring"]
+  provider        = vault.tenant
 }
 
 # Transit engine for monitoring key
 resource "vault_mount" "transit_monitoring" {
-  path = var.transit_monitoring_path
-  type = "transit"
+  path     = var.transit_monitoring_path
+  type     = "transit"
+  provider = vault.tenant
 }
 
 resource "vault_transit_secret_backend_key" "monitoring" {
   backend    = vault_mount.transit_monitoring.path
   name       = var.transit_monitoring_key_name
   exportable = var.transit_exportable
+  provider   = vault.tenant
 }

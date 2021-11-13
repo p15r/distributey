@@ -41,6 +41,7 @@ def __get_vault_client() -> hvac.Client:
     vault_mtls_client_key = \
         config.get_config_by_keypath('VAULT_MTLS_CLIENT_KEY')
     vault_url = config.get_config_by_keypath('VAULT_URL')
+    vault_ns = config.get_config_by_keypath('VAULT_NAMESPACE')
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
     vault_ca_cert = config.get_config_by_keypath('VAULT_CACERT')
 
@@ -49,9 +50,10 @@ def __get_vault_client() -> hvac.Client:
         client = hvac.Client(
             cert=mtls_auth,
             url=vault_url,
+            namespace=vault_ns,
             verify=vault_ca_cert)
     else:
-        client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
+        client = hvac.Client(cert=mtls_auth, url=vault_url, namespace=vault_ns, verify=True)
 
     trace_exit(inspect.currentframe(), client)
     return client

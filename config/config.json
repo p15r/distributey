@@ -33,5 +33,6 @@
   "VAULT_CACERT": "config/myCA.crt",
   "VAULT_MTLS_CLIENT_CERT": "config/mtls_auth.crt",
   "VAULT_MTLS_CLIENT_KEY": "config/mtls_auth.key",
-  "VAULT_URL": "https://vault:8300"
+  "VAULT_URL": "https://vault:8300",
+  "VAULT_NAMESPACE": "tenant"
 }

@@ -10,14 +10,15 @@ jwt_pubkey: str = ''
 with open('dev/tmp/jwt.pub', 'r') as f:
     jwt_pubkey = f.read().strip()
 
-p = re.compile('auth_jwt_validation_pubkeys = \[.*?\]',
-               re.DOTALL)  # noqa: W605
+p = re.compile('auth_jwt_validation_pubkeys = \[.*?\]',     # noqa: W605
+               re.DOTALL)
 updated_content = p.sub(
     f'auth_jwt_validation_pubkeys = [<<EOT\n{jwt_pubkey}\nEOT\n]', tfvars)
 
 # dev setup: use same jwt keypair for both tenants
-p = re.compile('auth_jwt_monitoring_validation_pubkeys = \[.*?\]',
-               re.DOTALL)  # noqa: W605
+p = re.compile(
+    'auth_jwt_monitoring_validation_pubkeys = \[.*?\]',     # noqa: W605
+    re.DOTALL)
 updated_content = p.sub(
     f'auth_jwt_monitoring_validation_pubkeys = [<<EOT\n{jwt_pubkey}\nEOT\n]',
     updated_content)

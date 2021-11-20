@@ -1,4 +1,4 @@
-import wsgi # import start flask app
+import wsgi     # noqa: F401
 
 
 def test_connect_to_app(http_client):

@@ -6,6 +6,16 @@ set -euf -o pipefail
 chmod o+x docker/certs/
 chmod -R o+r docker/nginx.conf docker/certs/
 
+arch=$(uname -i)
+
+if [ "$arch" == "aarch64" ]; then
+    arch="arm64"
+fi
+
+if [ "$arch" == "x86_64" ]; then
+    arch="amd64"
+fi
+
 echo '💾 Downloading Terraform providers...'
 
 # if this URL is configured, terraform will not try to download providers from internet
@@ -17,7 +27,7 @@ else
     if [ -z ${tf_provider_url_mirror_zip+x} ]; then
         echo 'ℹ️  Attempting to download providers from internet...';
 
-        cd docker/terraform && terraform providers mirror -platform=linux_amd64 tf-cache && cd ../../
+        cd docker/terraform && terraform providers mirror -platform=linux_"$arch" tf-cache && cd ../../
     else
         echo "ℹ️  Fetching terraform providers from '$tf_provider_url_mirror_zip'...";
         terraform_zip='tf-cache.zip'
@@ -39,4 +49,4 @@ docker container update --pids-limit=20 distributey
 docker container update --pids-limit=20 nginx
 
 echo 'ℹ️  Container processes:'
-docker ps -a
+docker ps

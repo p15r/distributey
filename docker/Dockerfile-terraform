@@ -1,0 +1,5 @@
+FROM alpine:3.14
+
+LABEL maintainer="pat@p15r.net"
+
+RUN apk update && apk update && apk add terraform

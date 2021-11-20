@@ -29,16 +29,16 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
   - `nginx`: `journalctl -f -t dy-nginx`
 - Enable debug logs
   - Set `LOG_LEVEL` to `debug` in `distributey/config/config.json`
-  - Fix config files permissions: `./02-fix-cfg-perms.sh`
+  - Fix config files permissions: `./01-fix-cfg-perms.sh`
   - Restart container: `docker restart distributey`
 - Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
   - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `distributey/config/config.json`
-  - Fix config files permissions: `./02-fix-cfg-perms.sh`
+  - Fix config files permissions: `./01-fix-cfg-perms.sh`
   - Restart container: `docker restart distributey`
 - To switch from HTTPS (mTLS) to HTTP between Vault and `distributey`, configure `"VAULT_URL": "http://localhost:8200"` in `config/config.json`.
 
 ## Development Mode
-- Start Vault: `./00-build.sh -d && ./01-start.sh`
+- Start Vault: `./00-build.sh -d && ./02-start.sh`
 - Create & activate venv: `python3 -m venv venv && source venv/bin/activate`
 - Install dependencies: `python3 -m pip install -r requirements.txt -r requirements_dev.txt`
 - Run flask dev server: `python3 dev/dev_mode.py`

@@ -60,7 +60,7 @@ def get_config_by_keypath(keypath: str) -> Any:
             cfg = json.load(file)
     except FileNotFoundError as exc:
         ret = False
-        logger.error('Config not found. Has "02-fix-cfg-perms.sh" '
+        logger.error('Config not found. Has "01-fix-cfg-perms.sh" '
                      'been executed? %s', exc)
         trace_exit(inspect.currentframe(), ret)
         return ret

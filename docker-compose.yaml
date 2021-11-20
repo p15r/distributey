@@ -73,7 +73,7 @@ services:
       - CHOWN
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile-distributey
     logging:
       driver: syslog
       options:
@@ -119,13 +119,16 @@ services:
         protocol: tcp
 
   terraform:
-    image: hashicorp/terraform:light
+    image: pat/terraform:0.1
     container_name: terraform
     hostname: terraform
     # remove state from old Vault dev mode, init, re-apply and leave running for debugging purposes
     # sleep() gives `02-start.sh` time to install Terraform providers
     entrypoint: "/bin/sh -c 'rm -rf .terraform && rm -rf terraform.tfstate* && terraform init -plugin-dir /terraform/tf-cache && terraform apply -auto-approve && sleep 3600'"
     working_dir: "/terraform"
+    build:
+      context: .
+      dockerfile: docker/Dockerfile-terraform
     environment:
       # - TF_LOG=debug
       - VAULT_ADDR=http://vault:8200          # tf config

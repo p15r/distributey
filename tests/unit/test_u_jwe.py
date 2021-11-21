@@ -18,8 +18,7 @@ class TestJwe():
             if args[0] == 'DEV_MODE':
                 return True
             else:
-                cert = ('config/backend/distributey_allservices_key_consumer.'
-                        'crt')
+                cert = ('config/backend/distributey_serviceX_key_consumer.crt')
                 return cert
 
         monkeypatch.setattr(config, 'get_config_by_keypath', mock_devmode)
@@ -112,7 +111,7 @@ class TestJwe():
         out, err = capfd.readouterr()
 
         pos = err.find('[Errno 13] Permission denied: \'config/backend/'
-                       'distributey_allservices_key_consumer.crt\'.')
+                       'distributey_serviceX_key_consumer.crt\'.')
         assert pos > -1     # if pos > -1, the string has been found
 
         # restore read perms

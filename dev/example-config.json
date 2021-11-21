@@ -21,7 +21,7 @@
       },
       "backend": {
         "jwe-kid-monitoring": {
-          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
+          "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
           "vault_path": "monitoring:latest"
         }
       },
@@ -41,13 +41,30 @@
       },
       "backend": {
         "jwe-kid-salesforce-serviceX": {
-          "key_consumer_cert": "config/backend/distributey_allservices_key_consumer.crt",
+          "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
           "vault_path": "salesforce:latest"
         }
       },
       "vault_auth_jwt_path": "jwt",
       "vault_default_role": "salesforce",
       "vault_transit_path": "transit"
+    },
+    "salesforce-dev": {
+      "auth": {
+        "jwt_algorithm": "RS256",
+        "jwt_audience": "urn:distributey",
+        "jwt_issuer": "salesforce-dev",
+        "jwt_subject": "cacheonlyservice-dev",
+        "jwt_validation_certs": {
+          "jwt_kid_salesforce_dev": "config/auth/jwt_salesforce_serviceX-dev.pub"
+        }
+      },
+      "backend": {
+        "backend_wide_key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt"
+      },
+      "vault_auth_jwt_path": "jwt-dev",
+      "vault_default_role": "salesforce-dev",
+      "vault_transit_path": "transit-dev"
     }
   },
   "VAULT_CACERT": "config/myCA.crt",

@@ -1,4 +1,6 @@
 # Vault
+- UI: `http://localhost:8200`
+  - root login token is `root`
 - Verify: `docker exec vault vault read transit/keys/salesforce`
 - Test your Vault configuration using the Vault cli:
   - ```bash

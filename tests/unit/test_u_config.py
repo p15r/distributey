@@ -31,7 +31,20 @@ class TestUnitConfig():
         except KeyError as e:
             assert isinstance(e, KeyError)
 
+    def test_get_backend_wide_key_consumer_cert_by_tenant(self):
+        """Find backend-wide key consumer cert by tenant"""
+        cfg = config.get_backend_wide_key_consumer_cert_by_tenant(self.tenant)
+
+        assert cfg is False
+
+        cfg = config.get_backend_wide_key_consumer_cert_by_tenant(
+            'salesforce-dev'
+        )
+
+        assert cfg == 'config/backend/distributey_serviceX_key_consumer.crt'
+
     def test_get_key_consumer_cert_by_tenant_and_kid(self):
+        """Find dedicated key consumer key per tenant and jwe kid"""
         cfg = config.get_key_consumer_cert_by_tenant_and_kid(self.tenant,
                                                              self.jwe_kid)
         assert cfg == 'config/backend/distributey_serviceX_key_consumer.crt'

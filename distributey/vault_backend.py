@@ -192,12 +192,6 @@ def get_dynamic_secret(
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    # if not client.sys.is_initialized():
-    #     ret = bytearray()
-    #     logger.error('Vault at "%s" has not been initialized.', vault_url)
-    #     trace_exit(inspect.currentframe(), ret)
-    #     return ret
-
     # fetch most recent key version of key
     try:
         response = client.secrets.transit.read_key(

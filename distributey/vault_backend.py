@@ -33,17 +33,37 @@ import utils
 __VAULT_TOKEN_CACHE: Dict[str, str] = {}
 
 
-def __get_vault_client() -> hvac.Client:
-    trace_enter(inspect.currentframe())
+def __get_vault_client(tenant: str) -> hvac.Client:
+    # try to fetch dedicated Vault connection settings
+    vault_mtls_client_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.vault_mtls_client_cert')
+    vault_mtls_client_key = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.vault_mtls_client_key')
+    vault_url = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.vault_url')
+    vault_ns = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.vault_namespace')
+    vault_ca_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.vault_cacert')
 
-    vault_mtls_client_cert = \
-        config.get_config_by_keypath('VAULT_MTLS_CLIENT_CERT')
-    vault_mtls_client_key = \
-        config.get_config_by_keypath('VAULT_MTLS_CLIENT_KEY')
-    vault_url = config.get_config_by_keypath('VAULT_URL')
-    vault_ns = config.get_config_by_keypath('VAULT_NAMESPACE')
+    # fall back to global Vault connection settings
+    if not vault_mtls_client_cert:
+        logger.warning('Cannot find dedicated key consumer certificate '
+                       'for tenant "%s". Using global default.', tenant)
+        vault_mtls_client_cert = config.get_config_by_keypath('VAULT_MTLS_CLIENT_CERT')
+    if not vault_mtls_client_key:
+        logger.warning('Cannot find dedicated key consumer key '
+                       'for tenant "%s". Using global default.', tenant)
+        vault_mtls_client_key = config.get_config_by_keypath('VAULT_MTLS_CLIENT_KEY')
+    if not vault_url:
+        logger.warning('Cannot find dedicated Vault URL '
+                       'for tenant "%s". Using global default.', tenant)
+        vault_url = config.get_config_by_keypath('VAULT_URL')
+    if not vault_ns:
+        logger.warning('Cannot find dedicated Vault namespace '
+                       'for tenant "%s". Using global default.', tenant)
+        vault_ns = config.get_config_by_keypath('VAULT_NAMESPACE')
+    if not vault_ca_cert:
+        logger.warning('Cannot find dedicated Vault CA cert '
+                       'for tenant "%s". Using global default.', tenant)
+        vault_ca_cert = config.get_config_by_keypath('VAULT_CACERT')
+
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
-    vault_ca_cert = config.get_config_by_keypath('VAULT_CACERT')
 
     # hvac.Client() never raises exceptions, regardless of the parameters
     if vault_ca_cert:
@@ -178,7 +198,7 @@ def get_dynamic_secret(
     vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
     vault_url = config.get_config_by_keypath('VAULT_URL')
 
-    client = __get_vault_client()
+    client = __get_vault_client(tenant)
     if not client:
         ret = bytearray()
         logger.error('Failed to get Vault client.')

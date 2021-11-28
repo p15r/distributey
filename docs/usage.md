@@ -46,6 +46,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
 - Create & activate venv: `python3 -m venv venv && source venv/bin/activate`
 - Install dependencies: `python3 -m pip install -r requirements.txt -r requirements_dev.txt`
 - Adjust config: `"VAULT_URL": "https://localhost:8300"`
+  - alternatively, add `127.0.0.1 vault` to `/etc/hosts`
 - Run flask dev server: `python3 dev/dev_mode.py`
 - Request JWE: `curl -k --no-progress-meter http://localhost:5000/v1/monitoring/jwe-kid-monitoring?requestId=$(openssl rand -hex 16) -H "Authorization: $(python3 dev/create_jwt.py -m)" -H 'x-real-ip: 127.0.0.1' | jq`
 

@@ -6,6 +6,9 @@ import config
 class TestUnitConfig():
     def setup_class(self):
         self.tenant = 'salesforce'
+        self.tenant_dev = 'salesforce-dev'
+        self.key_consumer_key_backend_wide = \
+            'config/backend/distributey_serviceX_key_consumer.crt'
         self.jwe_kid = 'jwe-kid-salesforce-serviceX'
         self.jwt_kid = 'jwt_kid_salesforce_serviceX'
 
@@ -38,16 +41,16 @@ class TestUnitConfig():
         assert cfg is False
 
         cfg = config.get_backend_wide_key_consumer_cert_by_tenant(
-            'salesforce-dev'
+            self.tenant_dev
         )
 
-        assert cfg == 'config/backend/distributey_serviceX_key_consumer.crt'
+        assert cfg == self.key_consumer_key_backend_wide
 
     def test_get_key_consumer_cert_by_tenant_and_kid(self):
         """Find dedicated key consumer key per tenant and jwe kid"""
         cfg = config.get_key_consumer_cert_by_tenant_and_kid(self.tenant,
                                                              self.jwe_kid)
-        assert cfg == 'config/backend/distributey_serviceX_key_consumer.crt'
+        assert cfg == self.key_consumer_key_backend_wide
 
         assert config.get_key_consumer_cert_by_tenant_and_kid(
             'nonexistingtenant', self.jwe_kid) is False

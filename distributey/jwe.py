@@ -40,7 +40,7 @@ def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
     )
 
     if not key_consumer_cert_path:
-        logger.warning('Cannot find dedicated key consumer certificate '
+        logger.info('Cannot find dedicated key consumer certificate '
                        'for "%s/%s". Searching for backend-wide key.',
                        tenant, jwe_kid)
 

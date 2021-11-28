@@ -36,6 +36,38 @@ variable transit_exportable {
   default = false
 }
 
+# salesforce-dev tenant
+variable auth_jwt_dev_path {
+  type    = string
+  default = "jwt-dev"
+}
+variable auth_jwt_dev_validation_pubkeys {
+  type    = list
+  default = []
+}
+variable auth_jwt_dev_default_role {
+  type    = string
+  default = "role1"
+}
+variable auth_jwt_dev_default_role_bound_audiences {
+  description = "List of aud claims to match against. Any match is sufficient."
+  type        = list
+  default     = []
+}
+
+variable transit_dev_path {
+  type    = string
+  default = "transit-dev"
+}
+variable transit_dev_key_name {
+  type    = string
+  default = "key3"
+}
+variable transit_dev_exportable {
+  type    = bool
+  default = false
+}
+
 # monitoring tenant
 variable auth_jwt_monitoring_path {
   type    = string

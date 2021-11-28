@@ -42,21 +42,37 @@ openssl req -passin pass:$cert_passphrase -new -sha512 -key $tmp_path/key_consum
 echo "🔑 Generate key consumer cert..."
 openssl x509 -passin pass:$ca_passphrase -req -in $tmp_path/key_consumer_key.csr -CA $tmp_path/myCA.crt -CAkey $tmp_path/myCA.key -CAcreateserial -out $tmp_path/key_consumer_key.crt -days 3650 -sha512 -extfile $tls_cfg_path/request.cfg -extensions 'v3_req'
 
-# JWT
-echo "🔑 Generate JWT key..."
+# JWT - salesforce
+echo "🔑 Generate salesforce JWT key..."
 openssl genrsa -passout pass:$cert_passphrase -aes-256-cbc -out $tmp_path/jwt_pw.key 4096
 
-echo "🔓 Remove passphrase from JWT key..."
+echo "🔓 Remove passphrase from salesforce JWT key..."
 openssl rsa -passin pass:$cert_passphrase -in $tmp_path/jwt_pw.key -out $tmp_path/jwt.key
 
-echo "🔑 Generate JWT cert csr..."
+echo "🔑 Generate salesforce JWT cert csr..."
 openssl req -passin pass:$cert_passphrase -new -sha512 -key $tmp_path/jwt.key -config $tls_cfg_path/request.cfg -out $tmp_path/jwt.csr
 
-echo "🔑 Generate JWT cert..."
+echo "🔑 Generate salesforce JWT cert..."
 openssl x509 -passin pass:$ca_passphrase -req -in $tmp_path/jwt.csr -CA $tmp_path/myCA.crt -CAkey $tmp_path/myCA.key -CAcreateserial -out $tmp_path/jwt.crt -days 3650 -sha512 -extfile $tls_cfg_path/request.cfg -extensions 'v3_req'
 
-echo "🔨 Export pubkey from JWT cert..."
+echo "🔨 Export pubkey from salesforce JWT cert..."
 openssl x509 -pubkey -noout -in $tmp_path/jwt.crt > $tmp_path/jwt.pub
+
+# JWT - salesforce-dev
+echo "🔑 Generate salesforce-dev JWT key..."
+openssl genrsa -passout pass:$cert_passphrase -aes-256-cbc -out $tmp_path/jwt_pw-dev.key 4096
+
+echo "🔓 Remove passphrase from salesforce-dev JWT key..."
+openssl rsa -passin pass:$cert_passphrase -in $tmp_path/jwt_pw-dev.key -out $tmp_path/jwt-dev.key
+
+echo "🔑 Generate salesforce-dev JWT cert csr..."
+openssl req -passin pass:$cert_passphrase -new -sha512 -key $tmp_path/jwt-dev.key -config $tls_cfg_path/request.cfg -out $tmp_path/jwt-dev.csr
+
+echo "🔑 Generate salesforce-dev JWT cert..."
+openssl x509 -passin pass:$ca_passphrase -req -in $tmp_path/jwt-dev.csr -CA $tmp_path/myCA.crt -CAkey $tmp_path/myCA.key -CAcreateserial -out $tmp_path/jwt-dev.crt -days 3650 -sha512 -extfile $tls_cfg_path/request.cfg -extensions 'v3_req'
+
+echo "🔨 Export pubkey from salesforce-dev JWT cert..."
+openssl x509 -pubkey -noout -in $tmp_path/jwt-dev.crt > $tmp_path/jwt-dev.pub
 
 # Vault mTLS auth
 echo "🔑 Generate mTLS auth cert key..."
@@ -94,14 +110,20 @@ echo 'Adding JWT to Terraform config...'
 python3 dev/write_jwt_to_tfvars.py
 echo 'Copying config...'
 cp dev/example-config.json config/config.json
-echo 'Copying JWT public key...'
+echo 'Copying salesforce JWT public key...'
 [ -f config/auth/jwt_salesforce_serviceX.pub ] && chmod 600 config/auth/jwt_salesforce_serviceX.pub
 cp $tmp_path/jwt.pub config/auth/jwt_salesforce_serviceX.pub
+echo 'Copying salesforce-dev JWT public key...'
+[ -f config/auth/jwt_salesforce_serviceX-dev.pub ] && chmod 600 config/auth/jwt_salesforce_serviceX-dev.pub
+cp $tmp_path/jwt-dev.pub config/auth/jwt_salesforce_serviceX-dev.pub
 echo 'Copying self-signed certs for API...'
 cp $tmp_path/nginx.{key,crt} docker/certs/
-echo 'Copying key consumer cert & key...'
-[ -f config/backend/distributey_allservices_key_consumer.crt ] && chmod 600 config/backend/distributey_allservices_key_consumer.crt
-cp $tmp_path/key_consumer_key.crt config/backend/distributey_allservices_key_consumer.crt
+echo 'Copying salesforce key consumer cert & key...'
+[ -f config/backend/distributey_serviceX_key_consumer.crt ] && chmod 600 config/backend/distributey_serviceX_key_consumer.crt
+cp $tmp_path/key_consumer_key.crt config/backend/distributey_serviceX_key_consumer.crt
+echo 'Copying salesforce-dev key consumer cert & key...'
+[ -f config/backend/distributey_allservices_key_consumer-dev.crt ] && chmod 600 config/backend/distributey_allservices_key_consumer-dev.crt
+cp $tmp_path/key_consumer_key.crt config/backend/distributey_allservices_key_consumer-dev.crt
 echo 'Copying Vault mTLS auth cert/key and CA for distributey hvac client...'
 cp $tmp_path/mtls_auth.crt $tmp_path/mtls_auth.key $tmp_path/myCA.crt config/
 echo 'Copying Vault mTLS server CA to Vault config folder...'

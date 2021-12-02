@@ -24,6 +24,15 @@ Configure Salesforce to authenticate its HYOK requests to `distributey` using JW
        - `Unique Name`: this is the `KID` of the `JWT` token, thus must be unique. Recommended naming scheme: `jwt_kid_salesforce_serviceX`
      - Download the certificate and save it by its `Unique Name`. It must later be configured in `distributey` (`config/auth/`).
      - Salesforce provides a certificate from which `distributey` only needs its public key. Use this command to extract it: `openssl x509 -pubkey -noout -in jwt_kid_salesforce_serviceX.crt > jwt_kid_salesforce_serviceX.pub`
+     - Store the same public `jwt_kid_salesforce_serviceX.pub` key on the Vault JWT auth backend as part of `auth_jwt_validation_pubkeys` in the Terraform variables ([`./docker/terraform/terraform.tfvars`](../docker/terraform/terraform.tfvars)). This task is automated in [dev/write_jwt_to_tfvars.py](../dev/write_jwt_to_tfvars.py) for [development setups](./usage.md). For a production setup, this configuration needs to be done on the Vault server side, not on the development Vault in the Docker container:
+       ```
+       auth_jwt_validation_pubkeys = [<<EOT
+       -----BEGIN PUBLIC KEY-----
+       ...
+       -----END PUBLIC KEY-----
+       EOT
+       ]
+       ```
    - Import your own key to Salesforce [[docs](key_consumer_setup_import_key_to_sf.md)] (**Not Recommended**)
 2. To go `Named Credential` on Salesforce and create a `New Named Credential` as following:
    | Config name  | Value |

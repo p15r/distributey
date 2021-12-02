@@ -19,6 +19,7 @@ Currently supported integrations:
 
 
 ### For developers
+- Run Distributey in a local development environment [[docs](docs/usage.md#development-mode)]
 - Verify Vault deployment [[docs](docs/vault.md)]
 
 ## Architecture

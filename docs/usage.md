@@ -42,7 +42,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
 - To switch from HTTPS (mTLS) to HTTP between Vault and `distributey`, configure `"VAULT_URL": "http://localhost:8200"` in `config/config.json`.
 
 ## Development Mode
-- Start Vault: `./00-build.sh -d && ./02-start.sh`
+- Start Vault: `./00-build.sh -d && ./01-start.sh`. Necessary files for the dev setup (`distributey/dev/dev_setup.sh`) are bootstrapped in development mode only (`-d`).
 - Create & activate venv: `python3 -m venv venv && source venv/bin/activate`
 - Install dependencies: `python3 -m pip install -r requirements.txt -r requirements_dev.txt`
 - Adjust config: `"VAULT_URL": "https://localhost:8300"`

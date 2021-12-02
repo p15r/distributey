@@ -33,6 +33,34 @@ __CACHE_DB = '/tmp/cache.db'    # NOSONAR
 __CACHE_DB_NR_ENTRIES = 10000
 
 
+def _dev_mode_warning_banner() -> None:
+    trace_enter(inspect.currentframe())
+
+    dev_mode = config.get_config_by_keypath('DEV_MODE')
+    log_level = config.get_config_by_keypath('LOG_LEVEL')
+
+    banner = r"""
+
+      _____  ________      __  __  __  ____  _____  ______
+     |  __ \|  ____\ \    / / |  \/  |/ __ \|  __ \|  ____|
+     | |  | | |__   \ \  / /  | \  / | |  | | |  | | |__
+     | |  | |  __|   \ \/ /   | |\/| | |  | | |  | |  __|
+     | |__| | |____   \  /    | |  | | |__| | |__| | |____
+     |_____/|______|   \/     |_|  |_|\____/|_____/|______|
+
+     Sensitive data, such as data encryption keys are logged in plain-text.
+
+     """
+
+    if dev_mode and log_level == 'debug':
+        app.logger.info(banner)
+
+    trace_exit(inspect.currentframe(), None)
+
+
+_dev_mode_warning_banner()
+
+
 def _initialize_cache_db() -> bool:
     """Init temporary database to store nonces to prevent replay attacks."""
     trace_enter(inspect.currentframe())

@@ -18,8 +18,7 @@ class TestJwe():
             if args[0] == 'DEV_MODE':
                 return True
             else:
-                cert = ('config/backend/distributey_allservices_key_consumer.'
-                        'crt')
+                cert = ('config/backend/distributey_serviceX_key_consumer.crt')
                 return cert
 
         monkeypatch.setattr(config, 'get_config_by_keypath', mock_devmode)
@@ -89,6 +88,7 @@ class TestJwe():
         assert jwe_token == ''
 
     def test__get_key_consumer_cert(self, capfd):
+        # receive dedicated key consumer cert by tenant & jwe id
         key_consumer_cert = jwe._get_key_consumer_cert(
             'salesforce', 'jwe-kid-salesforce-serviceX')
         assert isinstance(key_consumer_cert, str)
@@ -112,11 +112,22 @@ class TestJwe():
         out, err = capfd.readouterr()
 
         pos = err.find('[Errno 13] Permission denied: \'config/backend/'
-                       'distributey_allservices_key_consumer.crt\'.')
+                       'distributey_serviceX_key_consumer.crt\'.')
         assert pos > -1     # if pos > -1, the string has been found
 
         # restore read perms
         os.chmod(key_consumer_cert_path, S_IRUSR | S_IRGRP)
+
+        # receive backend-wide key consumer cert by tenant
+        key_consumer_cert = jwe._get_key_consumer_cert(
+            'salesforce', 'non-existing-jwe')
+
+        assert key_consumer_cert == ''
+
+        key_consumer_cert = jwe._get_key_consumer_cert(
+            'salesforce-dev', 'non-existing-jwe')
+
+        assert key_consumer_cert.startswith('-----BEGIN CERTIFICATE-----')
 
     def test__encrypt_cek_with_key_consumer_key(self):
         b64_cek_ciphertext = jwe._encrypt_cek_with_key_consumer_key(

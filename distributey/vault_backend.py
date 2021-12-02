@@ -114,9 +114,10 @@ def __authenticate_vault_client(
 
     vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
 
-    logger.debug(
-        'Attempting to authenticate against Vault using JWT: %s',
-        priv_jwt_token)
+    if config.get_config_by_keypath('DEV_MODE'):
+        logger.debug(
+            'Attempting to authenticate against Vault using JWT: %s',
+            priv_jwt_token)
 
     cache_client_id = utils.get_kid_from_jwt(priv_jwt_token)
 

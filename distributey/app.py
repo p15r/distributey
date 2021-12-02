@@ -305,7 +305,8 @@ def _authenticate(tenant: str, priv_auth_header: str) -> str:
         trace_exit(inspect.currentframe(), ret)
         _http_error(500, '{"error": "internal error"}')
 
-    app.logger.debug('Received JWT: %s', token)
+    if config.get_config_by_keypath('DEV_MODE'):
+        app.logger.debug('Received JWT: %s', token)
 
     token_sub, token_iss = _decode_jwt(tenant, token, cert)
 

@@ -82,22 +82,22 @@ def get_config_by_keypath(keypath: str) -> Any:
     return cfg_value
 
 
-def get_backend_wide_key_consumer_cert_by_tenant(tenant: str) -> str:
-    """Returns backend-wide key consumer certificate."""
-    trace_enter(inspect.currentframe())
-
-    cfg_keypath = f'TENANT_CFG.{tenant}.backend.backend_wide_key_consumer_cert'
-    ret = get_config_by_keypath(cfg_keypath)
-
-    trace_exit(inspect.currentframe(), ret)
-    return ret
-
-
-def get_key_consumer_cert_by_tenant_and_kid(tenant: str, jwe_kid: str) -> str:
-    """Returns dedicated key consumer certificate."""
+def get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
+    """
+    First, attempt fetching key consumer cert specific to a service of a
+    tenant. If no specific cert exists, attempt fetching key consumer cert
+    specific to tenant(backend-wide cert).
+    """
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.backend.{jwe_kid}.key_consumer_cert'
+    ret = get_config_by_keypath(cfg_keypath)
+
+    if ret:
+        trace_exit(inspect.currentframe(), ret)
+        return ret
+
+    cfg_keypath = f'TENANT_CFG.{tenant}.backend.backend_wide_key_consumer_cert'
     ret = get_config_by_keypath(cfg_keypath)
 
     trace_exit(inspect.currentframe(), ret)

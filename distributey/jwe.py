@@ -34,28 +34,19 @@ def _get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
     trace_enter(inspect.currentframe())
 
     # try to fetch dedicated key consumer cert
-    key_consumer_cert_path = config.get_key_consumer_cert_by_tenant_and_kid(
+    key_consumer_cert_path = config.get_key_consumer_cert(
         tenant,
         jwe_kid
     )
 
     if not key_consumer_cert_path:
-        logger.info('Cannot find dedicated key consumer certificate '
-                    'for "%s/%s". Searching for backend-wide key.',
-                    tenant, jwe_kid)
+        ret = ''
+        logger.error('Cannot find dedicated key consumer certificate'
+                     'nor backend-wide key consumer certificate for'
+                     '"%s/%s"', tenant, jwe_kid)
 
-        # fall back to backend-wide key consumer cert
-        key_consumer_cert_path = \
-            config.get_backend_wide_key_consumer_cert_by_tenant(tenant)
-
-        if not key_consumer_cert_path:
-            ret = ''
-            logger.error('Cannot find dedicated key consumer certificate'
-                         'nor backend-wide key consumer certificate for'
-                         '"%s/%s"', tenant, jwe_kid)
-
-            trace_exit(inspect.currentframe(), ret)
-            return ret
+        trace_exit(inspect.currentframe(), ret)
+        return ret
 
     try:
         with open(key_consumer_cert_path) as file:

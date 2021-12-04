@@ -103,7 +103,7 @@ class TestJwe():
 
         # test w/ missing fs perm
         key_consumer_cert_path = \
-            config.get_key_consumer_cert_by_tenant_and_kid(
+            config.get_key_consumer_cert(
                 'salesforce', 'jwe-kid-salesforce-serviceX')
 
         os.chmod(key_consumer_cert_path, S_IROTH)     # remove read perms

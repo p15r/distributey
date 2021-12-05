@@ -171,33 +171,39 @@ def get_jwt_validation_cert_by_tenant_and_kid(
     return ret
 
 
+# TODO: refactor
 def get_vault_default_role_by_tenant(tenant: str) -> str:
     """Returns Vault default role."""
     trace_enter(inspect.currentframe())
 
-    cfg_keypath = f'TENANT_CFG.{tenant}.vault_default_role'
+    #cfg_keypath = f'TENANT_CFG.{tenant}.vault_default_role'
+    cfg_keypath = 'VAULT.default_role'
     ret = get_config_by_keypath(cfg_keypath)
 
     trace_exit(inspect.currentframe(), ret)
     return ret
 
 
+# TODO: refactor
 def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
     """Returns Vault authorization JWT path."""
     trace_enter(inspect.currentframe())
 
-    cfg_keypath = f'TENANT_CFG.{tenant}.vault_auth_jwt_path'
+    #cfg_keypath = f'TENANT_CFG.{tenant}.vault_auth_jwt_path'
+    cfg_keypath = 'VAULT.auth_jwt_path'
     ret = get_config_by_keypath(cfg_keypath)
 
     trace_exit(inspect.currentframe(), ret)
     return ret
 
 
+# TODO: refactor
 def get_vault_transit_path_by_tenant(tenant: str) -> str:
     """Returns Vault transit path."""
     trace_enter(inspect.currentframe())
 
-    cfg_keypath = f'TENANT_CFG.{tenant}.vault_transit_path'
+    #cfg_keypath = f'TENANT_CFG.{tenant}.vault_transit_path'
+    cfg_keypath = 'VAULT.transit_path'
     ret = get_config_by_keypath(cfg_keypath)
 
     trace_exit(inspect.currentframe(), ret)

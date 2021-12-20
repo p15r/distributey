@@ -38,11 +38,11 @@ def __get_vault_client(tenant: str) -> hvac.Client:
 
     # TODO: refactor
 
-    vault_mtls_client_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.VAULT.mtls_client_cert')
-    vault_mtls_client_key = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.VAULT.mtls_client_key')
-    vault_url = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.VAULT.url')
-    vault_ns = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.VAULT.namespace')
-    vault_ca_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.VAULT.cacert')
+    vault_mtls_client_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_cert')
+    vault_mtls_client_key = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_key')
+    vault_url = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.url')
+    vault_ns = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.namespace')
+    vault_ca_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.cacert')
 
     # fall back to global Vault connection settings
     if not vault_mtls_client_cert:

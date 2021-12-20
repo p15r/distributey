@@ -1,7 +1,7 @@
 policies = ["salesforce", "salesforce-dev", "monitoring"]
 
 # salesforce tenant
-auth_jwt_default_role                 = "salesforce"
+auth_jwt_default_role                 = "distributey"
 auth_jwt_default_role_bound_audiences = ["urn:distributey"]
 auth_jwt_validation_pubkeys = [LIST_OF_CERTS]
 

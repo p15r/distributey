@@ -32,7 +32,7 @@ resource "vault_jwt_auth_backend_role" "role" {
   role_name       = var.auth_jwt_default_role
   bound_audiences = var.auth_jwt_default_role_bound_audiences
   user_claim      = "iss"
-  token_policies  = ["default", "salesforce"]
+  token_policies  = ["default", "monitoring"]
   role_type       = "jwt"
   provider        = vault.tenant
 }

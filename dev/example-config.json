@@ -28,7 +28,7 @@
           "cacert": "config/myCA.crt",
           "mtls_client_cert": "config/mtls_auth.crt",
           "mtls_client_key": "config/mtls_auth.key",
-          "url": "https://vault:8300",
+          "url": "https://127.0.0.1:8300",
           "namespace": "",
           "auth_jwt_path": "jwt-monitoring",
           "default_role": "monitoring",
@@ -69,7 +69,7 @@
           "cacert": "config/myCA.crt",
           "mtls_client_cert": "config/mtls_auth.crt",
           "mtls_client_key": "config/mtls_auth.key",
-          "url": "https://vault:8300",
+          "url": "https://127.0.0.1:8300",
           "namespace": "",
           "auth_jwt_path": "jwt-dev",
           "default_role": "salesforce-dev",
@@ -82,10 +82,10 @@
     "cacert": "config/myCA.crt",
     "mtls_client_cert": "config/mtls_auth.crt",
     "mtls_client_key": "config/mtls_auth.key",
-    "url": "https://vault:8300",
-    "namespace": "",
+    "url": "https://127.0.0.1:8300",
+    "namespace": "tenant",
     "auth_jwt_path": "jwt",
     "default_role": "distributey",
-    "transit_path": "transit"
+    "transit_path": "transit-monitoring"
   }
 }

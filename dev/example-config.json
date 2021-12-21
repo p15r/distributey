@@ -86,6 +86,6 @@
     "namespace": "tenant",
     "auth_jwt_path": "jwt",
     "default_role": "distributey",
-    "transit_path": "transit-monitoring"
+    "transit_path": "transit"
   }
 }

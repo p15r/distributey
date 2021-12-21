@@ -71,15 +71,18 @@ def __get_vault_client(tenant: str) -> hvac.Client:
 
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
 
-    # hvac.Client() never raises exceptions, regardless of the parameters
     if vault_ca_cert:
-        client = hvac.Client(
-            cert=mtls_auth,
-            url=vault_url,
-            namespace=vault_ns,
-            verify=vault_ca_cert)
+        verify=vault_ca_cert
     else:
-        client = hvac.Client(cert=mtls_auth, url=vault_url, namespace=vault_ns, verify=True)
+        verify=True
+
+    # hvac.Client() never raises exceptions, regardless of the parameters
+    client = hvac.Client(
+                cert=mtls_auth,
+                url=vault_url,
+                namespace=vault_ns,
+                verify=verify
+    )
 
     trace_exit(inspect.currentframe(), client)
     return client
@@ -95,6 +98,7 @@ def __get_vault_token(
     trace_enter(inspect.currentframe())
 
     try:
+        breakpoint()
         response = client.auth.jwt.jwt_login(
             role=config.get_vault_default_role_by_tenant(tenant),
             jwt=priv_jwt_token,

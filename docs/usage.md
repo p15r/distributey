@@ -21,6 +21,9 @@
   curl -k --no-progress-meter https://localhost/v1/salesforce-dev/salesforce-dev?requestId=$(openssl rand -hex 16) -H "Authorization: $(python3 dev/create_jwt.py -d)" | jq
   ```
 
+Note:
+- If fetching a secret fails and `distributey` reports `missing client token, on post *v1/auth/jwt/login`, this means the wrong Vault namespace is configured.
+
 ## Splunk
 
 If Splunk logging has been enabled in `config/config.json`, use the following Splunk search to discover `distributey` logs: `index=<INDEXNAME> host="distributey"`.

@@ -37,7 +37,6 @@ def __get_vault_client(tenant: str) -> hvac.Client:
     # try to fetch dedicated Vault connection settings
 
     # TODO: refactor
-
     vault_mtls_client_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_cert')
     vault_mtls_client_key = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_key')
     vault_url = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.url')
@@ -97,9 +96,14 @@ def __get_vault_token(
 
     trace_enter(inspect.currentframe())
 
+    default_role = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.default_role')
+
+    if not default_role:
+        default_role = config.get_vault_default_role_by_tenant(tenant)
+
     try:
         response = client.auth.jwt.jwt_login(
-            role=config.get_vault_default_role_by_tenant(tenant),
+            role=default_role,
             jwt=priv_jwt_token,
             path=vault_auth_jwt_path)
     except Exception as exc:
@@ -143,7 +147,11 @@ def __authenticate_vault_client(
 
     trace_enter(inspect.currentframe())
 
-    vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
+    # TODO refactor
+    vault_auth_jwt_path = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.auth_jwt_path')
+
+    if not vault_auth_jwt_path:
+        vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug(
@@ -204,10 +212,14 @@ def get_dynamic_secret(
 
     trace_enter(inspect.currentframe())
 
-    vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
+    # TODO: refactor
+    vault_transit_path = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.transit_path')
+
+    if not vault_transit_path:
+        vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
 
     # TODO: refactor - still necessary?
-    vault_url = config.get_config_by_keypath('VAULT.url')
+    # vault_url = config.get_config_by_keypath('VAULT.url')
 
     client = __get_vault_client(tenant)
     if not client:

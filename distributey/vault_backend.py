@@ -66,6 +66,9 @@ def __get_vault_client(tenant: str) -> hvac.Client:
                        'for tenant "%s". Using global default.', tenant)
         vault_ca_cert = config.get_config_by_keypath('VAULT.cacert')
 
+    if vault_ns == 'root':
+        vault_ns = ''
+
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
 
     # hvac.Client() never raises exceptions, regardless of the parameters

@@ -29,7 +29,7 @@
           "mtls_client_cert": "config/mtls_auth.crt",
           "mtls_client_key": "config/mtls_auth.key",
           "url": "https://127.0.0.1:8300",
-          "namespace": "",
+          "namespace": "root",
           "auth_jwt_path": "jwt-monitoring",
           "default_role": "monitoring",
           "transit_path": "transit-monitoring"
@@ -70,7 +70,7 @@
           "mtls_client_cert": "config/mtls_auth.crt",
           "mtls_client_key": "config/mtls_auth.key",
           "url": "https://127.0.0.1:8300",
-          "namespace": "",
+          "namespace": "root",
           "auth_jwt_path": "jwt-dev",
           "default_role": "salesforce-dev",
           "transit_path": "transit-dev"

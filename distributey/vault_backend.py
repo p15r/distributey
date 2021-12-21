@@ -98,7 +98,6 @@ def __get_vault_token(
     trace_enter(inspect.currentframe())
 
     try:
-        breakpoint()
         response = client.auth.jwt.jwt_login(
             role=config.get_vault_default_role_by_tenant(tenant),
             jwt=priv_jwt_token,

@@ -5,7 +5,7 @@
 import os
 import json
 import logging
-from typing import Any
+from typing import Any, Union
 import inspect
 import glom
 from dy_trace import trace_enter, trace_exit
@@ -51,7 +51,7 @@ if not _is_cfg_path_valid(__CFG_PATH):
     raise ValueError('Input validation for config path failed. Aborting...')
 
 
-def get_config_by_keypath(keypath: str) -> Any:
+def get_config_by_keypath(keypath: Union[str, list]) -> Any:
     """Returns config by key path."""
     trace_enter(inspect.currentframe())
 
@@ -70,16 +70,132 @@ def get_config_by_keypath(keypath: str) -> Any:
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    try:
-        cfg_value = glom.glom(cfg, keypath)
-    except glom.core.PathAccessError as exc:
-        ret = False
-        logger.error('Failed to load key "%s" from config: %s', keypath, exc)
-        trace_exit(inspect.currentframe(), ret)
-        return ret
+    # normalize to list
+    if isinstance(keypath, str):
+        keypath = [keypath]
 
+    for kp in keypath:
+        try:
+            cfg_value = glom.glom(cfg, kp)
+            trace_exit(inspect.currentframe(), cfg_value)
+            return cfg_value
+        except glom.core.PathAccessError as exc:
+            continue
+        except Exception as exc:
+            ret = False
+            logger.error('Failed to load config at "%s": %s', keypath, exc)
+            trace_exit(inspect.currentframe(), ret)
+            return ret
+
+    # no cfg found
+    cfg_value = None
+    logger.error('Failed to load config at: %s', keypath)
     trace_exit(inspect.currentframe(), cfg_value)
     return cfg_value
+
+
+def get_vault_ca_cert(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.cacert')
+    precedence.append('VAULT.cacert')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def get_vault_namespace(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.namespace')
+    precedence.append('VAULT.namespace')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def get_vault_url(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.url')
+    precedence.append('VAULT.url')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def get_vault_mtls_client_key(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_key')
+    precedence.append('VAULT.mtls_client_key')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def get_vault_mtls_client_cert(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_cert')
+    precedence.append('VAULT.mtls_client_cert')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def get_vault_auth_jwt_path(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.auth_jwt_path')
+    precedence.append('VAULT.auth_jwt_path')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def get_vault_transit_path(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.transit_path')
+    precedence.append('VAULT.transit_path')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
+
+
+def get_vault_default_role(tenant: str) -> str:
+    trace_enter(inspect.currentframe())
+
+    precedence: list[str] = []
+    precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.default_role')
+    precedence.append('VAULT.default_role')
+
+    ret = get_config_by_keypath(precedence)
+
+    trace_exit(inspect.currentframe(), ret)
+    return ret
 
 
 def get_key_consumer_cert(tenant: str, jwe_kid: str) -> str:
@@ -165,45 +281,6 @@ def get_jwt_validation_cert_by_tenant_and_kid(
     trace_enter(inspect.currentframe())
 
     cfg_keypath = f'TENANT_CFG.{tenant}.auth.jwt_validation_certs.{jwt_kid}'
-    ret = get_config_by_keypath(cfg_keypath)
-
-    trace_exit(inspect.currentframe(), ret)
-    return ret
-
-
-# TODO: refactor
-def get_vault_default_role_by_tenant(tenant: str) -> str:
-    """Returns Vault default role."""
-    trace_enter(inspect.currentframe())
-
-    #cfg_keypath = f'TENANT_CFG.{tenant}.vault_default_role'
-    cfg_keypath = 'VAULT.default_role'
-    ret = get_config_by_keypath(cfg_keypath)
-
-    trace_exit(inspect.currentframe(), ret)
-    return ret
-
-
-# TODO: refactor
-def get_vault_auth_jwt_path_by_tenant(tenant: str) -> str:
-    """Returns Vault authorization JWT path."""
-    trace_enter(inspect.currentframe())
-
-    #cfg_keypath = f'TENANT_CFG.{tenant}.vault_auth_jwt_path'
-    cfg_keypath = 'VAULT.auth_jwt_path'
-    ret = get_config_by_keypath(cfg_keypath)
-
-    trace_exit(inspect.currentframe(), ret)
-    return ret
-
-
-# TODO: refactor
-def get_vault_transit_path_by_tenant(tenant: str) -> str:
-    """Returns Vault transit path."""
-    trace_enter(inspect.currentframe())
-
-    #cfg_keypath = f'TENANT_CFG.{tenant}.vault_transit_path'
-    cfg_keypath = 'VAULT.transit_path'
     ret = get_config_by_keypath(cfg_keypath)
 
     trace_exit(inspect.currentframe(), ret)

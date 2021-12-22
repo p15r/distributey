@@ -34,36 +34,27 @@ __VAULT_TOKEN_CACHE: Dict[str, str] = {}
 
 
 def __get_vault_client(tenant: str) -> hvac.Client:
-    # try to fetch dedicated Vault connection settings
+    vault_mtls_client_cert = config.get_vault_mtls_client_cert(tenant)
+    vault_mtls_client_key = config.get_vault_mtls_client_key(tenant)
+    vault_url = config.get_vault_url(tenant)
+    vault_ns = config.get_vault_namespace(tenant)
+    vault_ca_cert = config.get_vault_ca_cert(tenant)
 
-    # TODO: refactor
-    vault_mtls_client_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_cert')
-    vault_mtls_client_key = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_key')
-    vault_url = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.url')
-    vault_ns = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.namespace')
-    vault_ca_cert = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.cacert')
-
-    # fall back to global Vault connection settings
     if not vault_mtls_client_cert:
-        logger.warning('Cannot find dedicated key consumer certificate '
-                       'for tenant "%s". Using global default.', tenant)
-        vault_mtls_client_cert = config.get_config_by_keypath('VAULT.mtls_client_cert')
+        logger.error('Failed to load Vault mTLS client cert.')
+        return None
     if not vault_mtls_client_key:
-        logger.warning('Cannot find dedicated key consumer key '
-                       'for tenant "%s". Using global default.', tenant)
-        vault_mtls_client_key = config.get_config_by_keypath('VAULT.mtls_client_key')
+        logger.error('Failed to load Vault mTLS client key.')
+        return None
     if not vault_url:
-        logger.warning('Cannot find dedicated Vault URL '
-                       'for tenant "%s". Using global default.', tenant)
-        vault_url = config.get_config_by_keypath('VAULT.url')
+        logger.error('Failed to load Vault url.')
+        return None
     if not vault_ns:
-        logger.warning('Cannot find dedicated Vault namespace '
-                       'for tenant "%s". Using global default.', tenant)
-        vault_ns = config.get_config_by_keypath('VAULT.namespace')
+        logger.error('Failed to load Vault namespace')
+        return None
     if not vault_ca_cert:
-        logger.warning('Cannot find dedicated Vault CA cert '
-                       'for tenant "%s". Using global default.', tenant)
-        vault_ca_cert = config.get_config_by_keypath('VAULT.cacert')
+        logger.error('Failed to load Vault CA cert.')
+        return None
 
     if vault_ns == 'root':
         vault_ns = ''
@@ -96,10 +87,13 @@ def __get_vault_token(
 
     trace_enter(inspect.currentframe())
 
-    default_role = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.default_role')
+    default_role = config.get_vault_default_role(tenant)
 
     if not default_role:
-        default_role = config.get_vault_default_role_by_tenant(tenant)
+        logger.error(
+            'Failed to load Vault default role for tenant "%s"', tenant
+        )
+        return ''
 
     try:
         response = client.auth.jwt.jwt_login(
@@ -147,11 +141,11 @@ def __authenticate_vault_client(
 
     trace_enter(inspect.currentframe())
 
-    # TODO refactor
-    vault_auth_jwt_path = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.auth_jwt_path')
+    vault_auth_jwt_path = config.get_vault_auth_jwt_path(tenant)
 
     if not vault_auth_jwt_path:
-        vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
+        logger.error('Failed to load auth jwt path for tenant "%s"', tenant)
+        return None
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug(
@@ -212,14 +206,13 @@ def get_dynamic_secret(
 
     trace_enter(inspect.currentframe())
 
-    # TODO: refactor
-    vault_transit_path = config.get_config_by_keypath(f'TENANT_CFG.{tenant}.backend.VAULT.transit_path')
+    vault_transit_path = config.get_vault_transit_path(tenant)
 
     if not vault_transit_path:
-        vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
-
-    # TODO: refactor - still necessary?
-    # vault_url = config.get_config_by_keypath('VAULT.url')
+        logger.error(
+            'Failed to load Vault transit path for tenant "%s"', tenant
+        )
+        return b''
 
     client = __get_vault_client(tenant)
     if not client:

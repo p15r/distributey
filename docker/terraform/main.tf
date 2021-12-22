@@ -32,7 +32,7 @@ resource "vault_jwt_auth_backend_role" "role" {
   role_name       = var.auth_jwt_default_role
   bound_audiences = var.auth_jwt_default_role_bound_audiences
   user_claim      = "iss"
-  token_policies  = ["default", "monitoring"]
+  token_policies  = ["default", "salesforce", "monitoring"]
   role_type       = "jwt"
   provider        = vault.tenant
 }
@@ -48,4 +48,10 @@ resource "vault_transit_secret_backend_key" "distributey" {
   name       = var.transit_key_name
   exportable = var.transit_exportable
   provider   = vault.tenant
+}
+
+resource "vault_policy" "policy_salesforce" {
+  name     = "salesforce"
+  policy   = file("policies/salesforce.hcl")
+  provider = vault.tenant
 }

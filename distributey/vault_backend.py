@@ -53,18 +53,15 @@ def __get_vault_client(tenant: str) -> hvac.Client:
         logger.error('Failed to load Vault namespace')
         return None
     if not vault_ca_cert:
-        logger.error('Failed to load Vault CA cert.')
-        return None
+        logger.warning('Failed to load Vault CA cert.')
+        verify=True
+    else:
+        verify=vault_ca_cert
 
     if vault_ns == 'root':
         vault_ns = ''
 
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
-
-    if vault_ca_cert:
-        verify=vault_ca_cert
-    else:
-        verify=True
 
     # hvac.Client() never raises exceptions, regardless of the parameters
     client = hvac.Client(

@@ -79,7 +79,7 @@ def get_config_by_keypath(keypath: Union[str, list]) -> Any:
             cfg_value = glom.glom(cfg, kp)
             trace_exit(inspect.currentframe(), cfg_value)
             return cfg_value
-        except glom.core.PathAccessError as exc:
+        except glom.core.PathAccessError:
             continue
         except Exception as exc:
             ret = False

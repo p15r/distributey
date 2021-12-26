@@ -14,10 +14,9 @@ def test___get_vault_client(monkeypatch):
 
     # test w/ no VAULT_CERT
     def mock_vault_cert(*args):
-        if args[0] == 'VAULT_CACERT':
-            return False
+        return False
 
-    monkeypatch.setattr(config, 'get_config_by_keypath', mock_vault_cert)
+    monkeypatch.setattr(config, 'get_vault_ca_cert', mock_vault_cert)
     client = vault_backend.__get_vault_client('salesforce')
     assert isinstance(client, hvac.Client)
 
@@ -30,33 +29,13 @@ def test_get_dynamic_secret(monkeypatch, get_jwt):
     assert dek == b''
 
     # test w/ failing client creation
-    def mock_client():
+    def mock_client(tenant: str):
         return None
 
     monkeypatch.setattr(vault_backend, '__get_vault_client', mock_client)
 
     dek = vault_backend.get_dynamic_secret('salesforce', 'salesforce',
                                            'latest', get_jwt)
-
-
-def test_get_dynamic_secret_2(monkeypatch, get_jwt):
-    # test client not initialized
-    def mock_auth_client(*args):
-        return vault_backend.__get_vault_client('salesforce')
-
-    monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
-                        mock_auth_client)
-
-    def mock_client_init(*args):
-        return False
-
-    monkeypatch.setattr(hvac.api.SystemBackend, 'is_initialized',
-                        mock_client_init)
-
-    dek = vault_backend.get_dynamic_secret('salesforce', 'salesforce',
-                                           'latest', get_jwt)
-
-    assert dek == b''
 
 
 def test_get_dynamic_secret_3(monkeypatch, get_jwt):

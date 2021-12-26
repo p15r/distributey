@@ -81,11 +81,6 @@ def get_config_by_keypath(keypath: Union[str, list]) -> Any:
             return cfg_value
         except glom.core.PathAccessError:
             continue
-        except Exception as exc:
-            ret = False
-            logger.error('Failed to load config at "%s": %s', keypath, exc)
-            trace_exit(inspect.currentframe(), ret)
-            return ret
 
     # no cfg found
     cfg_value = False

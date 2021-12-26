@@ -1,5 +1,8 @@
 """Tests config module."""
 
+import os
+import pytest
+
 import config
 
 
@@ -11,6 +14,7 @@ class TestUnitConfig():
             'config/backend/distributey_serviceX_key_consumer.crt'
         self.jwe_kid = 'jwe-kid-salesforce-serviceX'
         self.jwt_kid = 'jwt_kid_salesforce_serviceX'
+        self.cfg = 'config/config.json'
 
     def test__is_cfg_path_valid(self):
         # test w/ invalid path type
@@ -25,7 +29,19 @@ class TestUnitConfig():
         # test w/ missing 'config.json' at the end
         assert config._is_cfg_path_valid('/path/') is False
 
+
     def test_get_config_by_keypath(self):
+        # test if cfg is not accessible
+        os.chmod(self.cfg, 0o000)
+
+        cfg = config.get_config_by_keypath('LOG_LEVEL')
+
+        assert cfg == False
+
+        os.chmod(self.cfg, 0o664)
+
+
+    def test_get_config_by_keypath2(self):
         cfg = config.get_config_by_keypath('LOG_LEVEL')
         assert cfg == 'info'
 

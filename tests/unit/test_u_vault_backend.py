@@ -21,6 +21,42 @@ def test___get_vault_client(monkeypatch):
     assert isinstance(client, hvac.Client)
 
 
+def test___get_vault_client_no_mtls_client_cert(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_mtls_client_cert', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
+
+
+def test___get_vault_client_no_mtls_client_key(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_mtls_client_key', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
+
+
+def test___get_vault_client_no_vault_url(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_url', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
+
+
+def test___get_vault_client_no_vault_ns(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_namespace', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
+
+
 def test_get_dynamic_secret(monkeypatch, get_jwt):
     # test w/o connection to vault
     dek = vault_backend.get_dynamic_secret('salesforce', 'salesforce',

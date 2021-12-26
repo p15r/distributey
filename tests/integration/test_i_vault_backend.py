@@ -13,8 +13,6 @@ class TestVaultBackend():
         else:
             assert False, 'Retrieved dek with zero length.'
 
-# test get_vault_token, get_vault_client
-
 
 def test___get_vault_token(monkeypatch, get_jwt):
     client = vault_backend.__get_vault_client('salesforce')

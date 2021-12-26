@@ -20,7 +20,7 @@ every cache contains an expired token for a JWT KID. This would lead to
 
 import base64
 import inspect
-from typing import Dict
+from typing import Dict, Union
 import hvac
 from dy_logging import logger
 from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
@@ -40,6 +40,8 @@ def __get_vault_client(tenant: str) -> hvac.Client:
     vault_ns = config.get_vault_namespace(tenant)
     vault_ca_cert = config.get_vault_ca_cert(tenant)
 
+    verify: Union[bool, str]
+
     if not vault_mtls_client_cert:
         logger.error('Failed to load Vault mTLS client cert.')
         return None
@@ -54,9 +56,9 @@ def __get_vault_client(tenant: str) -> hvac.Client:
         return None
     if not vault_ca_cert:
         logger.warning('Failed to load Vault CA cert.')
-        verify=True
+        verify = True
     else:
-        verify=vault_ca_cert
+        verify = vault_ca_cert
 
     if vault_ns == 'root':
         vault_ns = ''

@@ -88,7 +88,7 @@ def get_config_by_keypath(keypath: Union[str, list]) -> Any:
             return ret
 
     # no cfg found
-    cfg_value = None
+    cfg_value = False
     logger.error('Failed to load config at: %s', keypath)
     trace_exit(inspect.currentframe(), cfg_value)
     return cfg_value

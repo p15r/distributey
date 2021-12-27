@@ -8,6 +8,7 @@ The following actions are required to configure & run `distributey`:
 - Configure service: `config/config.json`
    - Check example config: `dev/example-config.json`
 - Set config files permissions: `./01-fix-cfg-perms.sh`
+- Vault Enterprise (optional): `export VAULT_LICENSE=$(cat vault.hclic)`
 - Run service: `./02-start.sh`
 - `distributey` is now operational
 - For audit purposes, container logs are written to the host's logging infrastructure. However, `docker-compose.yaml` can be edited to forward logs to a remote logging service as well ([link](https://docs.docker.com/config/containers/logging/syslog/)).

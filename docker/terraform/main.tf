@@ -11,7 +11,13 @@ provider "vault" {
   namespace = vault_namespace.tenant.path
 }
 
-# Vault policies, see folder policies
+# Vault policies in root namespace, see folder policies
+resource "vault_policy" "policy-root" {
+  for_each = toset(var.policies)
+  name     = each.value
+  policy   = file("policies/${each.value}.hcl")
+}
+# Vault policies in tenant namespace, see folder policies
 resource "vault_policy" "policy" {
   for_each = toset(var.policies)
   name     = each.value
@@ -48,10 +54,4 @@ resource "vault_transit_secret_backend_key" "distributey" {
   name       = var.transit_key_name
   exportable = var.transit_exportable
   provider   = vault.tenant
-}
-
-resource "vault_policy" "policy_salesforce" {
-  name     = "salesforce"
-  policy   = file("policies/salesforce.hcl")
-  provider = vault.tenant
 }

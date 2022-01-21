@@ -25,8 +25,3 @@ resource "vault_transit_secret_backend_key" "salesforce_dev" {
   name       = var.transit_dev_key_name
   exportable = var.transit_dev_exportable
 }
-
-resource "vault_policy" "policy_dev" {
-  name     = "salesforce-dev"
-  policy   = file("policies/salesforce-dev.hcl")
-}

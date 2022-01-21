@@ -57,9 +57,3 @@ resource "vault_transit_secret_backend_key" "monitoring_root" {
   name       = var.transit_monitoring_key_name
   exportable = var.transit_exportable
 }
-
-# Vault policy for monitoring transit engine in the root namespace
-resource "vault_policy" "policy_root" {
-  name     = "monitoring"
-  policy   = file("policies/monitoring.hcl")
-}

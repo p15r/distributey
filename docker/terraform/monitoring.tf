@@ -48,8 +48,8 @@ resource "vault_jwt_auth_backend_role" "role_monitoring_root" {
 
 # Transit engine for monitoring key
 resource "vault_mount" "transit_monitoring_root" {
-  path     = var.transit_monitoring_path
-  type     = "transit"
+  path = var.transit_monitoring_path
+  type = "transit"
 }
 
 resource "vault_transit_secret_backend_key" "monitoring_root" {

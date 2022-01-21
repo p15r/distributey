@@ -88,3 +88,37 @@ The VAULT config block can either be configured globally (`VAULT` section as sib
 The namespace is used for authentication (`auth_jwt_path`) and the `transit_path`. JWT auth backend and Transit engine path must reside in the same Vault namespace.
 
 To connect to the Vault default (Root) namespace, configure distributey with `VAULT.namespace="root"` (see example above).
+
+## Dynamic Key ID Mapping between Distributey and Vault
+
+If the key ID (kid) is not explicitly specified with the `TENANT_CFG.${TENANT}.backend` section, distributey will "forward the request as is" and ask Vault if a Transit key with the given name exists.
+
+To make the mapping between the distributey kid and the Vault Transit key explicit, use a configuration similar to this one:
+```json
+{
+  "TENANT_CFG": {
+    "monitoring": {
+      ...
+      "backend": {
+        "jwe-kid-monitoring": {
+          "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
+          "vault_path": "monitoring:latest"
+        },
+        ...
+      }
+    }
+  ...
+  }
+}
+```
+
+The above configuration is taken from [development mode](#Development_Mode) and explicitly maps the Vault key path "monitoring" to the kid "jwe-kid-monitoring".
+
+The dynamic configuration can be configured using the `backend_wide_key_consumer_cert` key:
+```json
+  "backend": {
+    "backend_wide_key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
+  }
+```
+
+In this case, the explicit mapping between `vault_path` is missing and the `backend_wide_key_consumer_cert` is used for any requested kid (to encrypt the AES content encryption key).

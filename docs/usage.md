@@ -62,3 +62,29 @@ eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNl
 1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` in `distributey/config/config.json` to log secrets.
 2. Extract encrypted `dek` from JWE token by getting the second last dot-separated string: `zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=`
 3. Configure and run `dev/decrypt_dek.py` to decrypt the `dek` (data encryption key; the requested key by the key consumer).
+
+## Multi-Tenancy
+
+distributey can be configured to read keys from different Vault Enterprise namespaces.
+
+An example is given in [development mode](#Development_Mode). After running the `./dev/dev_setup.sh` script, the `config/config.json` will have different keys configured in the following tenants:
+* Key `monitoring` in the Vault "tenant" namespace
+* Key `salesforce-dev` in the Vault Root namespace
+
+The VAULT config block can either be configured globally (`VAULT` section as sibling of the `TENANT_CFG`) or per distributey tenant backend (under `TENANT_CFG.${TENANT}.backend.VAULT`):
+```json
+"VAULT": {
+  "cacert": "config/myCA.crt",
+  "mtls_client_cert": "config/mtls_auth.crt",
+  "mtls_client_key": "config/mtls_auth.key",
+  "url": "https://vault:8300",
+  "namespace": "root",
+  "auth_jwt_path": "jwt",
+  "default_role": "distributey",
+  "transit_path": "transit"
+}
+```
+
+The namespace is used for authentication (`auth_jwt_path`) and the `transit_path`. JWT auth backend and Transit engine path must reside in the same Vault namespace.
+
+To connect to the Vault default (Root) namespace, configure distributey with `VAULT.namespace="root"` (see example above).

@@ -14,3 +14,12 @@
       input=$(cat vault-dek.key.base64) | \
       jq -r ".data.sum" > vault-dek.key.hex
     ```
+
+## Audit log
+
+The request coming in from distributey can be verified in the Audit log enabled on the container standard output:
+```bash
+docker-compose logs -f vault
+```
+
+This helps to verify the authentication requests and the requests for keys, which is especially helpful in multi-tenancy scenarios or for troubleshooting permission/policy faults.

@@ -1,6 +1,15 @@
 # Provider for the Root namespace
 provider "vault" {}
 
+# Log to stdout of the container
+resource "vault_audit" "test" {
+  type = "file"
+
+  options = {
+    file_path = "stdout"
+  }
+}
+
 # Tenant namespace
 resource "vault_namespace" "tenant" {
   path = "tenant"

@@ -67,7 +67,7 @@ eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNl
 
 distributey can be configured to read keys from different Vault Enterprise namespaces.
 
-An example is given in [development mode](#Development_Mode). After running the `./dev/dev_setup.sh` script, the `config/config.json` will have different keys configured in the following tenants:
+An example is given in [development mode](#development-mode). After running the `./dev/dev_setup.sh` script, the `config/config.json` will have different keys configured in the following tenants:
 * Key `monitoring` in the Vault "tenant" namespace
 * Key `salesforce-dev` in the Vault Root namespace
 
@@ -112,7 +112,7 @@ To make the mapping between the distributey kid and the Vault Transit key explic
 }
 ```
 
-The above configuration is taken from [development mode](#Development_Mode) and explicitly maps the Vault key path "monitoring" to the kid "jwe-kid-monitoring".
+The above configuration is taken from [development mode](#development-mode) and explicitly maps the Vault key path "monitoring" to the kid "jwe-kid-monitoring".
 
 The dynamic configuration can be configured using the `backend_wide_key_consumer_cert` key:
 ```json

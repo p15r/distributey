@@ -35,7 +35,7 @@
     "mtls_client_cert": "config/mtls_auth.crt",
     "mtls_client_key": "config/mtls_auth.key",
     "url": "https://vault:8300",
-    "namespace": "",
+    "namespace": "root",
     "auth_jwt_path": "jwt",
     "default_role": "distributey",
     "transit_path": "transit"

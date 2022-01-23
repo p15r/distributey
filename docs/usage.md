@@ -52,6 +52,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
   - alternatively, add `127.0.0.1 vault` to `/etc/hosts`
 - Run flask dev server: `python3 dev/dev_mode.py`
 - Request JWE: `curl -k --no-progress-meter http://localhost:5000/v1/monitoring/jwe-kid-monitoring?requestId=$(openssl rand -hex 16) -H "Authorization: $(python3 dev/create_jwt.py -m)" -H 'x-real-ip: 127.0.0.1' | jq`
+- Run tests: `./run_tests -h` (integration tests require Vault connectivity)
 
 ## Decrypt JWE
 An example JWE to decrypt:

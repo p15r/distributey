@@ -21,8 +21,7 @@ def test___get_vault_token(monkeypatch, get_jwt):
         client,
         'salesforce',
         get_jwt,
-        'jwt',
-        'jwt_kid_salesforce_serviceX')
+        'jwt')
 
     # example token: s.Yc3hPcXPJgDYFheaYEG3wgKe'
     assert token

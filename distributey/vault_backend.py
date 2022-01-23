@@ -81,8 +81,7 @@ def __get_vault_token(
         client: hvac.Client,
         tenant: str,
         priv_jwt_token: str,
-        vault_auth_jwt_path: str,
-        cache_client_id: str) -> str:
+        vault_auth_jwt_path: str) -> str:
 
     trace_enter(inspect.currentframe())
 
@@ -127,8 +126,6 @@ def __get_vault_token(
 
     logger.debug('Retrieved new Vault token.')
 
-    __VAULT_TOKEN_CACHE[cache_client_id] = vault_token
-
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
     return vault_token
 
@@ -151,22 +148,21 @@ def __authenticate_vault_client(
             'Attempting to authenticate against Vault using JWT: %s',
             priv_jwt_token)
 
-    cache_client_id = utils.get_kid_from_jwt(priv_jwt_token)
+    cache_id = utils.get_vault_token_cache_id(tenant, priv_jwt_token)
 
-    if cache_client_id in __VAULT_TOKEN_CACHE:
+    if cache_id in __VAULT_TOKEN_CACHE:
         logger.debug(
-            'Cache hit: Found token for "%s".', cache_client_id)
-        client.token = __VAULT_TOKEN_CACHE[cache_client_id]
+            'Cache hit: Found token for "%s".', cache_id)
+        client.token = __VAULT_TOKEN_CACHE[cache_id]
     else:
         logger.debug(
-            'Cache miss: Token for "%s" not found.', cache_client_id)
+            'Cache miss: Token for "%s" not found.', cache_id)
 
         token = __get_vault_token(
             client,
             tenant,
             priv_jwt_token,
-            vault_auth_jwt_path,
-            cache_client_id)
+            vault_auth_jwt_path)
 
         if not token:
             ret = None
@@ -175,10 +171,11 @@ def __authenticate_vault_client(
             return ret
 
         client.token = token
+        __VAULT_TOKEN_CACHE[cache_id] = token
 
     if not client.is_authenticated():
         # token might be invalid/has expired
-        del __VAULT_TOKEN_CACHE[cache_client_id]
+        del __VAULT_TOKEN_CACHE[cache_id]
 
         ret = None
 

@@ -283,8 +283,7 @@ def test___get_vault_token(monkeypatch, get_jwt):
         client,
         'salesforce',
         get_jwt,
-        'jwt',
-        'jwt_kid_salesforce_serviceX')
+        'jwt')
 
     assert token == fake_token
 
@@ -307,8 +306,7 @@ def test___get_vault_token2(monkeypatch, get_jwt):
         client,
         'salesforce',
         get_jwt,
-        'jwt',
-        'jwt_kid_salesforce_serviceX')
+        'jwt')
 
     assert token == ''
 

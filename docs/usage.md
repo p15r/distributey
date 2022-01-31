@@ -113,7 +113,7 @@ To make the mapping between the distributey kid and the Vault Transit key explic
 }
 ```
 
-The above configuration is taken from [development mode](#development-mode) and explicitly maps the Vault key path "monitoring" to the kid "jwe-kid-monitoring".
+The above configuration is taken from [development mode](#development-mode) and explicitly maps the kid "jwe-kid-monitoring" to the Vault key path "monitoring".
 
 The dynamic configuration can be configured using the `backend_wide_key_consumer_cert` key:
 ```json
@@ -122,4 +122,4 @@ The dynamic configuration can be configured using the `backend_wide_key_consumer
   }
 ```
 
-In this case, the explicit mapping between `vault_path` is missing and the `backend_wide_key_consumer_cert` is used for any requested kid (to encrypt the AES content encryption key).
+In this case, the explicit mapping between JWE kid and `vault_path` is missing and the `backend_wide_key_consumer_cert` is used for any requested kid (to encrypt the AES content encryption key).

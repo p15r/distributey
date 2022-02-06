@@ -321,7 +321,6 @@ def test___authenticate_vault_client(monkeypatch, get_jwt):
     monkeypatch.setattr(
         hvac.v1.Client, 'is_authenticated', mock_client_is_authenticated)
 
-
     vault_backend.__VAULT_TOKEN_CACHE = {
         'c2FsZXNmb3JjZS1qd3Rfa2lkX3NhbGVzZm9yY2Vfc2VydmljZVg=': 's.FAKETOKEN'
     }

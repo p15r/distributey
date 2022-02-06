@@ -208,7 +208,7 @@ def get_dynamic_secret(
         logger.error(
             'Failed to load Vault transit path for tenant "%s"', tenant
         )
-        return b''
+        return bytearray()
 
     client = __get_vault_client(tenant)
     if not client:

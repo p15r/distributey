@@ -5,7 +5,7 @@
 import os
 import json
 import logging
-from typing import Any, Union
+from typing import Any, Union, List
 import inspect
 import glom
 from dy_trace import trace_enter, trace_exit
@@ -92,7 +92,7 @@ def get_config_by_keypath(keypath: Union[str, list]) -> Any:
 def get_vault_ca_cert(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.cacert')
     precedence.append('VAULT.cacert')
 
@@ -105,7 +105,7 @@ def get_vault_ca_cert(tenant: str) -> str:
 def get_vault_namespace(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.namespace')
     precedence.append('VAULT.namespace')
 
@@ -118,7 +118,7 @@ def get_vault_namespace(tenant: str) -> str:
 def get_vault_url(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.url')
     precedence.append('VAULT.url')
 
@@ -131,7 +131,7 @@ def get_vault_url(tenant: str) -> str:
 def get_vault_mtls_client_key(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_key')
     precedence.append('VAULT.mtls_client_key')
 
@@ -144,7 +144,7 @@ def get_vault_mtls_client_key(tenant: str) -> str:
 def get_vault_mtls_client_cert(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.mtls_client_cert')
     precedence.append('VAULT.mtls_client_cert')
 
@@ -157,7 +157,7 @@ def get_vault_mtls_client_cert(tenant: str) -> str:
 def get_vault_auth_jwt_path(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.auth_jwt_path')
     precedence.append('VAULT.auth_jwt_path')
 
@@ -170,7 +170,7 @@ def get_vault_auth_jwt_path(tenant: str) -> str:
 def get_vault_transit_path(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.transit_path')
     precedence.append('VAULT.transit_path')
 
@@ -183,7 +183,7 @@ def get_vault_transit_path(tenant: str) -> str:
 def get_vault_default_role(tenant: str) -> str:
     trace_enter(inspect.currentframe())
 
-    precedence: list[str] = []
+    precedence: List[str] = []
     precedence.append(f'TENANT_CFG.{tenant}.backend.VAULT.default_role')
     precedence.append('VAULT.default_role')
 

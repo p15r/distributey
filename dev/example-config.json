@@ -20,21 +20,21 @@
         }
       },
       "backend": {
+        "VAULT": {
+          "auth_jwt_path": "jwt-monitoring",
+          "cacert": "config/myCA.crt",
+          "default_role": "monitoring",
+          "mtls_client_cert": "config/mtls_auth.crt",
+          "mtls_client_key": "config/mtls_auth.key",
+          "namespace": "tenant",
+          "transit_path": "transit-monitoring",
+          "url": "https://vault:8300"
+        },
         "jwe-kid-monitoring": {
           "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
           "vault_path": "monitoring:latest"
-        },
-        "VAULT": {
-          "cacert": "config/myCA.crt",
-          "mtls_client_cert": "config/mtls_auth.crt",
-          "mtls_client_key": "config/mtls_auth.key",
-          "url": "https://vault:8300",
-          "namespace": "tenant",
-          "auth_jwt_path": "jwt-monitoring",
-          "default_role": "monitoring",
-          "transit_path": "transit-monitoring"
         }
-      } 
+      }
     },
     "salesforce": {
       "auth": {
@@ -47,19 +47,19 @@
         }
       },
       "backend": {
+        "VAULT": {
+          "auth_jwt_path": "jwt",
+          "cacert": "config/myCA.crt",
+          "default_role": "distributey",
+          "mtls_client_cert": "config/mtls_auth.crt",
+          "mtls_client_key": "config/mtls_auth.key",
+          "namespace": "tenant",
+          "transit_path": "transit",
+          "url": "https://vault:8300"
+        },
         "jwe-kid-salesforce-serviceX": {
           "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
           "vault_path": "salesforce:latest"
-        },
-        "VAULT": {
-          "cacert": "config/myCA.crt",
-          "mtls_client_cert": "config/mtls_auth.crt",
-          "mtls_client_key": "config/mtls_auth.key",
-          "url": "https://vault:8300",
-          "namespace": "tenant",
-          "auth_jwt_path": "jwt",
-          "default_role": "distributey",
-          "transit_path": "transit"
         }
       }
     },
@@ -74,28 +74,28 @@
         }
       },
       "backend": {
-        "backend_wide_key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
         "VAULT": {
+          "auth_jwt_path": "jwt-dev",
           "cacert": "config/myCA.crt",
+          "default_role": "salesforce-dev",
           "mtls_client_cert": "config/mtls_auth.crt",
           "mtls_client_key": "config/mtls_auth.key",
-          "url": "https://vault:8300",
           "namespace": "root",
-          "auth_jwt_path": "jwt-dev",
-          "default_role": "salesforce-dev",
-          "transit_path": "transit-dev"
-        }
-      } 
+          "transit_path": "transit-dev",
+          "url": "https://vault:8300"
+        },
+        "backend_wide_key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt"
+      }
     }
   },
   "VAULT": {
+    "auth_jwt_path": "jwt",
     "cacert": "config/myCA.crt",
+    "default_role": "distributey",
     "mtls_client_cert": "config/mtls_auth.crt",
     "mtls_client_key": "config/mtls_auth.key",
-    "url": "https://vault:8300",
     "namespace": "tenant",
-    "auth_jwt_path": "jwt",
-    "default_role": "distributey",
-    "transit_path": "transit"
+    "transit_path": "transit",
+    "url": "https://vault:8300"
   }
 }

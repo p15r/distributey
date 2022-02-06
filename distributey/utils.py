@@ -43,7 +43,7 @@ def get_vault_token_cache_id(tenant: str, priv_token) -> str:
         trace_exit(inspect.currentframe(), ret)
         return ret
 
-    cache_id = f"{tenant}-{jwt_kid}"
+    cache_id = f'{tenant}-{jwt_kid}'
     ret = base64.b64encode(cache_id.encode()).decode()
 
     trace_exit(inspect.currentframe(), ret)

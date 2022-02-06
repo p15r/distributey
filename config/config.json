@@ -31,13 +31,13 @@
     }
   },
   "VAULT": {
+    "auth_jwt_path": "jwt",
     "cacert": "config/myCA.crt",
+    "default_role": "distributey",
     "mtls_client_cert": "config/mtls_auth.crt",
     "mtls_client_key": "config/mtls_auth.key",
-    "url": "https://vault:8300",
     "namespace": "root",
-    "auth_jwt_path": "jwt",
-    "default_role": "distributey",
-    "transit_path": "transit"
+    "transit_path": "transit",
+    "url": "https://vault:8300"
   }
 }

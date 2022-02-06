@@ -20,7 +20,7 @@ every cache contains an expired token for a JWT KID. This would lead to
 
 import base64
 import inspect
-from typing import Dict
+from typing import Dict, Union
 import hvac
 from dy_logging import logger
 from dy_trace import trace_enter, trace_exit, CAMOUFLAGE_SIGN
@@ -33,25 +33,45 @@ import utils
 __VAULT_TOKEN_CACHE: Dict[str, str] = {}
 
 
-def __get_vault_client() -> hvac.Client:
-    trace_enter(inspect.currentframe())
+def __get_vault_client(tenant: str) -> hvac.Client:
+    vault_mtls_client_cert = config.get_vault_mtls_client_cert(tenant)
+    vault_mtls_client_key = config.get_vault_mtls_client_key(tenant)
+    vault_url = config.get_vault_url(tenant)
+    vault_ns = config.get_vault_namespace(tenant)
+    vault_ca_cert = config.get_vault_ca_cert(tenant)
 
-    vault_mtls_client_cert = \
-        config.get_config_by_keypath('VAULT_MTLS_CLIENT_CERT')
-    vault_mtls_client_key = \
-        config.get_config_by_keypath('VAULT_MTLS_CLIENT_KEY')
-    vault_url = config.get_config_by_keypath('VAULT_URL')
+    verify: Union[bool, str]
+
+    if not vault_mtls_client_cert:
+        logger.error('Failed to load Vault mTLS client cert.')
+        return None
+    if not vault_mtls_client_key:
+        logger.error('Failed to load Vault mTLS client key.')
+        return None
+    if not vault_url:
+        logger.error('Failed to load Vault url.')
+        return None
+    if not vault_ns:
+        logger.error('Failed to load Vault namespace')
+        return None
+    if not vault_ca_cert:
+        logger.warning('Failed to load Vault CA cert.')
+        verify = True
+    else:
+        verify = vault_ca_cert
+
+    if vault_ns == 'root':
+        vault_ns = ''
+
     mtls_auth = (vault_mtls_client_cert, vault_mtls_client_key)
-    vault_ca_cert = config.get_config_by_keypath('VAULT_CACERT')
 
     # hvac.Client() never raises exceptions, regardless of the parameters
-    if vault_ca_cert:
-        client = hvac.Client(
-            cert=mtls_auth,
-            url=vault_url,
-            verify=vault_ca_cert)
-    else:
-        client = hvac.Client(cert=mtls_auth, url=vault_url, verify=True)
+    client = hvac.Client(
+                cert=mtls_auth,
+                url=vault_url,
+                namespace=vault_ns,
+                verify=verify
+    )
 
     trace_exit(inspect.currentframe(), client)
     return client
@@ -61,14 +81,21 @@ def __get_vault_token(
         client: hvac.Client,
         tenant: str,
         priv_jwt_token: str,
-        vault_auth_jwt_path: str,
-        cache_client_id: str) -> str:
+        vault_auth_jwt_path: str) -> str:
 
     trace_enter(inspect.currentframe())
 
+    default_role = config.get_vault_default_role(tenant)
+
+    if not default_role:
+        logger.error(
+            'Failed to load Vault default role for tenant "%s"', tenant
+        )
+        return ''
+
     try:
         response = client.auth.jwt.jwt_login(
-            role=config.get_vault_default_role_by_tenant(tenant),
+            role=default_role,
             jwt=priv_jwt_token,
             path=vault_auth_jwt_path)
     except Exception as exc:
@@ -99,8 +126,6 @@ def __get_vault_token(
 
     logger.debug('Retrieved new Vault token.')
 
-    __VAULT_TOKEN_CACHE[cache_client_id] = vault_token
-
     trace_exit(inspect.currentframe(), CAMOUFLAGE_SIGN)
     return vault_token
 
@@ -112,29 +137,32 @@ def __authenticate_vault_client(
 
     trace_enter(inspect.currentframe())
 
-    vault_auth_jwt_path = config.get_vault_auth_jwt_path_by_tenant(tenant)
+    vault_auth_jwt_path = config.get_vault_auth_jwt_path(tenant)
+
+    if not vault_auth_jwt_path:
+        logger.error('Failed to load auth jwt path for tenant "%s"', tenant)
+        return None
 
     if config.get_config_by_keypath('DEV_MODE'):
         logger.debug(
             'Attempting to authenticate against Vault using JWT: %s',
             priv_jwt_token)
 
-    cache_client_id = utils.get_kid_from_jwt(priv_jwt_token)
+    cache_id = utils.get_vault_token_cache_id(tenant, priv_jwt_token)
 
-    if cache_client_id in __VAULT_TOKEN_CACHE:
+    if cache_id in __VAULT_TOKEN_CACHE:
         logger.debug(
-            'Cache hit: Found token for "%s".', cache_client_id)
-        client.token = __VAULT_TOKEN_CACHE[cache_client_id]
+            'Cache hit: Found token for "%s".', cache_id)
+        client.token = __VAULT_TOKEN_CACHE[cache_id]
     else:
         logger.debug(
-            'Cache miss: Token for "%s" not found.', cache_client_id)
+            'Cache miss: Token for "%s" not found.', cache_id)
 
         token = __get_vault_token(
             client,
             tenant,
             priv_jwt_token,
-            vault_auth_jwt_path,
-            cache_client_id)
+            vault_auth_jwt_path)
 
         if not token:
             ret = None
@@ -143,10 +171,11 @@ def __authenticate_vault_client(
             return ret
 
         client.token = token
+        __VAULT_TOKEN_CACHE[cache_id] = token
 
     if not client.is_authenticated():
         # token might be invalid/has expired
-        del __VAULT_TOKEN_CACHE[cache_client_id]
+        del __VAULT_TOKEN_CACHE[cache_id]
 
         ret = None
 
@@ -173,10 +202,15 @@ def get_dynamic_secret(
 
     trace_enter(inspect.currentframe())
 
-    vault_transit_path = config.get_vault_transit_path_by_tenant(tenant)
-    vault_url = config.get_config_by_keypath('VAULT_URL')
+    vault_transit_path = config.get_vault_transit_path(tenant)
 
-    client = __get_vault_client()
+    if not vault_transit_path:
+        logger.error(
+            'Failed to load Vault transit path for tenant "%s"', tenant
+        )
+        return b''
+
+    client = __get_vault_client(tenant)
     if not client:
         ret = bytearray()
         logger.error('Failed to get Vault client.')
@@ -187,12 +221,6 @@ def get_dynamic_secret(
     if not client:
         ret = bytearray()
         logger.error('Failed to authenticate Vault client.')
-        trace_exit(inspect.currentframe(), ret)
-        return ret
-
-    if not client.sys.is_initialized():
-        ret = bytearray()
-        logger.error('Vault at "%s" has not been initialized.', vault_url)
         trace_exit(inspect.currentframe(), ret)
         return ret
 

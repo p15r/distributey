@@ -13,28 +13,26 @@ class TestVaultBackend():
         else:
             assert False, 'Retrieved dek with zero length.'
 
-# test get_vault_token, get_vault_client
-
 
 def test___get_vault_token(monkeypatch, get_jwt):
-    client = vault_backend.__get_vault_client()
+    client = vault_backend.__get_vault_client('salesforce')
 
     token = vault_backend.__get_vault_token(
         client,
         'salesforce',
         get_jwt,
-        'jwt',
-        'jwt_kid_salesforce_serviceX')
+        'jwt')
 
     # example token: s.Yc3hPcXPJgDYFheaYEG3wgKe'
     assert token
     assert token.startswith('s.')
-    assert len(token) == 26
+
+    assert len(token) == 32
 
 
 def test___authenticate_vault_client(monkeypatch, get_jwt):
     # test with "valid" token
-    client = vault_backend.__get_vault_client()
+    client = vault_backend.__get_vault_client('salesforce')
 
     client = vault_backend.__authenticate_vault_client(
         client, 'salesforce', get_jwt)

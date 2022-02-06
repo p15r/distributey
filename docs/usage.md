@@ -21,6 +21,9 @@
   curl -k --no-progress-meter https://localhost/v1/salesforce-dev/salesforce-dev?requestId=$(openssl rand -hex 16) -H "Authorization: $(python3 dev/create_jwt.py -d)" | jq
   ```
 
+Note:
+- If fetching a secret fails and `distributey` reports `missing client token, on post *v1/auth/jwt/login`, this means the wrong Vault namespace is configured.
+
 ## Splunk
 
 If Splunk logging has been enabled in `config/config.json`, use the following Splunk search to discover `distributey` logs: `index=<INDEXNAME> host="distributey"`.
@@ -49,6 +52,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
   - alternatively, add `127.0.0.1 vault` to `/etc/hosts`
 - Run flask dev server: `python3 dev/dev_mode.py`
 - Request JWE: `curl -k --no-progress-meter http://localhost:5000/v1/monitoring/jwe-kid-monitoring?requestId=$(openssl rand -hex 16) -H "Authorization: $(python3 dev/create_jwt.py -m)" -H 'x-real-ip: 127.0.0.1' | jq`
+- Run tests: `./run_tests -h` (integration tests require Vault connectivity)
 
 ## Decrypt JWE
 An example JWE to decrypt:
@@ -59,3 +63,63 @@ eyJhbGciOiAiUlNBLU9BRVAiLCAiZW5jIjogIkEyNTZHQ00iLCAia2lkIjogImtpZC1zYWxlc2ZvcmNl
 1. Enable `DEV_MODE` and set `LOG_LEVEL` to `debug` in `distributey/config/config.json` to log secrets.
 2. Extract encrypted `dek` from JWE token by getting the second last dot-separated string: `zsEdzjYl8vl51XW9njHt7LWU1ARcXTpU8xL3368pUFw=`
 3. Configure and run `dev/decrypt_dek.py` to decrypt the `dek` (data encryption key; the requested key by the key consumer).
+
+## Multi-Tenancy
+
+distributey can be configured to read keys from different Vault Enterprise namespaces.
+
+An example is given in [development mode](#development-mode). After running the `./dev/dev_setup.sh` script, the `config/config.json` will have different keys configured in the following tenants:
+* Key `monitoring` in the Vault "tenant" namespace
+* Key `salesforce-dev` in the Vault Root namespace
+
+The VAULT config block can either be configured globally (`VAULT` section as sibling of the `TENANT_CFG`) or per distributey tenant backend (under `TENANT_CFG.${TENANT}.backend.VAULT`):
+```json
+"VAULT": {
+  "cacert": "config/myCA.crt",
+  "mtls_client_cert": "config/mtls_auth.crt",
+  "mtls_client_key": "config/mtls_auth.key",
+  "url": "https://vault:8300",
+  "namespace": "root",
+  "auth_jwt_path": "jwt",
+  "default_role": "distributey",
+  "transit_path": "transit"
+}
+```
+
+The namespace is used for authentication (`auth_jwt_path`) and the `transit_path`. JWT auth backend and Transit engine path must reside in the same Vault namespace.
+
+To connect to the Vault default (Root) namespace, configure distributey with `VAULT.namespace="root"` (see example above).
+
+## Dynamic Key ID Mapping between Distributey and Vault
+
+If the key ID (kid) is not explicitly specified with the `TENANT_CFG.${TENANT}.backend` section, distributey will "forward the request as is" and ask Vault if a Transit key with the given name exists.
+
+To make the mapping between the distributey kid and the Vault Transit key explicit, use a configuration similar to this one:
+```json
+{
+  "TENANT_CFG": {
+    "monitoring": {
+      ...
+      "backend": {
+        "jwe-kid-monitoring": {
+          "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
+          "vault_path": "monitoring:latest"
+        },
+        ...
+      }
+    }
+  ...
+  }
+}
+```
+
+The above configuration is taken from [development mode](#development-mode) and explicitly maps the kid "jwe-kid-monitoring" to the Vault key path "monitoring".
+
+The dynamic configuration can be configured using the `backend_wide_key_consumer_cert` key:
+```json
+  "backend": {
+    "backend_wide_key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
+  }
+```
+
+In this case, the explicit mapping between JWE kid and `vault_path` is missing and the `backend_wide_key_consumer_cert` is used for any requested kid (to encrypt the AES content encryption key).

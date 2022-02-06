@@ -23,11 +23,18 @@
         "jwe-kid-monitoring": {
           "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
           "vault_path": "monitoring:latest"
+        },
+        "VAULT": {
+          "cacert": "config/myCA.crt",
+          "mtls_client_cert": "config/mtls_auth.crt",
+          "mtls_client_key": "config/mtls_auth.key",
+          "url": "https://vault:8300",
+          "namespace": "tenant",
+          "auth_jwt_path": "jwt-monitoring",
+          "default_role": "monitoring",
+          "transit_path": "transit-monitoring"
         }
-      },
-      "vault_auth_jwt_path": "jwt-monitoring",
-      "vault_default_role": "monitoring",
-      "vault_transit_path": "transit-monitoring"
+      } 
     },
     "salesforce": {
       "auth": {
@@ -43,11 +50,18 @@
         "jwe-kid-salesforce-serviceX": {
           "key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
           "vault_path": "salesforce:latest"
+        },
+        "VAULT": {
+          "cacert": "config/myCA.crt",
+          "mtls_client_cert": "config/mtls_auth.crt",
+          "mtls_client_key": "config/mtls_auth.key",
+          "url": "https://vault:8300",
+          "namespace": "tenant",
+          "auth_jwt_path": "jwt",
+          "default_role": "distributey",
+          "transit_path": "transit"
         }
-      },
-      "vault_auth_jwt_path": "jwt",
-      "vault_default_role": "salesforce",
-      "vault_transit_path": "transit"
+      }
     },
     "salesforce-dev": {
       "auth": {
@@ -60,15 +74,28 @@
         }
       },
       "backend": {
-        "backend_wide_key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt"
-      },
-      "vault_auth_jwt_path": "jwt-dev",
-      "vault_default_role": "salesforce-dev",
-      "vault_transit_path": "transit-dev"
+        "backend_wide_key_consumer_cert": "config/backend/distributey_serviceX_key_consumer.crt",
+        "VAULT": {
+          "cacert": "config/myCA.crt",
+          "mtls_client_cert": "config/mtls_auth.crt",
+          "mtls_client_key": "config/mtls_auth.key",
+          "url": "https://vault:8300",
+          "namespace": "root",
+          "auth_jwt_path": "jwt-dev",
+          "default_role": "salesforce-dev",
+          "transit_path": "transit-dev"
+        }
+      } 
     }
   },
-  "VAULT_CACERT": "config/myCA.crt",
-  "VAULT_MTLS_CLIENT_CERT": "config/mtls_auth.crt",
-  "VAULT_MTLS_CLIENT_KEY": "config/mtls_auth.key",
-  "VAULT_URL": "https://vault:8300"
+  "VAULT": {
+    "cacert": "config/myCA.crt",
+    "mtls_client_cert": "config/mtls_auth.crt",
+    "mtls_client_key": "config/mtls_auth.key",
+    "url": "https://vault:8300",
+    "namespace": "tenant",
+    "auth_jwt_path": "jwt",
+    "default_role": "distributey",
+    "transit_path": "transit"
+  }
 }

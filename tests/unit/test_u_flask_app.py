@@ -1,5 +1,6 @@
 """Test module for Flask app."""
 
+import base64
 import os
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR, S_IRUSR
 import pytest
@@ -27,6 +28,12 @@ class TestUnitFlaskApp():
                            f'Got kid "{kid}".')
         else:
             assert True, 'Failed as expected on malformed protected header.'
+
+    def test_get_vault_token_cache_id(self, get_jwt):
+        assert utils.get_vault_token_cache_id('salesforce', get_jwt) == \
+            base64.b64encode(
+                "salesforce-jwt_kid_salesforce_serviceX".encode()
+            ).decode()
 
     def test__get_jwt_from_header(self, get_headers, get_jwt):
         # test w/ valid token

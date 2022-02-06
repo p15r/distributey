@@ -9,17 +9,52 @@ import vault_backend
 
 def test___get_vault_client(monkeypatch):
     # valid test
-    client = vault_backend.__get_vault_client()
+    client = vault_backend.__get_vault_client('salesforce')
     assert isinstance(client, hvac.Client)
 
     # test w/ no VAULT_CERT
     def mock_vault_cert(*args):
-        if args[0] == 'VAULT_CACERT':
-            return False
+        return False
 
-    monkeypatch.setattr(config, 'get_config_by_keypath', mock_vault_cert)
-    client = vault_backend.__get_vault_client()
+    monkeypatch.setattr(config, 'get_vault_ca_cert', mock_vault_cert)
+    client = vault_backend.__get_vault_client('salesforce')
     assert isinstance(client, hvac.Client)
+
+
+def test___get_vault_client_no_mtls_client_cert(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_mtls_client_cert', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
+
+
+def test___get_vault_client_no_mtls_client_key(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_mtls_client_key', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
+
+
+def test___get_vault_client_no_vault_url(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_url', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
+
+
+def test___get_vault_client_no_vault_ns(monkeypatch):
+    def mock_config(*args):
+        return False
+
+    monkeypatch.setattr(config, 'get_vault_namespace', mock_config)
+    client = vault_backend.__get_vault_client('salesforce')
+    assert client is None
 
 
 def test_get_dynamic_secret(monkeypatch, get_jwt):
@@ -30,7 +65,7 @@ def test_get_dynamic_secret(monkeypatch, get_jwt):
     assert dek == b''
 
     # test w/ failing client creation
-    def mock_client():
+    def mock_client(tenant: str):
         return None
 
     monkeypatch.setattr(vault_backend, '__get_vault_client', mock_client)
@@ -39,30 +74,10 @@ def test_get_dynamic_secret(monkeypatch, get_jwt):
                                            'latest', get_jwt)
 
 
-def test_get_dynamic_secret_2(monkeypatch, get_jwt):
-    # test client not initialized
-    def mock_auth_client(*args):
-        return vault_backend.__get_vault_client()
-
-    monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
-                        mock_auth_client)
-
-    def mock_client_init(*args):
-        return False
-
-    monkeypatch.setattr(hvac.api.SystemBackend, 'is_initialized',
-                        mock_client_init)
-
-    dek = vault_backend.get_dynamic_secret('salesforce', 'salesforce',
-                                           'latest', get_jwt)
-
-    assert dek == b''
-
-
 def test_get_dynamic_secret_3(monkeypatch, get_jwt):
     # test client initialized
     def mock_auth_client(*args):
-        return vault_backend.__get_vault_client()
+        return vault_backend.__get_vault_client('salesforce')
 
     monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
                         mock_auth_client)
@@ -82,7 +97,7 @@ def test_get_dynamic_secret_3(monkeypatch, get_jwt):
 def test_get_dynamic_secret_4(monkeypatch, get_jwt):
     # test client initialized
     def mock_auth_client(*args):
-        return vault_backend.__get_vault_client()
+        return vault_backend.__get_vault_client('salesforce')
 
     monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
                         mock_auth_client)
@@ -109,7 +124,7 @@ def test_get_dynamic_secret_4(monkeypatch, get_jwt):
 def test_get_dynamic_secret_5(monkeypatch, get_jwt):
     # test client initialized
     def mock_auth_client(*args):
-        return vault_backend.__get_vault_client()
+        return vault_backend.__get_vault_client('salesforce')
 
     monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
                         mock_auth_client)
@@ -137,7 +152,7 @@ def test_get_dynamic_secret_5(monkeypatch, get_jwt):
 def test_get_dynamic_secret_6(monkeypatch, get_jwt):
     # test client initialized
     def mock_auth_client(*args):
-        return vault_backend.__get_vault_client()
+        return vault_backend.__get_vault_client('salesforce')
 
     monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
                         mock_auth_client)
@@ -165,7 +180,7 @@ def test_get_dynamic_secret_6(monkeypatch, get_jwt):
 def test_get_dynamic_secret_7(monkeypatch, get_jwt):
     # test client initialized
     def mock_auth_client(*args):
-        return vault_backend.__get_vault_client()
+        return vault_backend.__get_vault_client('salesforce')
 
     monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
                         mock_auth_client)
@@ -200,7 +215,7 @@ def test_get_dynamic_secret_7(monkeypatch, get_jwt):
 def test_get_dynamic_secret_8(monkeypatch, get_jwt):
     # test client initialized
     def mock_auth_client(*args):
-        return vault_backend.__get_vault_client()
+        return vault_backend.__get_vault_client('salesforce')
 
     monkeypatch.setattr(vault_backend, '__authenticate_vault_client',
                         mock_auth_client)
@@ -237,7 +252,7 @@ def test_get_dynamic_secret_8(monkeypatch, get_jwt):
 
 def test___get_vault_token(monkeypatch, get_jwt):
     # test with valid token
-    client = vault_backend.__get_vault_client()
+    client = vault_backend.__get_vault_client('salesforce')
 
     fake_token = 's.FAKETOKEN'
 
@@ -246,6 +261,13 @@ def test___get_vault_token(monkeypatch, get_jwt):
         # interfere and return true, if called with other keys, ignore
         if args[0] == 'DEV_MODE':
             return True
+
+        if args[0] == [
+                'TENANT_CFG.salesforce.backend.VAULT.default_role',
+                'VAULT.default_role'
+        ]:
+            # return default role
+            return 'distributey'
 
     monkeypatch.setattr(config, 'get_config_by_keypath', mock_devmode)
 
@@ -261,15 +283,14 @@ def test___get_vault_token(monkeypatch, get_jwt):
         client,
         'salesforce',
         get_jwt,
-        'jwt',
-        'jwt_kid_salesforce_serviceX')
+        'jwt')
 
     assert token == fake_token
 
 
 def test___get_vault_token2(monkeypatch, get_jwt):
     # test with invalid response
-    client = vault_backend.__get_vault_client()
+    client = vault_backend.__get_vault_client('salesforce')
 
     fake_token = 's.FAKETOKEN'
 
@@ -285,21 +306,25 @@ def test___get_vault_token2(monkeypatch, get_jwt):
         client,
         'salesforce',
         get_jwt,
-        'jwt',
-        'jwt_kid_salesforce_serviceX')
+        'jwt')
 
     assert token == ''
 
 
 def test___authenticate_vault_client(monkeypatch, get_jwt):
     # test with "valid" token
-    client = vault_backend.__get_vault_client()
+    client = vault_backend.__get_vault_client('salesforce')
 
     def mock_client_is_authenticated(*args, **kwargs):
         return True
 
     monkeypatch.setattr(
         hvac.v1.Client, 'is_authenticated', mock_client_is_authenticated)
+
+
+    vault_backend.__VAULT_TOKEN_CACHE = {
+        "c2FsZXNmb3JjZS1qd3Rfa2lkX3NhbGVzZm9yY2Vfc2VydmljZVg=": 's.FAKETOKEN'
+    }
 
     client = vault_backend.__authenticate_vault_client(
         client, 'salesforce', get_jwt)
@@ -309,7 +334,7 @@ def test___authenticate_vault_client(monkeypatch, get_jwt):
 
 def test___authenticate_vault_client2(monkeypatch, get_jwt):
     # test with invalid token
-    client = vault_backend.__get_vault_client()
+    client = vault_backend.__get_vault_client('salesforce')
 
     def mock_client_is_authenticated(*args, **kwargs):
         return False

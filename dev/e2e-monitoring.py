@@ -142,7 +142,7 @@ def create_auth_header() -> str:
 
     token = jwt.encode(
         payload, private_key, algorithm='RS256',
-        headers={'kid': CFG_JWT_KID}).decode('utf-8')
+        headers={'kid': CFG_JWT_KID})
 
     ret = f'Bearer {token}'
 

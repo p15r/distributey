@@ -45,7 +45,6 @@ payload = {
         seconds=expiration_time)
 }
 
-token = jwt.encode(
-    payload, private_key, algorithm='RS256', headers=header).decode('utf-8')
+token = jwt.encode(payload, private_key, algorithm='RS256', headers=header)
 
 print(f'Bearer {token}')

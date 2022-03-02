@@ -29,7 +29,14 @@ __API_VERSIONING_PATH = 'v1/'
 __PATH_PREFIX = __BASE_PATH + __API_VERSIONING_PATH
 
 # DB to temporarily store nonces
-__CACHE_DB = '/tmp/cache.db'    # NOSONAR
+# Creating a temp file this way is insecure:
+# //security.openstack.org/guidelines/dg_using-temporary-files-securely.html
+# However, a hardcoded temp file location is required so that all gunicorn
+# threads can access it (using `tempfile.mkstemp()` would create a temp file
+# per thread). Temp file location could be randomly chosen during container
+# startup. The risk is relatively small, because this app runs in a dedicated
+# container.
+__CACHE_DB = '/tmp/cache.db'    # NOSONAR # nosec
 __CACHE_DB_NR_ENTRIES = 10000
 
 

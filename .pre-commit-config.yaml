@@ -28,6 +28,8 @@ repos:
     rev: v0.931
     hooks:
     -   id: mypy
+        # exclude, because mypy does not find types-requests stubs
+        exclude: ^(dev/|tests/unit/test_u_vault_backend.py)
 -   repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.9.0
     hooks:

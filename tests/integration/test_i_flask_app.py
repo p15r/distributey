@@ -144,8 +144,8 @@ class TestIntegrationFlaskApp():
 
         token = jwt.encode(
             payload, private_key, algorithm='RS256',
-            headers=dict(kid='unittest'))
-        token = token.decode('utf-8')
+            headers=dict(kid='unittest')
+        )
 
         headers = orig_headers.copy()
         headers['Authorization'] = 'Bearer ' + token

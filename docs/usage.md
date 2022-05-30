@@ -47,7 +47,7 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
 ## Development Mode
 - Start Vault: `./00-build.sh -d && ./01-start.sh`. Necessary files for the dev setup (`distributey/dev/dev_setup.sh`) are bootstrapped in development mode only (`-d`).
 - Create & activate venv: `python3 -m venv venv && source venv/bin/activate`
-- Install dependencies: `python3 -m pip install -r requirements.txt -r requirements_dev.txt`
+- Install dependencies: `python3 -m pip install -r requirements.txt -r requirements-dev.txt`
 - Adjust config: `"VAULT_URL": "https://localhost:8300"`
   - alternatively, add `127.0.0.1 vault` to `/etc/hosts`
 - Run flask dev server: `python3 dev/dev_mode.py`

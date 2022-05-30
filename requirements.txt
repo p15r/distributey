@@ -2,7 +2,7 @@ pycryptodomex==3.14.1
 Flask==2.0.3
 gunicorn==20.1.0
 hvac==0.11.2
-pyjwt[crypto]==2.3.0
+pyjwt[crypto]==2.4.0
 splunk-handler==3.0.0
 webargs==8.1.0
 glom==22.1.0

@@ -25,9 +25,9 @@ def test___get_vault_token(monkeypatch, get_jwt):
 
     # example token: s.Yc3hPcXPJgDYFheaYEG3wgKe'
     assert token
-    assert token.startswith('s.')
+    assert token.startswith('hvs.')
 
-    assert len(token) == 32
+    assert len(token) == 103
 
 
 def test___authenticate_vault_client(monkeypatch, get_jwt):

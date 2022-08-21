@@ -1,4 +1,3 @@
-# Usage
 ## Request JWE token
 - Issue an HTTP request to retrieve a `jwe` token:
   ```bash
@@ -36,11 +35,9 @@ If Splunk logging has been enabled in `config/config.json`, use the following Sp
   - `nginx`: `journalctl -f -t dy-nginx`
 - Enable debug logs
   - Set `LOG_LEVEL` to `debug` in `distributey/config/config.json`
-  - Fix config files permissions: `./01-fix-cfg-perms.sh`
   - Restart container: `docker restart distributey`
 - Enable developer mode to log any cryptographic material such as keys, additional authenticated data, initialization vectors, etc.
   - Set `LOG_LEVEL` to `debug` & `DEV_MODE` to `true` in `distributey/config/config.json`
-  - Fix config files permissions: `./01-fix-cfg-perms.sh`
   - Restart container: `docker restart distributey`
 - To switch from HTTPS (mTLS) to HTTP between Vault and `distributey`, configure `"VAULT_URL": "http://localhost:8200"` in `config/config.json`.
 

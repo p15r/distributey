@@ -7,15 +7,14 @@ The following actions are required to configure & run `distributey`:
 - Build service: run `./00-build.sh` (`./00-build.sh -d` if you are developer)
 - Configure service: `config/config.json`
    - Check example config: `dev/example-config.json`
-- Set config files permissions: `./01-fix-cfg-perms.sh`
 - Vault Enterprise (optional): `export VAULT_LICENSE=$(cat vault.hclic)`
-- Run service: `./02-start.sh`
+- Run service: `./01-start.sh`
 - `distributey` is now operational
 - For audit purposes, container logs are written to the host's logging infrastructure. However, `docker-compose.yaml` can be edited to forward logs to a remote logging service as well ([link](https://docs.docker.com/config/containers/logging/syslog/)).
 
 To stop or remove `distributey`:
-- Stop service: `./03-stop.sh`
-- Remove service: `./04-remove.sh`
+- Stop service: `./02-stop.sh`
+- Remove service: `./03-remove.sh`
 
 ## Offline Environments
 
@@ -26,4 +25,4 @@ In order for `distributey` to operate in offline environments, make sure to conf
 - `terraform providers mirror -platform=linux_amd64 tf-cache`
 - `zip -r tf-cache.zip tf-cache/`
 - Upload `tf-cache.zip` to mirror (for example, a webserver) and remember its URL
-- In `02-start.sh`, configure the variable `tf_provider_url_mirror_zip` accordingly
+- In `01-start.sh`, configure the variable `tf_provider_url_mirror_zip` accordingly

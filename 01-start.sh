@@ -13,6 +13,10 @@ trap 'err_report $LINENO' ERR
 # check if terraform is installed
 terraform version > /dev/null
 
+echo "🔧 Set file permissions.."
+find config/ -type d -exec chmod o=rx {} \;
+find config/ -type f -exec chmod o=r {} \;
+
 # Make nginx config & TLS files accessible in container
 chmod o+x docker/certs/
 chmod -R o+r docker/nginx.conf docker/certs/

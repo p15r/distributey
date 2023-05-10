@@ -1,6 +1,6 @@
-| SCA & SAST - snyk | SAST - SonarCloud | CodeCov | CI |
-|-------------|-------------|-----|------|
-| [![Known Vulnerabilities](https://snyk.io/test/github/p15r/distributey/badge.svg)](https://snyk.io/test/github/p15r/distributey) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=p15r_distributey&metric=alert_status)](https://sonarcloud.io/dashboard?id=p15r_distributey) | [![codecov](https://codecov.io/gh/p15r/distributey/branch/main/graph/badge.svg?token=Q15J8T81QB)](https://codecov.io/gh/p15r/distributey) | [![CI](https://github.com/p15r/distributey/actions/workflows/ci.yml/badge.svg)](https://github.com/p15r/distributey/actions/workflows/ci.yml/) |
+| SAST - SonarCloud | CodeCov | CI |
+|-------------|-----|------|
+| [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=p15r_distributey&metric=alert_status)](https://sonarcloud.io/dashboard?id=p15r_distributey) | [![codecov](https://codecov.io/gh/p15r/distributey/branch/main/graph/badge.svg?token=Q15J8T81QB)](https://codecov.io/gh/p15r/distributey) | [![CI](https://github.com/p15r/distributey/actions/workflows/ci.yml/badge.svg)](https://github.com/p15r/distributey/actions/workflows/ci.yml/) |
 
 # distributey
 **tl;dr** `distributey` acts as intermediary between a key consumer and a key service. It receives requests from the key consumer, fetches the key material from the key service and sends back JWE-wrapped ([RFC7516](https://tools.ietf.org/html/rfc7516)) responses.

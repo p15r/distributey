@@ -104,7 +104,7 @@ if not _initialize_cache_db():
     raise SystemExit(1)
 
 
-def _http_error(status_code: int, msg: str, headers: dict = None) -> None:
+def _http_error(status_code: int, msg: str, headers: dict = {}) -> None:
     trace_enter(inspect.currentframe())
 
     ret = Response(
@@ -117,7 +117,7 @@ def _http_error(status_code: int, msg: str, headers: dict = None) -> None:
     abort(ret)
 
 
-def _http_20x(status_code: int, msg: str, headers: dict = None) -> Response:
+def _http_20x(status_code: int, msg: str, headers: dict = {}) -> Response:
     trace_enter(inspect.currentframe())
 
     ret = Response(

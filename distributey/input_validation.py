@@ -22,8 +22,8 @@ def __handle_request_parsing_error(
         validation_error: typeValidationError,
         request: werkzeug.local.LocalProxy,
         schema: SchemaABC,
-        error_status_code: int = None,
-        error_headers: Mapping[str, str] = None) -> None:
+        error_status_code: int = 0,
+        error_headers: Mapping[str, str] = {}) -> None:
     """Handles errors, or raised exceptions respectively."""
     trace_enter(inspect.currentframe())
 

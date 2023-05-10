@@ -160,7 +160,9 @@ def request_jwe() -> dict:
         f'{CFG_DY_ENDPOINT}{dy_api_path}',
         headers={'Authorization': auth_header},
         verify=CFG_DY_CA_CERT,
-        params={'requestId': jwe_nonce})
+        params={'requestId': jwe_nonce},
+        timeout=10
+    )
 
     ret = r.json()
 

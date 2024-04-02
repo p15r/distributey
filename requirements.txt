@@ -1,5 +1,6 @@
 pycryptodomex==3.19.1
 Flask==2.3.2
+Werkzeug>=3.0
 gunicorn==20.1.0
 hvac==0.11.2
 pyjwt[crypto]==2.4.0

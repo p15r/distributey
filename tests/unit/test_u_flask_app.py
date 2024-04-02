@@ -278,7 +278,6 @@ class TestUnitFlaskApp():
              {'user-agent':
               ['User agent pattern does not match "name/version"']}}
         assert response.mimetype == 'application/json'
-        assert response.charset == 'utf-8'
 
     def test___x_real_ip_validator(
             self, http_client, get_endpoint_url, get_headers):

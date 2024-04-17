@@ -88,7 +88,7 @@ services:
     tmpfs:
       # default replay attack cache size of 10k requires approx. 324kb
       # for /tmp/cache.db
-      - /tmp:mode=770,size=1m
+      - /tmp:mode=0777,size=1m
     volumes:
       - ./config:/opt/distributey/config/:ro
 
